@@ -1,33 +1,63 @@
-// methods
+const input = document.querySelector("#fileName");
+const version = document.querySelector(".version");
+const docLink =
+  "https://docs.google.com/document/d/1f6nR1gs8f4Ddj9vVLVmsOS5gwGHIQla28Q6va0HvfN0/edit?usp=sharing";
 
+// DISPLAY VERSION AND CHANGELOG
+
+fetch("../manifest.json")
+  .then((e) => {
+    return e.json();
+  })
+  .then((e) => {
+    version.innerHTML = `Version ${e.version}. Click <a href="${docLink}" target="_blank">here</a> to view changelog.`;
+  });
+
+window.addEventListener("error", (e) => {
+  chrome.runtime.sendMessage({
+    type: "extension-error",
+    message: e.message,
+    fileName: e.filename,
+    lineNumber: e.lineno,
+    colNumber: e.colno,
+    stack: e.error?.stack,
+  });
+});
+
+// FUNCTIONS
+
+// get current tab
 async function getCurrentTab() {
   let queryOptions = { active: true, currentWindow: true };
   let [tab] = await chrome.tabs.query(queryOptions);
   return tab;
 }
 
+// build an event in ics format
 function buildICSEvent(
   title,
   buildingName,
   roomNumber,
   days,
-  startDate,
+  startdate,
   endDate,
   startTime,
-  endTime
+  endTime,
+  section
 ) {
   const uid = crypto.randomUUID();
+  console.log("build ics event", title);
   const dayFormat = formatDays(days);
   const location = `Building: ${buildingName} | Room: ${roomNumber}`;
 
   const [month, day, year] = endDate.split("/");
-  const [startMonth, startDay, startYear] = startDate.split("/");
+  const [startMonth, startDay, startYear] = startdate.split("/");
 
   const startDate = new Date(
     `${startYear}-${startMonth}-${parseInt(startDay) + 1}`
   );
-  // used to offset the days from the start date of the class. otherwise, every class will appear on the start date in iCloud calendar.
-  const indexes = {
+  // this is used to offset the days from the start date of the class. otherwise, every class will appear on the start date in iCloud maps.
+  const indices = {
     SU: 0,
     MO: 1,
     TU: 2,
@@ -36,12 +66,12 @@ function buildICSEvent(
     FR: 5,
     SA: 6,
   };
-  const difference = indexes[dayFormat.split(",")[0]] - startDate.getDay();
+  const difference = indices[dayFormat.split(",")[0]] - startDate.getDay();
   startDate.setDate(startDate.getDate() + difference);
 
   const today = new Date();
 
-  // build .ics manually, since an .ics file is just plain text.
+  // build .ics event manually, since an .ics file is just plain text.
   // I'm using an array here to properly do the spacing, as seen in lines.join("\r\n"). using a template literal otherwise would have resulted in problems, especially
   // in google calendar.
   // .ics date format: YYYYMMDDTHHmmss, which is what formatDate() is converting the time to.
@@ -49,7 +79,7 @@ function buildICSEvent(
     `BEGIN:VEVENT`,
     `UID:${uid}`,
     `DTSTAMP:${today.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z"}`,
-    `SUMMARY:${title}`,
+    `SUMMARY:${title}, Section ${section.toUpperCase()}`,
     `DTSTART;TZID=America/New_York:${formatDate(
       `${(startDate.getMonth() + 1).toString().padStart(2, "0")}/${startDate
         .getDate()
@@ -80,121 +110,54 @@ function buildICSFile(events) {
     .join("\r\n");
 }
 
-// parses all courses
-async function fetchSchedule() {
-  // this is injected into the webpage, therefore is utilizing the webpage's DOM, not the extension's.
-
-  // regular expressions to match the start and end times and the start and end dates.
-  const extractTimeRegex =
-    /\d{2}:\d{2}\s{2}(?:AM|PM)\s*-\s*\d{2}:\d{2}\s{2}(?:AM|PM)/;
-  const dateRegex = /(0?[1-9]|1[0-2])\/(0?[1-9]|[12]\d|3[01])\/\d{4}/g;
-
-  const classes = Array.from(document.querySelectorAll(".listViewWrapper")); // i despise the ElementList type, so im converting it to Array
-  const Schedule = [];
-  for (const _class of classes) {
-    const index = classes.indexOf(_class); // allows us to easily access course info
-
-    // course info
-    const courseInfo = document.querySelectorAll(".list-view-course-info-div")[
-      index
-    ].textContent; // example: 'Differential Calculus | Mathematics 1551 Section L01 | Class Begin: 08/18/2025 | Class End: 12/11/2025'
-
-    const meetingInformation = document.querySelectorAll(
-      ".listViewMeetingInformation"
-    )[index].textContent; // example: '08/18/2025 -- 12/11/2025   FridaySMTWTFS   03:30  PM - 04:20  PM Type: Class Location: Georgia Tech-Atlanta * Building: Skiles Room: 254'
-
-    const [courseTitle, courseDesc, classBegin, classEnd] =
-      courseInfo.split(" | ");
-
-    // day and time
-    const day = document.querySelectorAll(".ui-pillbox-summary.screen-reader")[
-      index
-    ].textContent; // example: "Friday", or "None"
-
-    if (day === "None") continue; // this is usually only the case for online ASYNCHRONOUS classes.
-
-    const time = meetingInformation.match(extractTimeRegex)[0];
-
-    const [startTime, endTime] = time.split(" - ");
-
-    // location
-    const buildingStringIndex = meetingInformation.indexOf("Building");
-    const buildingAndRoom = meetingInformation.substring(buildingStringIndex);
-    const buildingName = buildingAndRoom
-      .substring(0, buildingAndRoom.indexOf("Room"))
-      .replace("Building: ", "")
-      .trim();
-    const roomNumber = buildingAndRoom
-      .substring(buildingAndRoom.indexOf("Room"))
-      .replace("Room: ", "")
-      .trim();
-
-    // push to schedule array
-    Schedule.push({
-      courseTitle,
-      day,
-      time,
-      startDate: classBegin.match(dateRegex).join(),
-      endDate: classEnd.match(dateRegex).join(),
-      startTime,
-      endTime,
-      buildingName,
-      roomNumber,
-    });
-    console.log("HERE IS SCHEDULE");
-    console.log(Schedule);
-  }
-  chrome.runtime.sendMessage(Schedule);
-}
-
-async function createDownload(content, filename = "schedule.ics") {
+// creates a download
+async function createDownload(content, filename = "schedule") {
   // self explanatory
   const blob = new Blob([content], { type: "text/calendar;charset=utf8" });
   const url = URL.createObjectURL(blob);
+  message.innerHTML = `<span> Your download is ready: </span> <span> <a href=${url} download="${filename}.ics">Download Schedule</a>.<br>You may now use the file to import your courses to your calendar.</span>`;
+  message.classList.add("show", "success");
+
   return url;
 }
+
 // delay function, utilizing Promises
 async function wait(time) {
   return new Promise((res, rej) => {
     setTimeout(res, time);
   });
 }
-// checks for classes
-async function checkForClasses() {
-  // utilizes chrome's messaging system
 
-  // if no classes are seen
-  if (document.querySelectorAll(".listViewWrapper").length === 0) {
-    chrome.runtime.sendMessage("noClass");
-  }
-  // if the website is technically correct but not in the right section
-  if (
-    document.querySelector("h1")?.textContent !==
-    "View Registration Information"
-  ) {
-    chrome.runtime.sendMessage("differentSection");
-  }
-}
+// MAIN CODE
 
-// Main Code
 const button = document.querySelector("button"); // fetches the convert button, as it comes first and we are not using .querySelectorAll()
-const message = document.querySelector(".message");
+const message = document.querySelector(".message"); // fetches the status message
 
 let schedule; // this is set by fetchSchedule()
 
 getCurrentTab().then((tab) => {
   const currentUrl = new URL(tab.url);
-  const hostName = currentUrl.hostname;
-  const targetHostName = "registration.banner.gatech.edu";
-  if (hostName !== targetHostName) {
-    button.toggleAttribute("disabled", true);
-    message.classList.add("error", "show");
-    // the error message is pre set upon the extension loading up (check HTML), hence no reason to set .textContent to anything
+  const path = currentUrl.pathname;
+  const broaderPath = "/StudentRegistrationSsb/ssb/"; // used to direct the user to the path below
+  const targetPath =
+    "/StudentRegistrationSsb/ssb/registrationHistory/registrationHistory"; // this is banner's View Registration Information page, regardless of host name
+  if (path !== targetPath) {
+    if (!path.includes(broaderPath)) {
+      button.toggleAttribute("disabled", true);
+      // the error message is pre set upon the extension loading up (check HTML), hence no reason to set .textContent to anything
+      message.classList.add("error", "show");
+    } else {
+      button.toggleAttribute("disabled", true);
+      message.textContent =
+        "You seem to be on the correct website. Please return to the registration page and click 'View Registration System' to continue.";
+      message.classList.add("alert", "show");
+    }
+
     return;
   }
   // injects function checkForClasses into the webpage
   chrome.scripting.executeScript({
-    func: checkForClasses,
+    files: ["injected_scripts/checkForClasses.js"],
     target: { tabId: tab.id },
   });
 });
@@ -208,13 +171,24 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     button.toggleAttribute("disabled", true);
     return;
   }
-  // triggered by function checkForClasses
-  if (msg === "differentSection") {
-    message.innerHTML = `While the website is correct, this extension works best on the <strong>View Registration Information</strong> page`;
-    message.classList.add("show", "alert");
-    button.disabled = true;
+
+  if (typeof msg === "object") {
+    if (Object.keys(msg).includes("stack")) {
+      const text = `Type: ${msg.type}\n\n\n${msg.message}\n\nFile Name: ${msg.fileName}\nLine Number: ${msg.lineNumber}\nColumn Number: ${msg.colNumber}\n\n${msg.stack}`;
+      const blob = new Blob([text], {
+        type: "text/plain",
+      });
+      button.toggleAttribute("disabled", true);
+      button.textContent = "Error";
+
+      const url = URL.createObjectURL(blob);
+      message.innerHTML = `Uh oh! Looks like an error has occurred. I do apologize for this.<br><br>Below is a log file that has been generated for you to download. If you would like to report this error (highly recommended), please do so in the feedback form (Click 'Give feedback' to access). This would massively help the developer improve the extension to ensure it works for everyone, assuming you're using Banner.<br><br><a href=${url} download="conversionError.txt">Download Error Log</a`;
+      message.classList.add("error", "show");
+    }
     return;
   }
+
+  console.log(msg);
 
   // otherwise, message triggered by function fetchSchedule, which means we are receiving the schedule.
   schedule = msg;
@@ -226,21 +200,20 @@ button.addEventListener("click", async () => {
   button.toggleAttribute("disabled", true);
 
   const tab = await getCurrentTab();
-  console.log(tab.id);
 
   // injects function fetchSchedule into webpage
   chrome.scripting.executeScript({
-    func: fetchSchedule,
+    files: ["injected_scripts/fetchSchedule.js"],
     target: { tabId: tab.id },
   });
 
   await wait(1000 * 2); // waits 2 seconds, gives extension time to parse schedule
-  const events = [];
+  const events = []; // contains all events (courses) for .ics file creation
 
   for (const course of schedule) {
     const {
       courseTitle,
-      day,
+      days,
       time,
       startDate,
       endDate,
@@ -248,48 +221,47 @@ button.addEventListener("click", async () => {
       endTime,
       buildingName,
       roomNumber,
+      section,
     } = course;
 
     const event = buildICSEvent(
       courseTitle,
       buildingName,
       roomNumber,
-      day,
+      days,
       startDate,
       endDate,
       startTime,
-      endTime
+      endTime,
+      section
     );
     events.push(event);
   }
-
+  // use events to build .ics file
   const icsText = buildICSFile(events);
-
-  const url = await createDownload(icsText);
   // creates "a" tag that links to the download
-  message.innerHTML = `<span> Your download is ready: </span> <span> <a href=${url} download="schedule.ics">Download Schedule</a>.<br>You may now use the file to import your courses to your calendar.</span>`;
-  message.classList.add("show", "success");
+  await createDownload(icsText, input.value || "schedule");
+
   button.textContent = "Conversion Completed";
 });
 
 // formats date and time to YYYYMMDDTHHmmss format
-// assumes dateStr argument follows this format: DD/MM/YYYY
+// assumes dateStr argument follows this format: MM/DD/YYYY
 function formatDate(dateStr, timeStr) {
   const [month, day, year] = dateStr.split("/");
+
   // turn time to 24h time
   const [time, AMPM] = timeStr.split("  ");
   let [hour, minute] = time.split(":");
 
   if (AMPM === "PM" && hour !== "12") {
-    hour = parseInt(hour) + 12; // add 12 to hour to convert to 24 hr time;  6 pm + 12 = 18:00
+    hour = parseInt(hour) + 12; // add 12 to hour to convert to 24 hr time; example: 6 pm + 12 = 18:00
   }
   return `${year}${month}${day}T${hour}${minute}00`;
 }
 
 // formats days to .ics format. Wednesdays -> WE, Fridays -> FR
 function formatDays(days) {
-  // Thursdays,Fridays
-
   const split = days.split(",");
   for (let i = 0; i < split.length; i++) {
     const day = split[i];

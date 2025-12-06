@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Schedule to Calendar GT Converter",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Converts schedule on OSCAR to .ics file, allowing users to directly add classes on their device calendar",
   "author": "Sir Jal",
   "action": {
@@ -9,7 +9,7 @@
     "default_title": "Schedule to Calendar Converter"
   },
   "permissions": ["scripting", "activeTab", "downloads"],
-  "host_permissions": ["https://registration.banner.gatech.edu/*"],
+  "host_permissions": [],
   "icons": {
     "128": "images/extension logo.png"
   }

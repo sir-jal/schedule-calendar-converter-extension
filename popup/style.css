@@ -8,12 +8,45 @@ body {
 
 h1,
 h2,
+h3,
 .message {
   text-align: center;
 }
 
 h2 {
   font-size: 16px;
+}
+
+hr {
+  color: black;
+  border: black solid 0.1px;
+}
+
+.inputcontainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.version {
+  display: block;
+  text-align: center;
+  font-size: 14px;
+}
+.input {
+  padding: 5px;
+}
+
+.ics {
+  font-size: 20px;
+}
+
+#fileName {
+  border: black solid 2px;
+  border-radius: 6px;
+  padding: 5px;
+  width: 200px;
+  text-align: center;
 }
 
 .message {
@@ -31,7 +64,7 @@ h2 {
 }
 
 .message.error {
-  color: rgb(255, 0, 47);
+  color: rgb(78, 0, 14);
   border-left: solid rgb(255, 0, 0) 4px;
   background-color: rgb(255, 164, 79);
 }
