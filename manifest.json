@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Schedule to Calendar GT Converter",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Converts schedule on OSCAR to .ics file, allowing users to directly add classes on their device calendar",
   "author": "Sir Jal",
   "action": {

@@ -22,16 +22,15 @@
     chrome.runtime.sendMessage({
       type: "inject-error",
       message: e.message,
-      fileName: e.filename,
-      lineNumber: e.lineno,
-      colNumber: e.colno,
-      stack: e.error?.stack,
+      filename: e.filename,
+      lineno: e.lineno,
+      colno: e.colno,
+      error: { stack: e.error?.stack },
     });
     window.removeEventListener("error", reportError);
   }
 
   window.addEventListener("error", reportError);
-  console.log(Schedule.booty.error);
   const classes = Array.from(document.querySelectorAll(".listViewWrapper")); // i despise the ElementList type, so im converting it to Array
   const Schedule = [];
   console.log("hi");
@@ -149,6 +148,6 @@
   console.log("loop end");
   // this allow the chrome extension to receive the Schedule. keep in mind that this function is being injected into the webpage
   // and is not being ran in respect to the chrome extension.
-
+  console.log(Schedule);
   chrome.runtime.sendMessage(Schedule);
 })();

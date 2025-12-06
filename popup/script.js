@@ -2,6 +2,7 @@ const input = document.querySelector("#fileName");
 const version = document.querySelector(".version");
 const docLink =
   "https://docs.google.com/document/d/1f6nR1gs8f4Ddj9vVLVmsOS5gwGHIQla28Q6va0HvfN0/edit?usp=sharing";
+const errorLog = [];
 
 // DISPLAY VERSION AND CHANGELOG
 
@@ -13,15 +14,35 @@ fetch("../manifest.json")
     version.innerHTML = `Version ${e.version}. Click <a href="${docLink}" target="_blank">here</a> to view changelog.`;
   });
 
-window.addEventListener("error", (e) => {
-  chrome.runtime.sendMessage({
-    type: "extension-error",
-    message: e.message,
-    fileName: e.filename,
-    lineNumber: e.lineno,
-    colNumber: e.colno,
-    stack: e.error?.stack,
+function handleError(e, type, extensionError = true) {
+  let text;
+  const errorType = extensionError ? "extension-error" : "injection-error";
+
+  if (type === "error") {
+    text = `Type: ${errorType}\n\n\n${e.message}\n\nFile Name: ${e.filename}\nLine Number: ${e.lineno}\nColumn Number: ${e.colno}\n\n${e.error?.stack}`;
+  } else {
+    text = `UNHANDLED REJECTION:\n\nType: ${errorType}\n\n${e.reason.stack}`;
+  }
+  errorLog.push(text);
+
+  const blob = new Blob([errorLog.join(`\n\n\n\n${"-".repeat(100)}\n\n\n\n`)], {
+    type: "text/plain",
   });
+
+  const url = URL.createObjectURL(blob);
+
+  button.toggleAttribute("disabled", true);
+  button.textContent = "Error";
+
+  message.classList.add("error", "show");
+  message.innerHTML = `Uh oh! I ran into ${errorLog.length} error(s)! I do apologize for this.<br><br>Below is a log file that has been generated for you to download. If you would like to report this error (highly recommended), please do so in the feedback form (Click 'Give feedback' to access). This would massively help the developer improve the extension to ensure it works for everyone, assuming you're using Banner.<br><br><a href=${url} download="error.txt">Download Error Log</a`;
+}
+
+window.addEventListener("error", (e) => {
+  handleError(e, "error");
+});
+window.addEventListener("unhandledrejection", (e) => {
+  handleError(e, "promise");
 });
 
 // FUNCTIONS
@@ -171,24 +192,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     button.toggleAttribute("disabled", true);
     return;
   }
+  console.log(typeof msg);
 
   if (typeof msg === "object") {
-    if (Object.keys(msg).includes("stack")) {
-      const text = `Type: ${msg.type}\n\n\n${msg.message}\n\nFile Name: ${msg.fileName}\nLine Number: ${msg.lineNumber}\nColumn Number: ${msg.colNumber}\n\n${msg.stack}`;
-      const blob = new Blob([text], {
-        type: "text/plain",
-      });
-      button.toggleAttribute("disabled", true);
-      button.textContent = "Error";
-
-      const url = URL.createObjectURL(blob);
-      message.innerHTML = `Uh oh! Looks like an error has occurred. I do apologize for this.<br><br>Below is a log file that has been generated for you to download. If you would like to report this error (highly recommended), please do so in the feedback form (Click 'Give feedback' to access). This would massively help the developer improve the extension to ensure it works for everyone, assuming you're using Banner.<br><br><a href=${url} download="conversionError.txt">Download Error Log</a`;
-      message.classList.add("error", "show");
+    if (Object.keys(msg).includes("error")) {
+      handleError(msg, "error", false);
+      return;
     }
-    return;
   }
-
-  console.log(msg);
 
   // otherwise, message triggered by function fetchSchedule, which means we are receiving the schedule.
   schedule = msg;
@@ -207,7 +218,7 @@ button.addEventListener("click", async () => {
     target: { tabId: tab.id },
   });
 
-  await wait(1000 * 2); // waits 2 seconds, gives extension time to parse schedule
+  await wait(1000); // 1 second delay
   const events = []; // contains all events (courses) for .ics file creation
 
   for (const course of schedule) {
