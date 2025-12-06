@@ -1,9 +1,9 @@
 * {
-  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
 body {
-  background-color: rgb(255, 221, 0);
+  background-color: rgb(228, 200, 45);
 }
 
 h1,
@@ -70,12 +70,12 @@ hr {
 }
 .message.alert {
   color: rgb(34, 33, 32);
-  border-left: solid rgb(255, 149, 0) 4px;
-  background-color: rgb(255, 184, 84);
+  border-left: solid rgb(151, 88, 0) 4px;
+  background-color: rgb(253, 156, 20);
 }
 .message.success {
   color: rgb(40, 40, 40);
-  border-left: solid rgb(0, 255, 0) 4px;
+  border-left: solid rgb(0, 145, 0) 4px;
   background-color: rgb(147, 255, 148);
 }
 

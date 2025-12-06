@@ -187,7 +187,8 @@ getCurrentTab().then((tab) => {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // triggered by function checkForClasses
   if (msg === "noClass") {
-    message.textContent = 'Please click on "Schedule Details" to continue';
+    message.textContent =
+      'I cannot see your courses! If you\'re on the "View Registration Information" page, click on "Schedule Details".';
     message.classList.add("show", "alert");
     button.toggleAttribute("disabled", true);
     return;

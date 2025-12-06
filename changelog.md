@@ -14,5 +14,6 @@ The official release of the extension.
 - <span style="color:#ff1313"><i>[MAJOR]</i></span> Should work for students who attend other universities that use Banner as their registration system. Please fill out the feedback form if problems occur.
 - <span style="color:#ff1313"><i>[MAJOR]</i></span> Rebranding: The extension is no longer specifically targeted towards Georgia Tech students, therefore warranting a rebrand.
 - <span style="color:#073763"><i>[TECHNICAL]</i></span> Error handling. Users can download error log files to report to the developer.
+- Changed font to improve legibility.
 - Allows users to name the .ics file before converting.
 - Indicates when a course is waitlisted.
