@@ -29,7 +29,6 @@
     });
     window.removeEventListener("error", reportError);
   }
-
   window.addEventListener("error", reportError);
   const classes = Array.from(document.querySelectorAll(".listViewWrapper")); // i despise the ElementList type, so im converting it to Array
   const Schedule = [];
@@ -57,12 +56,11 @@
 
     const startDate = classBegin.match(dateRegex).join();
 
-    const rowEndPoints = findAllIndices(meetingInformation, startDate); // since in meetingInformation, a new row is indicated each time the start date appears, this will tell us at which indices do these rows begin/end.
+    const rowEndPoints = findAllIndices(meetingInformation, startDate); // since in meetingInformation, a new row is indicated each time the start date appears, this will tell us at which indices does each row begin.
     console.log("Endpoints", rowEndPoints);
     for (let i = 0; i < rowEndPoints.length; i++) {
       // this is responsible for slicing the string into different rows.
-      // this will slice the meetingInformation string from index i to index i + 1. if index i + 1 does not exist, we have reached
-      // the last row.
+      // this will slice the meetingInformation string from index i to index i + 1. if index i + 1 does not exist, we have reached the last row.
       rows.push(
         meetingInformation.substring(rowEndPoints[i], rowEndPoints[i + 1])
       );

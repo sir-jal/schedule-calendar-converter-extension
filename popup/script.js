@@ -160,9 +160,11 @@ getCurrentTab().then((tab) => {
   const currentUrl = new URL(tab.url);
   const path = currentUrl.pathname;
   const broaderPath = "/StudentRegistrationSsb/ssb/"; // used to direct the user to the path below
-  const targetPath =
-    "/StudentRegistrationSsb/ssb/registrationHistory/registrationHistory"; // this is banner's View Registration Information page, regardless of host name
-  if (path !== targetPath) {
+  const targetPath = [
+    "/StudentRegistrationSsb/ssb/registrationHistory/registrationHistory",
+    "/StudentRegistrationSsb/ssb/classRegistration/classRegistration",
+  ]; // this is banner's View Registration Information page, regardless of host name
+  if (!targetPath.includes(path)) {
     if (!path.includes(broaderPath)) {
       button.toggleAttribute("disabled", true);
       // the error message is pre set upon the extension loading up (check HTML), hence no reason to set .textContent to anything
@@ -170,7 +172,7 @@ getCurrentTab().then((tab) => {
     } else {
       button.toggleAttribute("disabled", true);
       message.textContent =
-        "You seem to be on the correct website. Please return to the registration page and click 'View Registration System' to continue.";
+        "You seem to be on the correct website. Please go to a page where you can view your schedule.";
       message.classList.add("alert", "show");
     }
 
@@ -187,8 +189,7 @@ getCurrentTab().then((tab) => {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // triggered by function checkForClasses
   if (msg === "noClass") {
-    message.textContent =
-      'I cannot see your courses! If you\'re on the "View Registration Information" page, click on "Schedule Details".';
+    message.textContent = 'Please click on "Schedule Details".';
     message.classList.add("show", "alert");
     button.toggleAttribute("disabled", true);
     return;
