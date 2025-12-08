@@ -8,7 +8,7 @@ The official release of the extension.
 
 - <span style="color:#fa1afa"><i>[BUG FIX]</i></span> Ignores asynchronous courses during conversion. Otherwise it would cause errors.
 
-# 1.1.0 - Dec 6, 2025
+# 1.1.0 - Dec 8, 2025
 
 - <span style="color:#ff1313"><i>[MAJOR]</i></span> Now works with classes with multiple meeting times and locations.
 - <span style="color:#ff1313"><i>[MAJOR]</i></span> Should work for students who attend other universities that use Banner as their registration system. Please fill out the feedback form if problems occur.
