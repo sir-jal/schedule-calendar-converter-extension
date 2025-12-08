@@ -13,7 +13,12 @@ fetch("../manifest.json")
   .then((e) => {
     version.innerHTML = `Version ${e.version}. Click <a href="${docLink}" target="_blank">here</a> to view changelog.`;
   });
-
+//
+//
+//
+//
+//
+// handles errors
 function handleError(e, type, extensionError = true) {
   let text;
   const errorType = extensionError ? "extension-error" : "injection-error";
@@ -35,7 +40,7 @@ function handleError(e, type, extensionError = true) {
   button.textContent = "Error";
 
   message.classList.add("error", "show");
-  message.innerHTML = `Uh oh! I ran into ${errorLog.length} error(s)! I do apologize for this.<br><br>Below is a log file that has been generated for you to download. If you would like to report this error (highly recommended), please do so in the feedback form (Click 'Give feedback' to access). This would massively help the developer improve the extension to ensure it works for everyone, assuming you're using Banner.<br><br><a href=${url} download="error.txt">Download Error Log</a`;
+  message.innerHTML = `Uh oh! I ran into ${errorLog.length} error(s)! I do apologize for this.<br><br>Below is a log file that has been generated for you to download. If you would like to report this error (highly recommended), please do so in the feedback form (Click 'Give feedback' to access). This would massively help the developer improve the extension to ensure it works for everyone, assuming you're using Banner.<br><br><a href=${url} download="errorlog.txt">Download Error Log</a`;
 }
 
 window.addEventListener("error", (e) => {
