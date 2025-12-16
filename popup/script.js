@@ -10,7 +10,7 @@ const errorLog = [];
 const stepsButton = document.querySelector("#stepsButton");
 const stepsPopup = document.querySelector("#stepsPopup");
 const validateText = document.querySelector("p#validation");
-const updateAfter = 1000 * 60 * 60 * 24 * 7; // 7 days
+const CACHE_MAX_AGE = 1000 * 60 * 60 * 24 * 7; // 7 days
 let step = 1;
 let links = {};
 
@@ -19,13 +19,21 @@ let popupOpen = false;
 // Display version information and update links for school searches (caching)
 
 async function updateCache() {
-  await chrome.storage?.local?.set({
-    info: await getJSON(
-      "https://sir-jal.github.io/schedule-calendar-converter-extension/extension_info.json"
-    ),
-    lastUpdated: Date.now(),
-  });
-  console.log("cache updated");
+  const e = await chrome.storage?.local?.get(["lastUpdated"]);
+  const lastUpdated = new Date(e?.lastUpdated ?? 0).getTime();
+  if (
+    Object.keys(e).length === 0 ||
+    lastUpdated + CACHE_MAX_AGE <= Date.now()
+  ) {
+    await chrome.storage?.local?.set({
+      info: await getJSON(
+        "https://sir-jal.github.io/schedule-calendar-converter-extension/extension_info.json"
+      ),
+      lastUpdated: Date.now(),
+    });
+    console.log("cache updated");
+  }
+  console.log("cache update attempted");
 }
 
 async function getCache() {
@@ -35,24 +43,11 @@ window.onload = async () => {
   const versionJson = await getJSON("../manifest.json");
   version.textContent = versionJson.version;
 
-  let infoJson = await getCache();
-  if (Object.keys(infoJson).length === 0) {
-    await updateCache();
-    infoJson = await getCache();
-  } else {
-    const e = await chrome.storage?.local?.get(["lastUpdated"]);
-    const lastUpdated = new Date(e.lastUpdated).getTime();
-    if (lastUpdated + updateAfter <= Date.now()) {
-      console.log("NEED TO UPDATE CACHE!");
-      await updateCache();
-      infoJson = await getCache();
-    }
-  }
-  console.log(infoJson);
+  await updateCache();
+  const infoJson = await getCache();
   if (infoJson.version !== versionJson.json) {
     version.textContent = versionJson.version + " (UPDATE TO THE LATEST!)";
   }
-
   links =
     infoJson.info?.banner_links ??
     (await getJSON(
