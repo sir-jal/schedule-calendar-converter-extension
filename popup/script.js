@@ -45,9 +45,6 @@ window.onload = async () => {
 
   await updateCache();
   const infoJson = await getCache();
-  if (infoJson.version !== versionJson.json) {
-    version.textContent = versionJson.version + " (UPDATE TO THE LATEST!)";
-  }
   links =
     infoJson.info?.banner_links ??
     (await getJSON(
