@@ -10,7 +10,7 @@ const errorLog = [];
 const stepsButton = document.querySelector("#stepsButton");
 const stepsPopup = document.querySelector("#stepsPopup");
 const validateText = document.querySelector("p#validation");
-const CACHE_MAX_AGE = 1000 * 60 * 60 * 24 * 7; // 7 days
+const CACHE_MAX_AGE = 1000 * 60 * 60 * 24 * 3; // 3 days
 let step = 1;
 let links = {};
 
@@ -18,39 +18,36 @@ let popupOpen = false;
 
 // Display version information and update links for school searches (caching)
 
-async function updateCache() {
-  const e = await chrome.storage?.local?.get(["lastUpdated"]);
-  const lastUpdated = new Date(e?.lastUpdated ?? 0).getTime();
-  if (
-    Object.keys(e).length === 0 ||
-    lastUpdated + CACHE_MAX_AGE <= Date.now()
-  ) {
-    await chrome.storage?.local?.set({
-      info: await getJSON(
-        "https://sir-jal.github.io/schedule-calendar-converter-extension/extension_info.json"
-      ),
-      lastUpdated: Date.now(),
-    });
-    console.log("cache updated");
+window.addEventListener("load", async () => {
+  async function updateCache() {
+    const e = await chrome.storage?.local?.get(["lastUpdated"]);
+    const lastUpdated = new Date(e?.lastUpdated ?? 0).getTime();
+    if (
+      Object.keys(e).length === 0 ||
+      lastUpdated + CACHE_MAX_AGE <= Date.now()
+    ) {
+      await chrome.storage?.local?.set({
+        info: await getJSON(
+          "https://sir-jal.github.io/schedule-calendar-converter-extension/extension_info.json"
+        ),
+        lastUpdated: Date.now(),
+      });
+      console.log("cache updated");
+    }
+    console.log("cache update attempted");
+    return await chrome.storage?.local?.get(["info"]);
   }
-  console.log("cache update attempted");
-}
 
-async function getCache() {
-  return await chrome.storage?.local?.get(["info"]);
-}
-window.onload = async () => {
   const versionJson = await getJSON("../manifest.json");
   version.textContent = versionJson.version;
 
-  await updateCache();
-  const infoJson = await getCache();
+  const infoJson = await updateCache();
   links =
     infoJson.info?.banner_links ??
     (await getJSON(
       "https://sir-jal.github.io/schedule-calendar-converter-extension/extension_info.json"
     ));
-};
+});
 
 // everything related to the steps pop up
 
@@ -196,8 +193,10 @@ function buildICSEvent(
       ? `${buildingName} ${roomNumber}`
       : "No location found";
 
-  const [month, day, year] = endDate.split("/");
-  const [startMonth, startDay, startYear] = startdate.split("/");
+  // const [month, day, year] = endDate.split("/");
+
+  const [endDateObj, startDateObj] = [new Date(endDate), new Date(startdate)];
+  // const [startMonth, startDay, startYear] = startdate.split("/");
 
   let [profLast, profFirst] = prof.split(", ");
   if (profLast === "No professor") {
@@ -205,9 +204,6 @@ function buildICSEvent(
     profLast = "";
   }
 
-  const startDate = new Date(
-    `${startYear}-${startMonth}-${parseInt(startDay) + 1}`
-  );
   // this is used to offset the days from the start date of the class. otherwise, every class will appear on the start date in iCloud maps.
   const indices = {
     SU: 0,
@@ -218,8 +214,8 @@ function buildICSEvent(
     FR: 5,
     SA: 6,
   };
-  const difference = indices[dayFormat.split(",")[0]] - startDate.getDay();
-  startDate.setDate(startDate.getDate() + difference);
+  const difference = indices[dayFormat.split(",")[0]] - startDateObj.getDay();
+  startDateObj.setDate(startDateObj.getDate() + difference);
 
   const today = new Date();
 
@@ -234,20 +230,26 @@ function buildICSEvent(
     `SUMMARY:${waitlisted ? "(WAITLISTED) " : ""}${title}` +
       (includeSection ? `, Section ${section.toUpperCase()}` : ""),
     `DTSTART;TZID=America/New_York:${formatDate(
-      `${(startDate.getMonth() + 1).toString().padStart(2, "0")}/${startDate
+      `${(startDateObj.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}/${startDateObj
         .getDate()
         .toString()
-        .padStart(2, "0")}/${startDate.getFullYear()}`,
+        .padStart(2, "0")}/${startDateObj.getFullYear()}`,
       startTime
     )}`,
     `DTEND;TZID=America/New_York:${formatDate(
-      `${(startDate.getMonth() + 1).toString().padStart(2, "0")}/${startDate
+      `${(startDateObj.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}/${startDateObj
         .getDate()
         .toString()
-        .padStart(2, "0")}/${startDate.getFullYear()}`,
+        .padStart(2, "0")}/${startDateObj.getFullYear()}`,
       endTime
     )}`,
-    `RRULE:FREQ=WEEKLY;BYDAY=${dayFormat};UNTIL=${year}${month}${day}T235959Z`,
+    `RRULE:FREQ=WEEKLY;BYDAY=${dayFormat};UNTIL=${endDateObj.getFullYear()}${
+      endDateObj.getMonth() + 1
+    }${endDateObj.getDate()}T235959Z`,
     `LOCATION:` +
       (includeLocation ? `${location}` : "") +
       (includeLocation && includeProfName ? " | " : "") +
@@ -611,7 +613,7 @@ button.addEventListener("click", async () => {
 
       courseDetails.innerHTML = `${
         waitlisted ? "WAITLISTED" : ""
-      }<div>Professor: ${prof}</div> <div>Days: ${days.replace(
+      }<div>Professor: ${prof}</div> <div>Meeting Dates: ${startDate} - ${endDate}</div> <div>Days: ${days.replace(
         ",",
         ", "
       )}</div> <div>Time: ${startTime} - ${endTime}</div><div>Location: ${

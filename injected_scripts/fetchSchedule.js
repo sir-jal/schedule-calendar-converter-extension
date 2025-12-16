@@ -125,7 +125,6 @@
 
       console.log("checkpoint 1");
       console.log(days);
-      // this is usually only the case for online ASYNCHRONOUS classes.
 
       const [startTime, endTime] = time.split(" - ");
 
