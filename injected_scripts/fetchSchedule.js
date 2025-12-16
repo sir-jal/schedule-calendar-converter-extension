@@ -20,20 +20,21 @@
 
   function reportError(e) {
     chrome.runtime.sendMessage({
-      type: "inject-error",
-      message: e.message,
-      filename: e.filename,
-      lineno: e.lineno,
-      colno: e.colno,
-      error: { stack: e.error?.stack },
+      error: {
+        type: "inject-error",
+        message: e.message,
+        filename: e.filename,
+        lineno: e.lineno,
+        colno: e.colno,
+        error: { stack: e.error?.stack },
+      },
+      HTML: document.body.innerHTML,
     });
     window.removeEventListener("error", reportError);
   }
   window.addEventListener("error", reportError);
   const classes = Array.from(document.querySelectorAll(".listViewWrapper")); // i despise the ElementList type, so im converting it to Array
   const Schedule = [];
-  console.log("hi");
-
   for (const _class of classes) {
     const rows = []; // holds all rows of class times and meetings
     const index = classes.indexOf(_class); // allows us to easily access course info

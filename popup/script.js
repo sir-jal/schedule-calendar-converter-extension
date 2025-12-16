@@ -11,6 +11,8 @@ const stepsButton = document.querySelector("#stepsButton");
 const stepsPopup = document.querySelector("#stepsPopup");
 const validateText = document.querySelector("p#validation");
 const CACHE_MAX_AGE = 1000 * 60 * 60 * 24 * 3; // 3 days
+
+let injection_error = false;
 let step = 1;
 let links = {};
 
@@ -383,7 +385,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
   if (typeof msg === "object") {
     if (Object.keys(msg).includes("error")) {
-      handleError(msg, "error", false);
+      handleError(msg.error, "error", false);
+      injection_error = true;
       return;
     }
   }
@@ -529,6 +532,7 @@ button.addEventListener("click", async () => {
     });
 
     await wait(1000); // 1 second delay
+    if (injection_error) return;
 
     selectionContainer.style.display = "flex";
     const classes = document.querySelector(".classes");
