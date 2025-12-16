@@ -10,17 +10,54 @@ const errorLog = [];
 const stepsButton = document.querySelector("#stepsButton");
 const stepsPopup = document.querySelector("#stepsPopup");
 const validateText = document.querySelector("p#validation");
+const updateAfter = 1000 * 60 * 60 * 24 * 7; // 7 days
 let step = 1;
 let links = {};
 
 let popupOpen = false;
 
-// Display version information and update links for school searches
+// Display version information and update links for school searches (caching)
+
+async function updateCache() {
+  await chrome.storage?.local?.set({
+    info: await getJSON(
+      "https://sir-jal.github.io/schedule-calendar-converter-extension/extension_info.json"
+    ),
+    lastUpdated: Date.now(),
+  });
+  console.log("cache updated");
+}
+
+async function getCache() {
+  return await chrome.storage?.local?.get(["info"]);
+}
 window.onload = async () => {
   const versionJson = await getJSON("../manifest.json");
-  const infoJson = await getJSON("../extension_info.json");
-  links = infoJson.banner_links;
   version.textContent = versionJson.version;
+
+  let infoJson = await getCache();
+  if (Object.keys(infoJson).length === 0) {
+    await updateCache();
+    infoJson = await getCache();
+  } else {
+    const e = await chrome.storage?.local?.get(["lastUpdated"]);
+    const lastUpdated = new Date(e.lastUpdated).getTime();
+    if (lastUpdated + updateAfter <= Date.now()) {
+      console.log("NEED TO UPDATE CACHE!");
+      await updateCache();
+      infoJson = await getCache();
+    }
+  }
+  console.log(infoJson);
+  if (infoJson.version !== versionJson.json) {
+    version.textContent = versionJson.version + " (UPDATE TO THE LATEST!)";
+  }
+
+  links =
+    infoJson.info?.banner_links ??
+    (await getJSON(
+      "https://sir-jal.github.io/schedule-calendar-converter-extension/extension_info.json"
+    ));
 };
 
 // everything related to the steps pop up
