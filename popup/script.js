@@ -1,24 +1,70 @@
-const input = document.querySelector("#fileName");
-const version = document.querySelector(".version");
+const fileName = document.querySelector(".fileName");
+const fileNameInput = document.querySelector("#fileName");
+const version = document.querySelector("#versionNumber");
+const schoolName = document.querySelector("#school-name");
+const schoolSection = document.querySelector(".school-search");
+const settings = {};
 const docLink =
   "https://docs.google.com/document/d/1f6nR1gs8f4Ddj9vVLVmsOS5gwGHIQla28Q6va0HvfN0/edit?usp=sharing";
 const errorLog = [];
+const stepsButton = document.querySelector("#stepsButton");
+const stepsPopup = document.querySelector("#stepsPopup");
+const validateText = document.querySelector("p#validation");
+let step = 1;
+let links = {};
 
-// DISPLAY VERSION AND CHANGELOG
+let popupOpen = false;
 
-fetch("../manifest.json")
-  .then((e) => {
-    return e.json();
-  })
-  .then((e) => {
-    version.innerHTML = `Version ${e.version}. Click <a href="${docLink}" target="_blank">here</a> to view changelog.`;
-  });
+// Display version information and update links for school searches
+window.onload = async () => {
+  const versionJson = await getJSON("../manifest.json");
+  const infoJson = await getJSON("../extension_info.json");
+  links = infoJson.banner_links;
+  version.textContent = versionJson.version;
+};
+
+// everything related to the steps pop up
+
+stepsButton.addEventListener("click", async () => {
+  stepsPopup.showModal();
+  stepsPopup.style.opacity = 1;
+  await wait(500);
+  popupOpen = true;
+});
+
+stepsPopup.style.opacity = 0;
+
+document.onclick = async (e) => {
+  if (popupOpen && e.target.id === "stepsPopup") {
+    popupOpen = false;
+    stepsPopup.style.opacity = 0;
+    await wait(400);
+    stepsPopup.close();
+  }
+};
+changeStep(1);
+
 //
 //
 //
 //
 //
 // handles errors
+
+function changeStep(num) {
+  const steps = document.querySelectorAll(".step");
+  const maxSteps = steps.length;
+  if (maxSteps < num) return;
+  document.querySelector(`#step${step}`).classList.remove("current");
+  step = num;
+
+  for (let i = 1; i < num; i++) {
+    const leStep = document.querySelector(`#step${i}`);
+    leStep.classList.add("past");
+  }
+  document.querySelector(`#step${step}`).classList.add("current");
+}
+
 function handleError(e, type, extensionError = true) {
   let text;
   const errorType = extensionError ? "extension-error" : "injection-error";
@@ -26,8 +72,14 @@ function handleError(e, type, extensionError = true) {
   if (type === "error") {
     text = `Type: ${errorType}\n\n\n${e.message}\n\nFile Name: ${e.filename}\nLine Number: ${e.lineno}\nColumn Number: ${e.colno}\n\n${e.error?.stack}`;
   } else {
+    if (e.reason.stack.toLowerCase().includes("file")) {
+      validateText.textContent =
+        "Invalid file name; please double check and try again";
+      return;
+    }
     text = `UNHANDLED REJECTION:\n\nType: ${errorType}\n\n${e.reason.stack}`;
   }
+
   errorLog.push(text);
 
   const blob = new Blob([errorLog.join(`\n\n\n\n${"-".repeat(100)}\n\n\n\n`)], {
@@ -59,8 +111,31 @@ async function getCurrentTab() {
   return tab;
 }
 
+// get json from .json files
+async function getJSON(fileName) {
+  const request = await fetch(fileName);
+  const json = await request.json();
+  return json;
+}
+
+// search schools
+function getSchools(query) {
+  const schools = [];
+  for (const school in links) {
+    const aliases = links[school].aliases;
+    if (
+      school.toLowerCase().includes(query.toLowerCase()) ||
+      aliases.some((e) => e.toLowerCase().includes(query.toLowerCase()))
+    ) {
+      schools.push(school);
+    }
+  }
+  return schools;
+}
+
 // build an event in ics format
 function buildICSEvent(
+  courseIndex,
   title,
   buildingName,
   roomNumber,
@@ -69,15 +144,37 @@ function buildICSEvent(
   endDate,
   startTime,
   endTime,
-  section
+  section,
+  prof,
+  waitlisted,
+  settings
 ) {
+  // figure out settings
+  const includeProfName = settings[`includeprofessorname`][courseIndex];
+  const includeSection = settings[`includesection`][courseIndex];
+  const includeLocation = settings[`includeclasslocation`][courseIndex];
+
   const uid = crypto.randomUUID();
   console.log("build ics event", title);
   const dayFormat = formatDays(days);
-  const location = `Building: ${buildingName} | Room: ${roomNumber}`;
+  const location =
+    buildingName !== "None" &&
+    roomNumber !== "None" &&
+    buildingName !== "NA" &&
+    roomNumber !== "NA" &&
+    buildingName !== "Online" &&
+    roomNumber !== "Online"
+      ? `${buildingName} ${roomNumber}`
+      : "No location found";
 
   const [month, day, year] = endDate.split("/");
   const [startMonth, startDay, startYear] = startdate.split("/");
+
+  let [profLast, profFirst] = prof.split(", ");
+  if (profLast === "No professor") {
+    profFirst = "No professor";
+    profLast = "";
+  }
 
   const startDate = new Date(
     `${startYear}-${startMonth}-${parseInt(startDay) + 1}`
@@ -105,7 +202,8 @@ function buildICSEvent(
     `BEGIN:VEVENT`,
     `UID:${uid}`,
     `DTSTAMP:${today.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z"}`,
-    `SUMMARY:${title}, Section ${section.toUpperCase()}`,
+    `SUMMARY:${waitlisted ? "(WAITLISTED) " : ""}${title}` +
+      (includeSection ? `, Section ${section.toUpperCase()}` : ""),
     `DTSTART;TZID=America/New_York:${formatDate(
       `${(startDate.getMonth() + 1).toString().padStart(2, "0")}/${startDate
         .getDate()
@@ -121,7 +219,10 @@ function buildICSEvent(
       endTime
     )}`,
     `RRULE:FREQ=WEEKLY;BYDAY=${dayFormat};UNTIL=${year}${month}${day}T235959Z`,
-    `LOCATION:${location}`,
+    `LOCATION:` +
+      (includeLocation ? `${location}` : "") +
+      (includeLocation && includeProfName ? " | " : "") +
+      (includeProfName ? `${profFirst} ${profLast}` : ""),
     `END:VEVENT`,
   ];
   return lines.join("\r\n");
@@ -137,14 +238,35 @@ function buildICSFile(events) {
 }
 
 // creates a download
-async function createDownload(content, filename = "schedule") {
+function createDownload(content) {
   // self explanatory
   const blob = new Blob([content], { type: "text/calendar;charset=utf8" });
   const url = URL.createObjectURL(blob);
-  message.innerHTML = `<span> Your download is ready: </span> <span> <a href=${url} download="${filename}.ics">Download Schedule</a>.<br>You may now use the file to import your courses to your calendar.</span>`;
-  message.classList.add("show", "success");
+  console.log(url);
 
   return url;
+}
+
+// validates the file name as an error can occur otherwise
+function nameValidation(name) {
+  const nonoChars = `< > : " / \\ | ? *`.split(" ");
+  const nonoStart = ".".split(" ");
+
+  const hasNonoChars = nonoChars.some((e) => name.includes(e));
+  const startsWithNoNo = nonoStart.some((e) => name.trim().startsWith(e));
+  console.log(nonoChars, name.split(""));
+
+  if (hasNonoChars)
+    return [
+      false,
+      `Cannot have the following characters in File Name: ${nonoChars.join(
+        ", "
+      )}`,
+    ];
+  if (name.trim().startsWith("."))
+    return [false, "Cannot start File Name with a period"];
+
+  return [true, "Yes"];
 }
 
 // delay function, utilizing Promises
@@ -156,7 +278,7 @@ async function wait(time) {
 
 // MAIN CODE
 
-const button = document.querySelector("button"); // fetches the convert button, as it comes first and we are not using .querySelectorAll()
+const button = document.querySelector("#importSchedule"); // fetches the convert button, as it comes first and we are not using .querySelectorAll()
 const message = document.querySelector(".message"); // fetches the status message
 
 let schedule; // this is set by fetchSchedule()
@@ -172,8 +294,31 @@ getCurrentTab().then((tab) => {
   if (!targetPath.includes(path)) {
     if (!path.includes(broaderPath)) {
       button.toggleAttribute("disabled", true);
-      // the error message is pre set upon the extension loading up (check HTML), hence no reason to set .textContent to anything
+      button.style.display = "none";
       message.classList.add("error", "show");
+      schoolSection.style.display = "flex";
+
+      schoolName.onblur = () => {
+        const results = document.querySelector(".search-results");
+        results.replaceChildren();
+
+        let schoolInput = schoolName.value.trim();
+        if (!schoolInput) {
+          return;
+        }
+        const schools = getSchools(schoolInput);
+        if (schools.length === 0) {
+          let div = document.createElement("div");
+          div.textContent = `No results for ${schoolInput}. If you feel your school is missing, fill out the feedback form that is linked at the bottom of this page. In the meantime, go to your school's Banner registration page. If your school does not use Banner, this extension may not work for you.`;
+          results.append(div);
+        }
+
+        for (const school of schools) {
+          let div = document.createElement("div");
+          div.innerHTML = `<a href="${links[school].link}" target=_blank>${school}</a>`;
+          results.appendChild(div);
+        }
+      };
     } else {
       button.toggleAttribute("disabled", true);
       message.textContent =
@@ -195,11 +340,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // triggered by function checkForClasses
   if (msg === "noClass") {
     message.textContent = 'Please click on "Schedule Details".';
+    changeStep(2);
     message.classList.add("show", "alert");
     button.toggleAttribute("disabled", true);
     return;
   }
-  console.log(typeof msg);
+
+  if (msg === "greenLight") {
+    changeStep(3);
+  }
 
   if (typeof msg === "object") {
     if (Object.keys(msg).includes("error")) {
@@ -209,58 +358,322 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
 
   // otherwise, message triggered by function fetchSchedule, which means we are receiving the schedule.
+
   schedule = msg;
 });
-
-// event listener for convert button
-button.addEventListener("click", async () => {
-  button.textContent = "Converting schedule...";
-  button.toggleAttribute("disabled", true);
-
-  const tab = await getCurrentTab();
-
-  // injects function fetchSchedule into webpage
-  chrome.scripting.executeScript({
-    files: ["injected_scripts/fetchSchedule.js"],
-    target: { tabId: tab.id },
-  });
-
-  await wait(1000); // 1 second delay
-  const events = []; // contains all events (courses) for .ics file creation
-
-  for (const course of schedule) {
-    const {
-      courseTitle,
-      days,
-      time,
-      startDate,
-      endDate,
-      startTime,
-      endTime,
-      buildingName,
-      roomNumber,
-      section,
-    } = course;
-
-    const event = buildICSEvent(
-      courseTitle,
-      buildingName,
-      roomNumber,
-      days,
-      startDate,
-      endDate,
-      startTime,
-      endTime,
-      section
-    );
-    events.push(event);
+//
+///
+///
+//
+//
+//
+//
+// this is used to detect when checkboxes are checked/unchecked.
+// this will update the settings object which will later be used when downloading the .ics file
+document.addEventListener("change", (event) => {
+  console.log(event.target.tagName, event.target.getAttribute("type"));
+  if (
+    event.target.tagName === "INPUT" &&
+    event.target.getAttribute("type") === "checkbox"
+  ) {
+    const id = event.target.id;
+    if (id.includes("waitlisted")) {
+      settings[id] = event.target.checked;
+      return;
+    }
+    const index = parseInt(id[id.length - 1]);
+    settings[id.substring(0, id.length - 1)][index] = event.target.checked;
+    console.log(settings);
   }
-  // use events to build .ics file
-  const icsText = buildICSFile(events);
-  // creates "a" tag that links to the download
-  await createDownload(icsText, input.value || "schedule");
+});
+///
+///
+///
+///
+///
+// event listener for button
+let validating = false;
+button.addEventListener("click", async () => {
+  // this only runs when the button is clicked after the classes are imported
+  if (button.classList.contains("export")) {
+    // await wait(500);
+    // if (validating) return;
+    const filtered = schedule.filter((e, i) => {
+      return (
+        settings[`includecourse`][i] &&
+        (e.waitlisted ? settings["includewaitlisted"] : true)
+      );
+    });
+    const events = [];
+    console.log(filtered);
+    for (const course of filtered) {
+      const {
+        courseTitle,
+        days,
+        time,
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        buildingName,
+        roomNumber,
+        section,
+        prof,
+        waitlisted,
+      } = course;
+      events.push(
+        buildICSEvent(
+          schedule.indexOf(course),
+          courseTitle,
+          buildingName,
+          roomNumber,
+          days,
+          startDate,
+          endDate,
+          startTime,
+          endTime,
+          section,
+          prof,
+          waitlisted,
+          settings
+        )
+      );
+    }
 
-  button.textContent = "Conversion Completed";
+    console.log(events);
+    const file = buildICSFile(events);
+
+    console.log(file);
+
+    const valid = nameValidation(fileNameInput.value.trim());
+    const noClassesSelected = settings["includecourse"].every((e) => !e);
+
+    if (noClassesSelected)
+      return (validateText.textContent =
+        "At least one class needs to be selected to export");
+    if (!valid[0]) return (validateText.textContent = valid[1]);
+
+    validateText.textContent = "";
+    chrome.downloads.download({
+      url: createDownload(file),
+      filename: `${fileNameInput.value.trim() || "schedule"}.ics`,
+      saveAs: false,
+    });
+  } else {
+    const selectionContainer = document.querySelector("#selectionContainer");
+    const selectAll = document.querySelector("#selectAll");
+    const deselectAll = document.querySelector("#deselectAll");
+
+    selectAll.onclick = () => {
+      const selectBox = document.querySelector("#optionSelect");
+      const value = selectBox.value;
+
+      settings[value].fill(true, 0);
+      for (let i = 0; i < schedule.length; i++) {
+        document.querySelector(`#${value}${i}`).checked = true;
+      }
+    };
+
+    deselectAll.onclick = () => {
+      const selectBox = document.querySelector("#optionSelect");
+      const value = selectBox.value;
+
+      settings[value].fill(false, 0);
+      for (let i = 0; i < schedule.length; i++) {
+        document.querySelector(`#${value}${i}`).checked = false;
+      }
+    };
+
+    // import classes into extension
+    changeStep(4);
+    button.textContent = "Importing classes...";
+    button.toggleAttribute("disabled", true);
+
+    const tab = await getCurrentTab();
+
+    // injects function fetchSchedule into webpage
+    chrome.scripting.executeScript({
+      files: ["injected_scripts/fetchSchedule.js"],
+      target: { tabId: tab.id },
+    });
+
+    await wait(1000); // 1 second delay
+
+    selectionContainer.style.display = "flex";
+    const classes = document.querySelector(".classes");
+    classes.style.display = "flex";
+
+    const waitlistedLabel = document.createElement("label");
+    const waitlistedCheckbox = document.createElement("input");
+    const waitlistedContainer = document.createElement("div");
+
+    waitlistedCheckbox.type = "checkbox";
+    waitlistedCheckbox.checked = true;
+    waitlistedCheckbox.id = "includewaitlisted";
+
+    waitlistedContainer.id = "waitlistedContainer";
+
+    waitlistedLabel.textContent = "Include waitlisted courses";
+    waitlistedLabel.setAttribute("for", "includewaitlisted");
+
+    waitlistedContainer.classList.add("waitlistedContainer");
+    waitlistedContainer.append(waitlistedCheckbox, waitlistedLabel);
+
+    const courseOptions = [
+      "Include professor name",
+      "Include section",
+      "Include class location",
+    ]; // options per class
+
+    courseOptions.forEach(
+      (e) => (settings[e.trim().replaceAll(" ", "").toLowerCase()] = [])
+    );
+    const id = "includecourse";
+    settings[id] = [];
+    for (const course of schedule) {
+      //
+      //
+      const {
+        courseTitle,
+        days,
+        time,
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        buildingName,
+        roomNumber,
+        section,
+        prof,
+        waitlisted,
+      } = course;
+
+      const index = schedule.indexOf(course);
+
+      const clas = document.createElement("details");
+      const summary = document.createElement("summary");
+      const span = document.createElement("span");
+      const checkbox = document.createElement("input");
+      const options = document.createElement("div");
+      const courseDetails = document.createElement("div");
+      const br = document.createElement("br");
+
+      checkbox.type = "checkbox";
+      checkbox.checked = true;
+      checkbox.id = id + index;
+
+      span.textContent = `${courseTitle} Section ${section.toUpperCase()}`;
+
+      settings[id].push(checkbox.checked);
+
+      clas.classList.add("class");
+      options.classList.add("options");
+      courseDetails.classList.add("classDetails");
+
+      const hasLocation =
+        buildingName !== "None" &&
+        roomNumber !== "None" &&
+        buildingName !== "NA" &&
+        roomNumber !== "NA" &&
+        buildingName !== "Online" &&
+        roomNumber !== "Online";
+
+      summary.append(span, checkbox);
+
+      courseDetails.innerHTML = `${
+        waitlisted ? "WAITLISTED" : ""
+      }<div>Professor: ${prof}</div> <div>Days: ${days.replace(
+        ",",
+        ", "
+      )}</div> <div>Time: ${startTime} - ${endTime}</div><div>Location: ${
+        hasLocation
+          ? `${buildingName} ${roomNumber}`
+          : "No location found; likely online"
+      }</div>`;
+
+      // load in per-class options
+      for (const option of courseOptions) {
+        const id = option.trim().replaceAll(" ", "").toLowerCase();
+
+        const element = document.createElement("div");
+        element.classList.add("option");
+
+        const label = document.createElement("label");
+        const checkbox = document.createElement("input");
+
+        checkbox.type = "checkbox";
+        checkbox.checked = true;
+        if (
+          (option.includes("location") && !hasLocation) ||
+          (option.includes("professor") && prof === "No professor")
+        )
+          checkbox.checked = false;
+
+        checkbox.name = id + index;
+        checkbox.id = id + index;
+
+        label.setAttribute("for", id + index);
+        label.textContent = option;
+
+        element.append(checkbox, label);
+        options.append(element);
+
+        settings[id].push(checkbox.checked);
+      }
+
+      clas.append(summary, br, courseDetails, options);
+      classes.append(clas);
+    }
+    classes.append(waitlistedContainer);
+    settings[waitlistedCheckbox.id] = waitlistedCheckbox.checked;
+
+    message.classList.add("success", "show");
+
+    fileName.style.display = "flex";
+
+    message.textContent =
+      "Classes successfully loaded. You may now customize your .ics file. You may chose to exclude certain classes or exclude certain parts of a class using the checkboxes.";
+
+    button.textContent = "Export .ICS File";
+    button.classList.add("export");
+    button.toggleAttribute("disabled", false);
+
+    // const events = []; // contains all events (courses) for .ics file creation
+
+    // for (const course of schedule) {
+    //   const {
+    //     courseTitle,
+    //     days,
+    //     time,
+    //     startDate,
+    //     endDate,
+    //     startTime,
+    //     endTime,
+    //     buildingName,
+    //     roomNumber,
+    //     section,
+    //   } = course;
+
+    //   const event = buildICSEvent(
+    //     courseTitle,
+    //     buildingName,
+    //     roomNumber,
+    //     days,
+    //     startDate,
+    //     endDate,
+    //     startTime,
+    //     endTime,
+    //     section
+    //   );
+    //   events.push(event);
+    // }
+    // // use events to build .ics file
+    // const icsText = buildICSFile(events);
+    // // creates "a" tag that links to the download
+    // await createDownload(icsText, input.value || "schedule");
+
+    // button.textContent = "Conversion Completed";
+  }
 });
 
 // formats date and time to YYYYMMDDTHHmmss format

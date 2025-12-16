@@ -85,7 +85,21 @@
       .substring(courseSection.indexOf("section"))
       .replace("section ", "")
       .trim();
+    const professorInformation = document.querySelectorAll(
+      ".listViewInstructorInformation"
+    )[index]?.textContent;
 
+    let prof;
+    const indexPrimary = professorInformation.indexOf("(Primary)");
+    if (indexPrimary === -1) {
+      prof = "No professor";
+    } else {
+      prof = professorInformation
+        .substring(0, indexPrimary)
+        .replace("Instructor: ", "")
+        .trim();
+    }
+    console.log(prof);
     console.log(section);
     // console.log(`Course: ${courseTitle} Section: ${section.toUpperCase()}`);
 
@@ -129,7 +143,7 @@
         .trim();
       console.log("checkpoint 2");
       Schedule.push({
-        courseTitle: `${isWaitlisted ? "(WAITLISTED) " : ""}` + courseTitle,
+        courseTitle,
         days,
         time,
         startDate: classBegin.match(dateRegex).join(),
@@ -139,6 +153,8 @@
         buildingName,
         roomNumber,
         section,
+        prof,
+        waitlisted: isWaitlisted,
       });
       console.log("final checkpoint");
     }

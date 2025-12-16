@@ -9,52 +9,115 @@
     <script src="./script.js" defer></script>
   </head>
   <body>
-    <h1>Schedule to Calendar Converter</h1>
-    <p class="version"></p>
-    <div class="imagecontainer">
-      <img
-        id="gatechlogo"
-        src="../images/calendar-days-svgrepo-com.svg"
-        alt="georgia tech logo"
-      />
-      <img
-        id="rightarrow"
-        src="../images/right-arrow-svgrepo-com.svg"
-        alt="arrow pointing right"
-      />
-      <img
-        id="calendar"
-        src="../images/ics file logo.png"
-        alt="calendar graphic"
-      />
+    <div class="header">
+      <h1>Schedule to Calendar Converter</h1>
+      <p class="version">
+        Version <span id="versionNumber"></span>. Click
+        <a
+          href="https://docs.google.com/document/d/1f6nR1gs8f4Ddj9vVLVmsOS5gwGHIQla28Q6va0HvfN0/edit?usp=sharing"
+          target="_blank"
+          >here</a
+        >
+        to view changelog.
+      </p>
+      <div class="imagecontainer">
+        <img
+          id="gatechlogo"
+          src="../images/calendar-days-svgrepo-com.svg"
+          alt="georgia tech logo"
+        />
+        <img
+          id="rightarrow"
+          src="../images/right-arrow-svgrepo-com.svg"
+          alt="arrow pointing right"
+        />
+        <img
+          id="calendar"
+          src="../images/ics file logo.png"
+          alt="calendar graphic"
+        />
+      </div>
+      <h2>by Sir Jal.</h2>
+      <hr />
     </div>
-    <h2>by Sir Jal.</h2>
-    <hr />
 
-    <div class="inputcontainer">
-      <div class="textinput">
-        <h3>File name</h3>
-        <div class="input">
-          <input
-            type="text"
-            name="fileName"
-            id="fileName"
-            placeholder="schedule"
-            value="schedule"
-          />
-          <span class="ics">.ics</span>
-        </div>
+    <div class="main">
+      <div class="message">
+        This extension will not work on the website you are on. This extension
+        only works with universities who use <b><u>Banner</u></b> as their
+        registration system. Use the textbox below to search for your school's
+        link.
+      </div>
+
+      <div class="classes"></div>
+      <div id="selectionContainer">
+        <button id="selectAll">Select All</button>
+        <button id="deselectAll">Deselect All</button>
+        <select name="optionSelect" id="optionSelect">
+          <option value="includecourse">Courses</option>
+          <option value="includeprofessorname">Professor name</option>
+          <option value="includesection">Section</option>
+          <option value="includeclasslocation">Class location</option>
+        </select>
+      </div>
+
+      <div class="fileName">
+        <h3>File Name</h3>
+        <input
+          type="text"
+          name="fileName"
+          id="fileName"
+          placeholder="schedule"
+          maxlength="355"
+        />
+      </div>
+      <p id="validation"></p>
+
+      <div class="buttoncontainer">
+        <button id="importSchedule">Import Schedule</button>
+      </div>
+
+      <div class="school-search">
+        <h3>School Name</h3>
+        <input type="text" name="school-name" id="school-name" />
+        <div class="search-results"></div>
       </div>
     </div>
-    <div class="buttoncontainer">
-      <button>Convert schedule</button>
-      <a href="https://forms.gle/FV54aHLFmzFs9Dqm6" target="_blank"
-        ><button>Give feedback</button></a
-      >
-    </div>
+    <dialog id="stepsPopup">
+      <h1>How to use this extension</h1>
+      <h3>Click out to close</h3>
+      <ol id="steps">
+        <li class="step" id="step1">Go to school registration page (Banner)</li>
+        <li class="step" id="step2">Click "schedule details"</li>
+        <li class="step" id="step3">Click "import schedule"</li>
+        <li class="step" id="step4">
+          Customize .ics file by using the checkboxes and textbox to name it
+        </li>
+        <ul>
+          <li>Unchecking a class excludes the class from the .ics file.</li>
+          <li>Each class has its own options.</li>
+          <li>
+            Unchecking "include waitlisted courses" will exclude all waitlisted
+            courses, regardless of if the course is checked.
+          </li>
+          <li>
+            Some options may overlap each other. For example, say there are 2
+            options: "include professor name" and "put professor name in title".
+            If the former is disabled, the latter will not apply.
+          </li>
+        </ul>
+        <li class="step" id="step5">Export & Download .ics file</li>
+      </ol>
+    </dialog>
 
-    <div class="message">
-      This extension will not work on the website you are on. This extension only works with universities who use <b><u>Banner</u></b> as their registration system. If you are using or viewing Banner, please click on "View Registration Information" to continue.
+    <div class="footer">
+      <a href="http://forms.gle/FV54aHLFmzFs9Dqm6" id="feedback" target="_blank"
+        >Give feedback</a
+      >
+      <a href="https://www.youtube.com/watch?v=WiqA5XfRaNM" target="_blank"
+        >Watch tutorial</a
+      >
+      <div id="stepsButton" href="">Steps to using extension</div>
     </div>
   </body>
 </html>
