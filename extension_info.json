@@ -1,0 +1,64 @@
+{
+  "banner_links": {
+    "Georgia State University": {
+      "link": "https://registration.gosolar.gsu.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": ["GSU"]
+    },
+    "Georgia Institute of Technology": {
+      "link": "https://registration.banner.gatech.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": ["Georgia Tech", "Gatech", "Yellow Jackets"]
+    },
+    "Kennesaw State University": {
+      "link": "https://srs-owlexpress.kennesaw.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": ["KSU"]
+    },
+    "University of Georgia": {
+      "link": "https://athena-prod.uga.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": ["UGA", "Georgia Bulldogs"]
+    },
+    "University of North Carolina at Charlotte": {
+      "link": "https://selfservice.uncc.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": ["UNCC"]
+    },
+    "Universtiy of West Georgia": {
+      "link": "https://westga.gabest.usg.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": ["UWG"]
+    },
+    "Georgia Gwinnett College": {
+      "link": "https://ggc.gabest.usg.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": ["GGC"]
+    },
+    "University of Illinois": {
+      "link": "https://banner.apps.uillinois.edu/StudentRegistrationSSB/ssb/registration",
+      "aliases": ["UIUC"]
+    },
+    "University of Alabama": {
+      "link": "https://bannerssb-sevl.ua.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": ["UA"]
+    },
+    "University of Saskatchewan": {
+      "link": "https://banner.usask.ca/StudentRegistrationSsb/ssb/registration",
+      "aliases": ["USASK"]
+    },
+    "Lehigh University": {
+      "link": "https://reg-prod.ec.lehigh.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": ["LU"]
+    },
+    "Seton Hall University": {
+      "link": "https://bannerapps.shu.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": ["SHU"]
+    },
+    "Mississippi Delta Community College": {
+      "link": "https://mybanner.msdelta.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": ["MSDELTA"]
+    },
+    "University of Texas at San Antonio": {
+      "link": "https://ssbprod.utsa.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": ["UTSA", "UT San Antonio"]
+    },
+    "Misr University for Science & Technology": {
+      "link": "https://register.must.edu.eg/StudentRegistrationSsb/ssb/registration",
+      "aliases": ["MUST"]
+    }
+  }
+}
