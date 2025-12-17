@@ -249,9 +249,14 @@ function buildICSEvent(
         .padStart(2, "0")}/${startDateObj.getFullYear()}`,
       endTime
     )}`,
-    `RRULE:FREQ=WEEKLY;BYDAY=${dayFormat};UNTIL=${endDateObj.getFullYear()}${
+    `RRULE:FREQ=WEEKLY;BYDAY=${dayFormat};UNTIL=${endDateObj.getFullYear()}${(
       endDateObj.getMonth() + 1
-    }${endDateObj.getDate()}T235959Z`,
+    )
+      .toString()
+      .padStart(2, "0")}${endDateObj
+      .getDate()
+      .toString()
+      .padStart(2, "0")}T235959Z`,
     `LOCATION:` +
       (includeLocation ? `${location}` : "") +
       (includeLocation && includeProfName ? " | " : "") +
