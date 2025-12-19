@@ -10,7 +10,7 @@
     },
     "Kennesaw State University": {
       "link": "https://srs-owlexpress.kennesaw.edu/StudentRegistrationSsb/ssb/registration",
-      "aliases": ["KSU"]
+      "aliases": ["KSU", "Streamer University"]
     },
     "University of Georgia": {
       "link": "https://athena-prod.uga.edu/StudentRegistrationSsb/ssb/registration",
@@ -64,6 +64,5 @@
       "link": "https://www.youtube.com/watch?v=IJmIGC0nwK0",
       "aliases": ["HAH GOT EM", "DN"]
     }
-  },
-  "version": "1.1.2"
+  }
 }

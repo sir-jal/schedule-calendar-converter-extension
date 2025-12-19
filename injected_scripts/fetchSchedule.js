@@ -3,8 +3,6 @@
 
 (() => {
   const timeRegex = /\d{2}:\d{2}\s{2}(?:AM|PM)\s*-\s*\d{2}:\d{2}\s{2}(?:AM|PM)/;
-  const dateRegex = /(0?[1-9]|1[0-2])\/(0?[1-9]|[12]\d|3[01])\/\d{4}/g;
-
   function findAllIndices(str, sub) {
     // find all indices where a substring occurs in a string
     let indices = [];
@@ -35,6 +33,11 @@
   window.addEventListener("error", reportError);
   const classes = Array.from(document.querySelectorAll(".listViewWrapper")); // i despise the ElementList type, so im converting it to Array
   const Schedule = [];
+
+  if (classes.length === 0) {
+    chrome.runtime.sendMessage("SCHEDULE FETCHING ATTEMPTED: NO CLASSES FOUND");
+  }
+
   for (const _class of classes) {
     const rows = []; // holds all rows of class times and meetings
     const index = classes.indexOf(_class); // allows us to easily access course info
@@ -55,7 +58,13 @@
     const [courseTitle, courseDesc, classBegin, classEnd] =
       courseInfo.split(" | ");
 
-    const startDate = classBegin.match(dateRegex).join();
+    const startColonIndex = classBegin.indexOf(":");
+    const startDate = classBegin.substring(startColonIndex + 1).trim();
+
+    const endColonIndex = classEnd.indexOf(":");
+    const endDate = classEnd.substring(endColonIndex + 1).trim();
+
+    console.log("DATES: ", startDate, endDate);
 
     const rowEndPoints = findAllIndices(meetingInformation, startDate); // since in meetingInformation, a new row is indicated each time the start date appears, this will tell us at which indices does each row begin.
     console.log("Endpoints", rowEndPoints);
@@ -86,21 +95,26 @@
       .substring(courseSection.indexOf("section"))
       .replace("section ", "")
       .trim();
+    //
+    //
+    //
     const professorInformation = document.querySelectorAll(
       ".listViewInstructorInformation"
-    )[index]?.textContent;
+    )[index];
+    const parsableProfessors = Array.from(
+      professorInformation.querySelectorAll(".email")
+    );
 
-    let prof;
-    const indexPrimary = professorInformation.indexOf("(Primary)");
-    if (indexPrimary === -1) {
-      prof = "No professor";
+    const prof = [];
+    if (parsableProfessors.length === 0) {
+      prof.push("No professor");
     } else {
-      prof = professorInformation
-        .substring(0, indexPrimary)
-        .replace("Instructor: ", "")
-        .trim();
+      for (const elProf of parsableProfessors) {
+        const [first, last] = elProf.textContent.trim().split(", ").reverse();
+        prof.push(`${first} ${last}`);
+      }
     }
-    console.log(prof);
+    console.log("PROFESSORS", prof);
     console.log(section);
     // console.log(`Course: ${courseTitle} Section: ${section.toUpperCase()}`);
 
@@ -146,8 +160,8 @@
         courseTitle,
         days,
         time,
-        startDate: classBegin.match(dateRegex).join(),
-        endDate: classEnd.match(dateRegex).join(),
+        startDate,
+        endDate,
         startTime,
         endTime,
         buildingName,
