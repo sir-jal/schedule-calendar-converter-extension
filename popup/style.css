@@ -41,6 +41,7 @@ hr {
   text-align: center;
   font-size: 14px;
 }
+
 .input {
   padding: 5px;
 }
@@ -83,6 +84,7 @@ input[type="text"] {
   border-left: solid rgb(255, 0, 0) 4px;
   background-color: rgb(255, 164, 79);
 }
+
 .message.alert {
   color: rgb(34, 33, 32);
   border-left: solid rgb(151, 88, 0) 4px;
@@ -123,9 +125,11 @@ img {
 #fileName {
   width: 300px;
 }
+
 .school-search {
   display: none;
 }
+
 .search-results {
   margin-top: 15px;
   text-align: center;
@@ -136,10 +140,12 @@ img {
   font-weight: bold;
   color: black;
 }
+
 .school-search a:hover {
   font-weight: bold;
   color: rgb(82, 82, 82);
 }
+
 .footer *,
 .footer *:visited {
   color: blue;
@@ -202,9 +208,11 @@ details.class {
   padding: 10px;
   width: 300px;
 }
+
 details div {
   font-size: 14.5px;
 }
+
 details:has(summary:hover) {
   background-color: rgb(236, 236, 236);
   cursor: pointer;
@@ -263,6 +271,7 @@ summary::before {
 #validation {
   text-align: center;
 }
+
 .step.past,
 .step.past li {
   text-decoration: line-through;
@@ -293,4 +302,8 @@ summary::before {
 select {
   border: black solid 2.5px;
   border-radius: 5px;
+}
+
+.classDetails div:not(:nth-child(1)) {
+  margin-top: 10px
 }

@@ -1,14 +1,19 @@
 {
   "manifest_version": 3,
   "name": "Schedule to Calendar Converter",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "Converts schedule on Banner to .ics file, allowing users to directly add classes on their device calendar",
   "author": "Sir Jal",
   "action": {
     "default_popup": "popup/index.html",
     "default_title": "Schedule to Calendar Converter"
   },
-  "permissions": ["scripting", "activeTab", "downloads", "storage"],
+  "permissions": [
+    "scripting",
+    "activeTab",
+    "downloads",
+    "storage"
+  ],
   "host_permissions": [],
   "icons": {
     "128": "images/extension logo.png"

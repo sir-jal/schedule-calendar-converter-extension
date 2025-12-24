@@ -43,7 +43,7 @@
     const index = classes.indexOf(_class); // allows us to easily access course info
     const status = document
       .querySelectorAll(".list-view-status")
-      [index].textContent.trim()
+    [index].textContent.trim()
       .toLowerCase();
     const isWaitlisted = status === "waitlisted";
     // course info
@@ -89,7 +89,7 @@
     // }
     const courseSection = document
       .querySelectorAll(".list-view-subj-course-section")
-      [index].textContent.toLowerCase();
+    [index].textContent.toLowerCase();
     console.log("course section");
     const section = courseSection
       .substring(courseSection.indexOf("section"))

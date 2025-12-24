@@ -12,6 +12,7 @@
   const stepsPopup = document.querySelector("#stepsPopup");
   const validateText = document.querySelector("p#validation");
   const CACHE_MAX_AGE = 1000 * 60 * 60 * 24 * 3; // 3 days
+  const actionHistory = [] // may help with replicating errors and debugging
 
   let injection_error = false;
   let step = 1;
@@ -20,7 +21,7 @@
 
   let popupOpen = false;
   let revertingChanges = false;
-  
+
   chrome.storage.onChanged.addListener(async (changes, namespace) => {
     if (revertingChanges) return;
     for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
@@ -148,7 +149,7 @@
     errorLog.push(text);
 
     const blob = new Blob(
-      [errorLog.join(`\n\n\n\n${"-".repeat(100)}\n\n\n\n`)],
+      [errorLog.join(`\n\n\n\n${"-".repeat(100)}\n\n\n\n`) + `\n\n\n\nUser Action History:\n\n${actionHistory.map((e, i) => { return `${i + 1}. ${e}` }).join('\n')}`],
       {
         type: "text/plain",
       }
@@ -218,7 +219,7 @@
     settings
   ) {
     // figure out settings
-    const includeProfName = settings[`includeprofessorname`][courseIndex];
+    const includeProfName = settings[`includeprofessornames`][courseIndex];
     const includeSection = settings[`includesection`][courseIndex];
     const includeLocation = settings[`includeclasslocation`][courseIndex];
     const onlyPrimaryProfessor =
@@ -229,11 +230,11 @@
     const dayFormat = formatDays(days);
     const location =
       buildingName !== "None" &&
-      roomNumber !== "None" &&
-      buildingName !== "NA" &&
-      roomNumber !== "NA" &&
-      buildingName !== "Online" &&
-      roomNumber !== "Online"
+        roomNumber !== "None" &&
+        buildingName !== "NA" &&
+        roomNumber !== "NA" &&
+        buildingName !== "Online" &&
+        roomNumber !== "Online"
         ? `${buildingName} ${roomNumber}`
         : "No location found";
 
@@ -266,28 +267,27 @@
       `UID:${uid}`,
       `DTSTAMP:${today.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z"}`,
       `SUMMARY:${waitlisted ? "(WAITLISTED) " : ""}${title}` +
-        (includeSection ? `, Section ${section.toUpperCase()}` : ""),
-      `DESCRIPTION:${
-        includeProfName
-          ? `Professor(s): ${onlyPrimaryProfessor ? prof[0] : prof.join(", ")}`
-          : ""
+      (includeSection ? `, Section ${section.toUpperCase()}` : ""),
+      `DESCRIPTION:${includeProfName
+        ? `Professor(s): ${onlyPrimaryProfessor ? prof[0] : prof.join(", ")}`
+        : ""
       }`,
       `DTSTART;TZID=America/New_York:${formatDate(
         `${(startDateObj.getMonth() + 1)
           .toString()
           .padStart(2, "0")}/${startDateObj
-          .getDate()
-          .toString()
-          .padStart(2, "0")}/${startDateObj.getFullYear()}`,
+            .getDate()
+            .toString()
+            .padStart(2, "0")}/${startDateObj.getFullYear()}`,
         startTime
       )}`,
       `DTEND;TZID=America/New_York:${formatDate(
         `${(startDateObj.getMonth() + 1)
           .toString()
           .padStart(2, "0")}/${startDateObj
-          .getDate()
-          .toString()
-          .padStart(2, "0")}/${startDateObj.getFullYear()}`,
+            .getDate()
+            .toString()
+            .padStart(2, "0")}/${startDateObj.getFullYear()}`,
         endTime
       )}`,
       `RRULE:FREQ=WEEKLY;BYDAY=${dayFormat};UNTIL=${endDateObj.getFullYear()}${(
@@ -295,9 +295,9 @@
       )
         .toString()
         .padStart(2, "0")}${endDateObj
-        .getDate()
-        .toString()
-        .padStart(2, "0")}T235959Z`,
+          .getDate()
+          .toString()
+          .padStart(2, "0")}T235959Z`,
       `LOCATION:` + (includeLocation ? `${location}` : ""),
       `END:VEVENT`,
     ];
@@ -465,8 +465,10 @@
         settings[id] = event.target.checked;
         return;
       }
-      const index = parseInt(id[id.length - 1]);
-      settings[id.substring(0, id.length - 1)][index] = event.target.checked;
+      const index = parseInt(id.match(/\d+/)[0]);
+      const setting = id.match(/\D+/)[0];
+      actionHistory.push(`User changed the following setting: ${setting} at index ${index} with a new value of ${event.target.checked}`);
+      settings[setting][index] = event.target.checked;
       console.log(settings);
     }
   });
@@ -482,6 +484,7 @@
     if (button.classList.contains("export")) {
       // await wait(500);
       // if (validating) return;
+      actionHistory.push("User attempted .ics export");
       const filtered = schedule.filter((e, i) => {
         return (
           settings[`includecourse`][i] &&
@@ -551,6 +554,7 @@
       selectAll.onclick = () => {
         const selectBox = document.querySelector("#optionSelect");
         const value = selectBox.value;
+        actionHistory.push(`User clicked on the Select All button with the Select Menu value: ${value}`);
 
         settings[value].fill(true, 0);
         for (let i = 0; i < schedule.length; i++) {
@@ -561,6 +565,7 @@
       deselectAll.onclick = () => {
         const selectBox = document.querySelector("#optionSelect");
         const value = selectBox.value;
+        actionHistory.push(`User clicked on the Deselect All button with the Select Menu value: ${value}`);
 
         settings[value].fill(false, 0);
         for (let i = 0; i < schedule.length; i++) {
@@ -605,7 +610,7 @@
       waitlistedContainer.append(waitlistedCheckbox, waitlistedLabel);
 
       const courseOptions = [
-        "Include professor name",
+        "Include professor names",
         "Only include primary professor",
         "Include section",
         "Include class location",
@@ -616,9 +621,11 @@
       );
       const id = "includecourse";
       settings[id] = [];
+      console.log(schedule);
       for (const course of schedule) {
         //
         //
+
         const {
           courseTitle,
           days,
@@ -633,6 +640,7 @@
           prof,
           waitlisted,
         } = course;
+
 
         const index = schedule.indexOf(course);
 
@@ -672,18 +680,30 @@
 
         summary.append(span, checkbox);
 
-        courseDetails.innerHTML = `${
-          waitlisted ? "WAITLISTED" : ""
-        }<div>Professor: ${prof.join(
-          ", "
-        )}</div> <div>Meeting Dates: ${startDate} - ${endDate}</div> <div>Days: ${days.replaceAll(
-          ",",
-          ", "
-        )}</div> <div>Time: ${startTime} - ${endTime}</div><div>Location: ${
-          hasLocation
-            ? `${buildingName} ${roomNumber}`
-            : "No location found; likely online"
-        }</div>`;
+        const infoObj = {
+          waitlisted,
+          Professors: prof.join(", "),
+          "Meeting Dates": `${startDate} - ${endDate}`,
+          Days: days.replaceAll(",", ", "),
+          Time: `${startTime} - ${endTime}`,
+          Location: hasLocation ? `${buildingName} ${roomNumber}` : "No location found; likely online",
+        }
+
+        for (const [key, value] of Object.entries(infoObj)) {
+          const div = document.createElement('div');
+          const b = document.createElement('b');
+
+          if (key === "waitlisted") {
+            if (!value) continue
+            div.append("WAITLISTED");
+            courseDetails.append(div);
+            continue;
+          }
+
+          b.textContent = key + ":";
+          div.append(b, " ", value);
+          courseDetails.append(div);
+        }
 
         // load in per-class options
         for (const option of courseOptions) {
@@ -731,6 +751,7 @@
       button.textContent = "Export .ICS File";
       button.classList.add("export");
       button.toggleAttribute("disabled", false);
+      actionHistory.push("User has imported schedule into extension");
 
       // const events = []; // contains all events (courses) for .ics file creation
 
