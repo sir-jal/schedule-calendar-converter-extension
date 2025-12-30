@@ -2,7 +2,8 @@
 // regular expressions to match the start and end times and the start and end dates.
 
 (() => {
-  const timeRegex = /\d{2}:\d{2}\s{2}(?:AM|PM)\s*-\s*\d{2}:\d{2}\s{2}(?:AM|PM)/;
+  const timeRegex12 = /\d{2}:\d{2}\s{2}(?:AM|PM)\s*-\s*\d{2}:\d{2}\s{2}(?:AM|PM)/;
+  const timeRegex24 = /\d{2}:\d{2}\s*-\s*\d{2}:\d{2}/;
   function findAllIndices(str, sub) {
     // find all indices where a substring occurs in a string
     let indices = [];
@@ -153,12 +154,12 @@
         })
         continue;
       }
-      const time = row.match(timeRegex)[0];
+      let time = row.match(timeRegex12)?.[0];
+      if (!time) time = row.match(timeRegex24)?.[0]
 
 
-
-
-      const [startTime, endTime] = time.split(" - ");
+      const timeSplit = time.split("-")
+      const [startTime, endTime] = [timeSplit[0].trim(), timeSplit[1].trim()];
 
       // location
       // building name

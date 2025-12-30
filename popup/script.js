@@ -1010,17 +1010,18 @@
   // assumes dateStr argument follows this format: MM/DD/YYYY
   function formatDate(dateStr, timeStr, justDate) {
     const [month, day, year] = dateStr.split("/");
-
     // turn time to 24h time
     const [time, AMPM] = timeStr.split("  ");
     let [hour, minute] = time.split(":");
 
-    if (AMPM === "PM" && hour !== "12") {
-      hour = parseInt(hour) + 12; // add 12 to hour to convert to 24 hr time; example: 6 pm + 12 = 18:00
-    }
+    if (AMPM) {
+      if (AMPM === "PM" && hour !== "12") {
+        hour = parseInt(hour) + 12; // add 12 to hour to convert to 24 hr time; example: 6 pm + 12 = 18:00
+      }
 
-    if (AMPM === "AM" && hour === "12") {
-      hour = "00";
+      if (AMPM === "AM" && hour === "12") {
+        hour = "00";
+      }
     }
     return justDate ? `${year}${month}${day}` : `${year}${month}${day}T${hour.toString().padStart(2, "0")}${minute.toString().padStart(2, "0")}00`;
   }
