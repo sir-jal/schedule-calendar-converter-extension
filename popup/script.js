@@ -1,4 +1,6 @@
 (() => {
+  // DEFINING GLOBAL VARIABLES
+
   const fileName = document.querySelector(".fileName");
   const fileNameInput = document.querySelector("#fileName");
   const version = document.querySelector("#versionNumber");
@@ -13,15 +15,39 @@
   const validateText = document.querySelector("p#validation");
   const CACHE_MAX_AGE = 1000 * 60 * 60 * 24 * 3; // 3 days
   const actionHistory = [] // may help with replicating errors and debugging
-
+  const colors = ["green", "blue", "yellow", "aqua", "red", "orange", "teal", "purple", "brown", "beige", "white", "bisque", "maroon", "magenta"];
+  const keysToEditName = ["e", "f2"];
   let injection_error = false;
   let step = 1;
   let links = {};
   let changingLocal = false;
+  let editingName = false;
+
 
   let popupOpen = false;
   let revertingChanges = false;
 
+
+
+
+
+  // PRELIMINARY
+
+
+
+  // makes all "a" tags clickable via keyboard
+  const aTags = Array.from(document.querySelectorAll('a'));
+
+  for (const a of aTags) {
+    a.addEventListener("keydown", (e) => {
+      if (e.key === " ") {
+        a.click();
+      }
+    })
+  }
+
+
+  // anti cache editing system
   chrome.storage.onChanged.addListener(async (changes, namespace) => {
     if (revertingChanges) return;
     for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
@@ -70,9 +96,9 @@
         ),
         lastUpdated: Date.now(),
       });
-      console.log("cache updated");
+
     }
-    console.log("cache update attempted");
+
     changingLocal = false;
     return await chrome.storage?.local?.get(["info"]);
   }
@@ -91,8 +117,18 @@
 
   // everything related to the steps pop up
 
+  const closePopUp = async () => {
+    stepsPopup.style.opacity = 0;
+    await wait(500);
+    popupOpen = false;
+    stepsPopup.close();
+  }
+
+  document.querySelector('#closePopup').addEventListener('click', closePopUp)
+
   stepsButton.addEventListener("click", async () => {
     stepsPopup.showModal();
+    stepsPopup.scrollTo({ top: 0 })
     stepsPopup.style.opacity = 1;
     await wait(500);
     popupOpen = true;
@@ -100,12 +136,17 @@
 
   stepsPopup.style.opacity = 0;
 
-  document.onclick = async (e) => {
-    if (popupOpen && e.target.id === "stepsPopup") {
-      popupOpen = false;
-      stepsPopup.style.opacity = 0;
-      await wait(400);
-      stepsPopup.close();
+  stepsPopup.onclick = async (e) => {
+    const rect = stepsPopup.getBoundingClientRect();
+    const clickedOutside =
+      e.clientX < rect.left ||
+      e.clientX > rect.right ||
+      e.clientY < rect.top ||
+      e.clientY > rect.bottom;
+
+    if (clickedOutside) {
+      closePopUp();
+
     }
   };
   changeStep(1);
@@ -171,7 +212,18 @@
     handleError(e, "promise");
   });
 
+
+
+
+
+
+
   // FUNCTIONS
+
+
+
+
+
 
   // get current tab
   async function getCurrentTab() {
@@ -224,9 +276,10 @@
     const includeLocation = settings[`includeclasslocation`][courseIndex];
     const onlyPrimaryProfessor =
       includeProfName && settings["onlyincludeprimaryprofessor"][courseIndex];
+    const asynchronous = days === "ASYNCHRONOUS"
 
     const uid = crypto.randomUUID();
-    console.log("build ics event", title);
+
     const dayFormat = formatDays(days);
     const location =
       buildingName !== "None" &&
@@ -234,15 +287,15 @@
         buildingName !== "NA" &&
         roomNumber !== "NA" &&
         buildingName !== "Online" &&
-        roomNumber !== "Online"
+        roomNumber !== "Online" && !asynchronous
         ? `${buildingName} ${roomNumber}`
         : "No location found";
 
     // const [month, day, year] = endDate.split("/");
 
+
     const [endDateObj, startDateObj] = [new Date(endDate), new Date(startdate)];
     // const [startMonth, startDay, startYear] = startdate.split("/");
-
     // this is used to offset the days from the start date of the class. otherwise, every class will appear on the start date in iCloud maps.
     const indices = {
       SU: 0,
@@ -253,54 +306,85 @@
       FR: 5,
       SA: 6,
     };
-    const difference = indices[dayFormat.split(",")[0]] - startDateObj.getDay();
-    startDateObj.setDate(startDateObj.getDate() + difference);
+
 
     const today = new Date();
+    const chosenColor = colors.pop();
 
     // build .ics event manually, since an .ics file is just plain text.
     // I'm using an array here to properly do the spacing, as seen in lines.join("\r\n"). using a template literal otherwise would have resulted in problems, especially
     // in google calendar.
     // .ics date format: YYYYMMDDTHHmmss, which is what formatDate() is converting the time to.
-    const lines = [
-      `BEGIN:VEVENT`,
-      `UID:${uid}`,
-      `DTSTAMP:${today.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z"}`,
-      `SUMMARY:${waitlisted ? "(WAITLISTED) " : ""}${title}` +
-      (includeSection ? `, Section ${section.toUpperCase()}` : ""),
-      `DESCRIPTION:${includeProfName
-        ? `Professor(s): ${onlyPrimaryProfessor ? prof[0] : prof.join(", ")}`
-        : ""
-      }`,
-      `DTSTART;TZID=America/New_York:${formatDate(
-        `${(startDateObj.getMonth() + 1)
+
+    let lines;
+
+    if (asynchronous) {
+      lines = [
+        `BEGIN:VEVENT`,
+        `UID:${uid}`,
+        `DTSTAMP:${today.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z"}`,
+        `COLOR:${chosenColor}`,
+        `SUMMARY:${waitlisted ? "(WAITLISTED) " : ""}${title}` +
+        (includeSection ? `, Section ${section.toUpperCase()}` : ""),
+        `DESCRIPTION:${includeProfName
+          ? `No meeting time; asynchronous\\nProfessor(s): ${onlyPrimaryProfessor ? prof[0] : prof.join(", ")}`
+          : "No meeting time; asynchronous"
+        }`,
+        `DTSTART;TZID=America/New_York:${formatDate(
+          `${(startDateObj.getMonth() + 1)
+            .toString()
+            .padStart(2, "0")}/${startDateObj
+              .getDate()
+              .toString()
+              .padStart(2, "0")}/${startDateObj.getFullYear()}`,
+          "12:00  AM"
+          , true)}`,
+        `END:VEVENT`,
+      ];
+    } else {
+      const difference = indices[dayFormat.split(",")[0]] - startDateObj.getDay();
+      startDateObj.setDate(startDateObj.getDate() + difference);
+      lines = [
+        `BEGIN:VEVENT`,
+        `UID:${uid}`,
+        `DTSTAMP:${today.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z"}`,
+        `COLOR:${chosenColor}`,
+        `SUMMARY:${waitlisted ? "(WAITLISTED) " : ""}${title}` +
+        (includeSection ? `, Section ${section.toUpperCase()}` : ""),
+        `DESCRIPTION:${includeProfName
+          ? `Professor(s): ${onlyPrimaryProfessor ? prof[0] : prof.join(", ")}`
+          : ""
+        }`,
+        `DTSTART;TZID=America/New_York:${formatDate(
+          `${(startDateObj.getMonth() + 1)
+            .toString()
+            .padStart(2, "0")}/${startDateObj
+              .getDate()
+              .toString()
+              .padStart(2, "0")}/${startDateObj.getFullYear()}`,
+          startTime
+        )}`,
+        `DTEND;TZID=America/New_York:${formatDate(
+          `${(startDateObj.getMonth() + 1)
+            .toString()
+            .padStart(2, "0")}/${startDateObj
+              .getDate()
+              .toString()
+              .padStart(2, "0")}/${startDateObj.getFullYear()}`,
+          endTime
+        )}`,
+        `RRULE:FREQ=WEEKLY;BYDAY=${dayFormat};UNTIL=${endDateObj.getFullYear()}${(
+          endDateObj.getMonth() + 1
+        )
           .toString()
-          .padStart(2, "0")}/${startDateObj
+          .padStart(2, "0")}${endDateObj
             .getDate()
             .toString()
-            .padStart(2, "0")}/${startDateObj.getFullYear()}`,
-        startTime
-      )}`,
-      `DTEND;TZID=America/New_York:${formatDate(
-        `${(startDateObj.getMonth() + 1)
-          .toString()
-          .padStart(2, "0")}/${startDateObj
-            .getDate()
-            .toString()
-            .padStart(2, "0")}/${startDateObj.getFullYear()}`,
-        endTime
-      )}`,
-      `RRULE:FREQ=WEEKLY;BYDAY=${dayFormat};UNTIL=${endDateObj.getFullYear()}${(
-        endDateObj.getMonth() + 1
-      )
-        .toString()
-        .padStart(2, "0")}${endDateObj
-          .getDate()
-          .toString()
-          .padStart(2, "0")}T235959Z`,
-      `LOCATION:` + (includeLocation ? `${location}` : ""),
-      `END:VEVENT`,
-    ];
+            .padStart(2, "0")}T235959Z`,
+        `LOCATION:` + (includeLocation ? `${location}` : ""),
+        `END:VEVENT`,
+      ];
+    }
     return lines.join("\r\n");
   }
 
@@ -318,7 +402,7 @@
     // self explanatory
     const blob = new Blob([content], { type: "text/calendar;charset=utf8" });
     const url = URL.createObjectURL(blob);
-    console.log(url);
+
 
     return url;
   }
@@ -330,7 +414,6 @@
 
     const hasNonoChars = nonoChars.some((e) => name.includes(e));
     const startsWithNoNo = nonoStart.some((e) => name.trim().startsWith(e));
-    console.log(nonoChars, name.split(""));
 
     if (hasNonoChars)
       return [
@@ -352,7 +435,22 @@
     });
   }
 
+
+
+
+
+
+
+
   // MAIN CODE
+
+
+
+
+
+
+
+
 
   const button = document.querySelector("#importSchedule"); // fetches the convert button, as it comes first and we are not using .querySelectorAll()
   const message = document.querySelector(".message"); // fetches the status message
@@ -390,15 +488,28 @@
           }
 
           for (const school of schools) {
-            let div = document.createElement("div");
-            div.innerHTML = `<a href="${links[school].link}" target=_blank>${school}</a>`;
+            const div = document.createElement("div");
+            const a = document.createElement('a');
+
+            a.href = links[school].link;
+            a.target = "_blank";
+            a.textContent = school;
+            a.tabIndex = 0;
+            a.addEventListener("keydown", (e) => {
+              if (e.key === " ") {
+                a.click();
+              }
+            })
+
+            div.appendChild(a);
+
             results.appendChild(div);
           }
         };
       } else {
         button.toggleAttribute("disabled", true);
         message.textContent =
-          "You seem to be on the correct website. Please go to a page where you can view your schedule.";
+          "You seem to be on Banner. Please go to a page where you can view your schedule.";
         message.classList.add("alert", "show");
       }
 
@@ -455,7 +566,6 @@
   // this is used to detect when checkboxes are checked/unchecked.
   // this will update the settings object which will later be used when downloading the .ics file
   document.addEventListener("change", (event) => {
-    console.log(event.target.tagName, event.target.getAttribute("type"));
     if (
       event.target.tagName === "INPUT" &&
       event.target.getAttribute("type") === "checkbox"
@@ -469,15 +579,21 @@
       const setting = id.match(/\D+/)[0];
       actionHistory.push(`User changed the following setting: ${setting} at index ${index} with a new value of ${event.target.checked}`);
       settings[setting][index] = event.target.checked;
-      console.log(settings);
+
     }
   });
+
+
+
+
   ///
   ///
   ///
   ///
   ///
   // event listener for button
+
+
   let validating = false;
   button.addEventListener("click", async () => {
     // this only runs when the button is clicked after the classes are imported
@@ -492,10 +608,11 @@
         );
       });
       const events = [];
-      console.log(filtered);
+
       for (const course of filtered) {
         const {
           courseTitle,
+          displayName,
           days,
           time,
           startDate,
@@ -508,29 +625,32 @@
           prof,
           waitlisted,
         } = course;
+
+        const event = buildICSEvent(
+          schedule.indexOf(course),
+          displayName,
+          buildingName,
+          roomNumber,
+          days,
+          startDate,
+          endDate,
+          startTime,
+          endTime,
+          section,
+          prof,
+          waitlisted,
+          settings
+        );
+        if (!event) continue;
         events.push(
-          buildICSEvent(
-            schedule.indexOf(course),
-            courseTitle,
-            buildingName,
-            roomNumber,
-            days,
-            startDate,
-            endDate,
-            startTime,
-            endTime,
-            section,
-            prof,
-            waitlisted,
-            settings
-          )
+          event
         );
       }
 
-      console.log(events);
+
       const file = buildICSFile(events);
 
-      console.log(file);
+
 
       const valid = nameValidation(fileNameInput.value.trim());
       const noClassesSelected = settings["includecourse"].every((e) => !e);
@@ -556,8 +676,10 @@
         const value = selectBox.value;
         actionHistory.push(`User clicked on the Select All button with the Select Menu value: ${value}`);
 
-        settings[value].fill(true, 0);
+
         for (let i = 0; i < schedule.length; i++) {
+          if (schedule[i].days === "ASYNCHRONOUS") continue;
+          settings[value][i] = true;
           document.querySelector(`#${value}${i}`).checked = true;
         }
       };
@@ -567,8 +689,9 @@
         const value = selectBox.value;
         actionHistory.push(`User clicked on the Deselect All button with the Select Menu value: ${value}`);
 
-        settings[value].fill(false, 0);
         for (let i = 0; i < schedule.length; i++) {
+          if (schedule[i].days === "ASYNCHRONOUS") continue;
+          settings[value][i] = false
           document.querySelector(`#${value}${i}`).checked = false;
         }
       };
@@ -621,7 +744,7 @@
       );
       const id = "includecourse";
       settings[id] = [];
-      console.log(schedule);
+
       for (const course of schedule) {
         //
         //
@@ -641,6 +764,8 @@
           waitlisted,
         } = course;
 
+        const asynchronous = days === "ASYNCHRONOUS";
+
 
         const index = schedule.indexOf(course);
 
@@ -652,17 +777,90 @@
         const courseDetails = document.createElement("div");
         const br = document.createElement("br");
 
-        const charLimit = 0;
+        const renameClass = (e, isKeyBoard = false) => {
+          if (e.target.tagName !== "SPAN" && !isKeyBoard) return;
+          if (editingName) return;
+          actionHistory.push(`User double clicks Class #${index + 1} to rename it`);
+          clas.open = true;
+
+          const span = summary.querySelector('span');
+          const checkbox = summary.querySelector('input[type="checkbox"]')
+          const text = document.createElement('input');
+
+          text.type = "text";
+          text.value = span.textContent;
+
+          summary.replaceChildren(text, checkbox)
+          text.focus();
+          text.select();
+
+          editingName = true;
+
+          const handleSpaceBar = (e) => {
+            if (e.key === " ") e.preventDefault()
+          }
+
+          const finalizeText = async (reset = false) => {
+            const trimmed = text.value.trim()
+            if (!reset && !/^\s*$/.test(text.value)) {
+              actionHistory.push(`User renames Class #${index + 1} from ${span.textContent} to \`${trimmed}\``);
+              span.textContent = trimmed;
+            } else {
+              actionHistory.push(`User resets Class #${index + 1}'s name from ${span.textContent} to \`${courseTitle}\``);
+              span.textContent = courseTitle;
+            }
+            schedule[index].displayName = span.textContent;
+
+            summary.replaceChildren(span, checkbox);
+            summary.removeEventListener('keyup', handleSpaceBar);
+
+
+            editingName = false;
+
+          }
+
+
+
+          summary.addEventListener('keyup', handleSpaceBar);
+
+          text.addEventListener('blur', () => {
+            finalizeText()
+          })
+          text.addEventListener('keydown', async (e) => {
+            if (!editingName) return;
+
+            switch (e.key.toLowerCase()) {
+              case "enter": {
+                text.blur();
+                break;
+              }
+            }
+
+          })
+        }
+
+        summary.addEventListener('dblclick', renameClass)
+
+        summary.addEventListener('keydown', async (e) => {
+          if (keysToEditName.includes(e.key.toLowerCase())) {
+            if (editingName) return;
+            await wait(100);
+            renameClass(e, true);
+          }
+        })
+
+        if (asynchronous) clas.classList.add('notIncluded');
+
+
 
         checkbox.type = "checkbox";
-        checkbox.checked = true;
+        checkbox.checked = !asynchronous
         checkbox.id = id + index;
+        const courseStr = `${courseTitle}`;
 
-        const courseStr = `${courseTitle} Section ${section.toUpperCase()}`;
 
-        console.log(courseStr.length);
 
-        span.textContent = cutOffString(courseStr, 60);
+        span.textContent = courseStr;
 
         settings[id].push(checkbox.checked);
 
@@ -670,23 +868,30 @@
         options.classList.add("options");
         courseDetails.classList.add("classDetails");
 
+
+
+
+
         const hasLocation =
           buildingName !== "None" &&
           roomNumber !== "None" &&
           buildingName !== "NA" &&
           roomNumber !== "NA" &&
           buildingName !== "Online" &&
-          roomNumber !== "Online";
+          roomNumber !== "Online" && !asynchronous;
 
         summary.append(span, checkbox);
 
         const infoObj = {
+          asynchronous,
           waitlisted,
+          Section: section.toUpperCase(),
           Professors: prof.join(", "),
-          "Meeting Dates": `${startDate} - ${endDate}`,
+          "Class Active": `${startDate} - ${endDate}`,
           Days: days.replaceAll(",", ", "),
           Time: `${startTime} - ${endTime}`,
           Location: hasLocation ? `${buildingName} ${roomNumber}` : "No location found; likely online",
+
         }
 
         for (const [key, value] of Object.entries(infoObj)) {
@@ -694,15 +899,23 @@
           const b = document.createElement('b');
 
           if (key === "waitlisted") {
-            if (!value) continue
-            div.append("WAITLISTED");
+            if (!value) continue;
+            div.append("This class is WAITLISTED");
+            courseDetails.append(div);
+            continue;
+          } else if (key === "asynchronous") {
+            if (!value) continue;
+            div.append(`This class is likely asynchronous as the extension could not find a time/day. If you include this course in your .ics file, it will ONLY (1) create an all-day event on ${startDate}.`);
             courseDetails.append(div);
             continue;
           }
 
+
+
           b.textContent = key + ":";
           div.append(b, " ", value);
           courseDetails.append(div);
+          if (key === "Class Active" && asynchronous) break;
         }
 
         // load in per-class options
@@ -723,9 +936,9 @@
           )
             checkbox.checked = false;
 
+          if (option.includes('location') && asynchronous) checkbox.disabled = true;
           checkbox.name = id + index;
           checkbox.id = id + index;
-
           label.setAttribute("for", id + index);
           label.textContent = option;
 
@@ -741,12 +954,14 @@
       classes.append(waitlistedContainer);
       settings[waitlistedCheckbox.id] = waitlistedCheckbox.checked;
 
+
+      message.textContent =
+        "Classes successfully loaded. Check the steps located at the bottom of the page to learn how to customize your .ics file.";
+
       message.classList.add("success", "show");
 
       fileName.style.display = "flex";
 
-      message.textContent =
-        "Classes successfully loaded. You may now customize your .ics file. You may chose to exclude certain classes or exclude certain parts of a class using the checkboxes.";
 
       button.textContent = "Export .ICS File";
       button.classList.add("export");
@@ -793,7 +1008,7 @@
 
   // formats date and time to YYYYMMDDTHHmmss format
   // assumes dateStr argument follows this format: MM/DD/YYYY
-  function formatDate(dateStr, timeStr) {
+  function formatDate(dateStr, timeStr, justDate) {
     const [month, day, year] = dateStr.split("/");
 
     // turn time to 24h time
@@ -803,7 +1018,11 @@
     if (AMPM === "PM" && hour !== "12") {
       hour = parseInt(hour) + 12; // add 12 to hour to convert to 24 hr time; example: 6 pm + 12 = 18:00
     }
-    return `${year}${month}${day}T${hour}${minute}00`;
+
+    if (AMPM === "AM" && hour === "12") {
+      hour = "00";
+    }
+    return justDate ? `${year}${month}${day}` : `${year}${month}${day}T${hour.toString().padStart(2, "0")}${minute.toString().padStart(2, "0")}00`;
   }
 
   // formats days to .ics format. Wednesdays -> WE, Fridays -> FR
@@ -823,3 +1042,4 @@
     return str;
   }
 })();
+

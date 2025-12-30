@@ -64,10 +64,10 @@
     const endColonIndex = classEnd.indexOf(":");
     const endDate = classEnd.substring(endColonIndex + 1).trim();
 
-    console.log("DATES: ", startDate, endDate);
+
 
     const rowEndPoints = findAllIndices(meetingInformation, startDate); // since in meetingInformation, a new row is indicated each time the start date appears, this will tell us at which indices does each row begin.
-    console.log("Endpoints", rowEndPoints);
+
     for (let i = 0; i < rowEndPoints.length; i++) {
       // this is responsible for slicing the string into different rows.
       // this will slice the meetingInformation string from index i to index i + 1. if index i + 1 does not exist, we have reached the last row.
@@ -90,7 +90,7 @@
     const courseSection = document
       .querySelectorAll(".list-view-subj-course-section")
     [index].textContent.toLowerCase();
-    console.log("course section");
+
     const section = courseSection
       .substring(courseSection.indexOf("section"))
       .replace("section ", "")
@@ -114,17 +114,17 @@
         prof.push(`${first} ${last}`);
       }
     }
-    console.log("PROFESSORS", prof);
-    console.log(section);
+
+
     // console.log(`Course: ${courseTitle} Section: ${section.toUpperCase()}`);
 
     // day and time
 
-    console.log("loop start");
-    console.log("rows", rows);
+
+
     for (const row of rows) {
       // example row: '08/18/2025 -- 12/11/2025   FridaySMTWTFS   03:30  PM - 04:20  PM Type: Class Location: Georgia Tech-Atlanta * Building: Skiles Room: 254'
-      console.log(row);
+
       const dayList = [
         "Monday",
         "Tuesday",
@@ -135,11 +135,28 @@
         "Sunday",
       ];
       const days = dayList.filter((day) => row.includes(day)).join(",");
-      if (!days) continue;
+      if (!days) {
+        Schedule.push({
+          courseTitle,
+          displayName: courseTitle,
+          days: "ASYNCHRONOUS",
+          time: "ASYNCHRONOUS",
+          startDate,
+          endDate,
+          startTime: "ASYNCHRONOUS",
+          endTime: "ASYNCHRONOUS",
+          buildingName: "ASYNCHRONOUS",
+          roomNumber: "ASYNCHRONOUS",
+          section,
+          prof,
+          waitlisted: isWaitlisted
+        })
+        continue;
+      }
       const time = row.match(timeRegex)[0];
 
-      console.log("checkpoint 1");
-      console.log(days);
+
+
 
       const [startTime, endTime] = time.split(" - ");
 
@@ -155,9 +172,10 @@
         .substring(buildingAndRoom.indexOf("Room"))
         .replace("Room: ", "")
         .trim();
-      console.log("checkpoint 2");
+
       Schedule.push({
         courseTitle,
+        displayName: courseTitle,
         days,
         time,
         startDate,
@@ -170,12 +188,12 @@
         prof,
         waitlisted: isWaitlisted,
       });
-      console.log("final checkpoint");
+
     }
   }
-  console.log("loop end");
+
   // this allow the chrome extension to receive the Schedule. keep in mind that this function is being injected into the webpage
   // and is not being ran in respect to the chrome extension.
-  console.log(Schedule);
+
   chrome.runtime.sendMessage(Schedule);
 })();

@@ -8,6 +8,11 @@
   <link rel="stylesheet" href="./style.css" />
 
   <script src="./script.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap"
+    rel="stylesheet">
+
 </head>
 
 <body>
@@ -68,36 +73,54 @@
     </div>
   </div>
   <dialog id="stepsPopup">
-    <h1>How to use this extension</h1>
-    <h3>Click out to close</h3>
-    <ol id="steps">
-      <li class="step" id="step1">Go to school registration page (Banner)</li>
-      <li class="step" id="step2">Click "schedule details"</li>
-      <li class="step" id="step3">Click "import schedule"</li>
-      <li class="step" id="step4">
-        Customize .ics file by using the checkboxes and textbox to name it
-      </li>
-      <ul>
-        <li>Unchecking a class excludes the class from the .ics file.</li>
-        <li>Each class has its own options.</li>
-        <li>
-          Unchecking "include waitlisted courses" will exclude all waitlisted
-          courses, regardless of if the course is checked.
+    <div id="popupContainer">
+      <h1>How to use this extension</h1>
+      <h3>Click out or click the button below to close</h3>
+      <ol id="steps">
+        <li class="step" id="step1">Go to school registration page (Banner)</li>
+        <li class="step" id="step2">Click "schedule details"</li>
+        <li class="step" id="step3">Click "import schedule"</li>
+        <li class="step" id="step4">
+          Customize .ics file
         </li>
-        <li>
-          Some options may overlap each other. For example, say there are 2
-          options: "include professor name" and "put professor name in title".
-          If the former is disabled, the latter will not apply.
-        </li>
-      </ul>
-      <li class="step" id="step5">Export & Download .ics file</li>
-    </ol>
+        <ul>
+          <li>Unchecking a class excludes the class from the .ics file.</li>
+          <li>Each class has its own options.</li>
+          <li>You may rename a class by double clicking on it or by pressing E or F2 on your keyboard if you're focused
+            on a class.
+          </li>
+          <ul>
+            <li>Hit enter or click out of the text box to apply the name.</li>
+            <li>If the textbox is empty, the name will be reset back to the original course name.</li>
+          </ul>
+          <li>
+            Unchecking "include waitlisted courses" will exclude all waitlisted
+            courses, regardless of if the course is checked.
+          </li>
+          <li>
+            Some options may overlap each other. For example, say there are 2
+            options: "include professor name" and "put professor name in title".
+            If the former is disabled, the latter will not apply.
+          </li>
+          <li>You can mass (de)select by using the appropriate buttons and the select menu.</li>
+          <ul>
+            <li>Asynchronous courses will not be affected by these buttons.</li>
+          </ul>
+          <li>Use the textbox to name the .ics file. The name will be validated before downloading.</li>
+        </ul>
+        <li class="step" id="step5">Export & Download .ics file</li>
+      </ol>
+      <div id="popupbuttoncontainer">
+        <button id="closePopup">Close</button>
+      </div>
+    </div>
+
   </dialog>
 
   <div class="footer">
     <a href="http://forms.gle/FV54aHLFmzFs9Dqm6" id="feedback" target="_blank">Give feedback</a>
     <a href="https://github.com/sir-jal/schedule-calendar-converter-extension" target="_blank">GitHub</a>
-    <div id="stepsButton">Steps to using extension</div>
+    <a tabindex="0" id="stepsButton">Steps to using extension</a>
   </div>
 </body>
 

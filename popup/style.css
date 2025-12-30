@@ -1,5 +1,6 @@
 * {
-  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-family: "Figtree", system-ui, Verdana, Geneva, Tahoma, sans-serif;
+  font-style: normal;
 }
 
 body {
@@ -21,6 +22,11 @@ h3,
   text-align: center;
 }
 
+h1 {
+  font-size: 25px;
+}
+
+
 h2 {
   font-size: 16px;
 }
@@ -39,7 +45,7 @@ hr {
 .version {
   display: block;
   text-align: center;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .input {
@@ -62,7 +68,7 @@ input[type="text"] {
   margin-top: 18px;
   display: none;
   color: white;
-  font-size: 16px;
+  font-size: 18px;
   border-left: solid rgb(255, 254, 245) 4px;
   background-color: rgb(255, 229, 58);
   padding: 10px;
@@ -109,12 +115,17 @@ img {
 }
 
 .buttoncontainer,
+#popupbuttoncontainer,
 .school-search,
 .fileName {
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
+}
+
+#popupbuttoncontainer {
+  margin-bottom: 10px;
 }
 
 .fileName {
@@ -149,6 +160,10 @@ img {
 .footer *,
 .footer *:visited {
   color: blue;
+}
+
+.footer *:hover {
+  cursor: pointer;
 }
 
 .footer *:hover {
@@ -209,14 +224,23 @@ details.class {
   width: 300px;
 }
 
+details.class.notIncluded {
+  background-color: rgb(255, 201, 201);
+}
+
+details.class.notIncluded summary input[type="text"]:focus {
+  background-color: rgb(253, 209, 209);
+}
+
 details div {
-  font-size: 14.5px;
+  font-size: 16.5px;
 }
 
 details:has(summary:hover) {
   background-color: rgb(236, 236, 236);
   cursor: pointer;
 }
+
 
 details[open] summary {
   border-bottom: solid black 2px;
@@ -231,19 +255,32 @@ summary {
   gap: 10px;
 }
 
-summary input {
+summary input[type="checkbox"] {
   width: 25px;
   height: 25px;
   margin-left: auto;
 }
 
-summary span {
+
+
+summary span,
+summary input[type="text"] {
   width: 300px;
+  font-size: 16px;
+  text-align: left;
 }
 
-summary::before {
-  background-color: aqua;
+summary span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
+summary input[type="text"]:focus {
+  background-color: rgb(236, 236, 236)
+}
+
+
 
 .options {
   margin-top: 30px;
@@ -254,6 +291,7 @@ summary::before {
 }
 
 #stepsPopup {
+  padding: 0;
   width: 400px;
   height: 300px;
   transition: opacity 0.5s;
@@ -261,11 +299,13 @@ summary::before {
 
 #steps li {
   margin: 10px;
+  font-size: 15px;
 }
 
 .step.current,
 .step.current li {
   font-weight: bold;
+  text-decoration: underline;
 }
 
 #validation {
@@ -306,4 +346,12 @@ select {
 
 .classDetails div:not(:nth-child(1)) {
   margin-top: 10px
+}
+
+.courseButton {
+  margin-top: 10px;
+}
+
+*:focus {
+  outline: #F00 solid 1px;
 }
