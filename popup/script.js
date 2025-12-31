@@ -813,6 +813,7 @@
 
             summary.replaceChildren(span, checkbox);
             summary.removeEventListener('keyup', handleSpaceBar);
+            summary.focus();
 
 
             editingName = false;
