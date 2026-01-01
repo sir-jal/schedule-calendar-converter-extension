@@ -1006,7 +1006,6 @@
         hour = "00";
       }
     }
-    console.log(year, month, day);
     return justDate ? `${year}${month}${day}` : `${year}${month}${day}T${hour.toString().padStart(2, "0")}${minute.toString().padStart(2, "0")}00`;
   }
 
