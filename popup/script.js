@@ -330,15 +330,14 @@
           ? `No meeting time; asynchronous\\nProfessor(s): ${onlyPrimaryProfessor ? prof[0] : prof.join(", ")}`
           : "No meeting time; asynchronous"
         }`,
+        //
         `DTSTART;TZID=America/New_York:${formatDate(
-          `${(startDateObj.getMonth() + 1)
-            .toString()
-            .padStart(2, "0")}/${startDateObj
-              .getDate()
-              .toString()
-              .padStart(2, "0")}/${startDateObj.getFullYear()}`,
-          "12:00  AM"
-          , true)}`,
+          `${(startDateObj.getMonth() + 1).toString().padStart(2, "0")}/${startDateObj.getDate().toString().padStart(2, "0")}/${startDateObj.getFullYear()}`,
+          "12:00  AM", true)}`,
+        //
+        `DTEND;TZID=America/New_York:${formatDate(
+          `${(startDateObj.getMonth() + 1).toString().padStart(2, "0")}/${(startDateObj.getDate() + 1).toString().padStart(2, "0")}/${startDateObj.getFullYear()}`,
+          "12:00  AM", true)}`,
         `END:VEVENT`,
       ];
     } else {
@@ -356,31 +355,14 @@
           : ""
         }`,
         `DTSTART;TZID=America/New_York:${formatDate(
-          `${(startDateObj.getMonth() + 1)
-            .toString()
-            .padStart(2, "0")}/${startDateObj
-              .getDate()
-              .toString()
-              .padStart(2, "0")}/${startDateObj.getFullYear()}`,
+          `${(startDateObj.getMonth() + 1).toString().padStart(2, "0")}/${startDateObj.getDate().toString().padStart(2, "0")}/${startDateObj.getFullYear()}`,
           startTime
         )}`,
         `DTEND;TZID=America/New_York:${formatDate(
-          `${(startDateObj.getMonth() + 1)
-            .toString()
-            .padStart(2, "0")}/${startDateObj
-              .getDate()
-              .toString()
-              .padStart(2, "0")}/${startDateObj.getFullYear()}`,
+          `${(startDateObj.getMonth() + 1).toString().padStart(2, "0")}/${startDateObj.getDate().toString().padStart(2, "0")}/${startDateObj.getFullYear()}`,
           endTime
         )}`,
-        `RRULE:FREQ=WEEKLY;BYDAY=${dayFormat};UNTIL=${endDateObj.getFullYear()}${(
-          endDateObj.getMonth() + 1
-        )
-          .toString()
-          .padStart(2, "0")}${endDateObj
-            .getDate()
-            .toString()
-            .padStart(2, "0")}T235959Z`,
+        `RRULE:FREQ=WEEKLY;BYDAY=${dayFormat};UNTIL=${endDateObj.getFullYear()}${(endDateObj.getMonth() + 1).toString().padStart(2, "0")}${endDateObj.getDate().toString().padStart(2, "0")}T235959Z`,
         `LOCATION:` + (includeLocation ? `${location}` : ""),
         `END:VEVENT`,
       ];
@@ -1024,6 +1006,7 @@
         hour = "00";
       }
     }
+    console.log(year, month, day);
     return justDate ? `${year}${month}${day}` : `${year}${month}${day}T${hour.toString().padStart(2, "0")}${minute.toString().padStart(2, "0")}00`;
   }
 
