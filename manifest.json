@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Schedule to Calendar Converter",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Converts schedule on Banner to .ics file, allowing users to directly add classes on their device calendar",
   "author": "Sir Jal",
   "action": {
