@@ -162,12 +162,24 @@
     const steps = document.querySelectorAll(".step");
     const maxSteps = steps.length;
     if (maxSteps < num) return;
-    document.querySelector(`#step${step}`).classList.remove("current");
+
+    const curStep = document.querySelector(`#step${step}`);
+    curStep.classList.remove("current");
+
+    const curSubList = document.querySelector(`#step${step}sublist`);
+    if (curSubList) curSubList.classList.remove('current');
+
     step = num;
+
+    const nextSubList = document.querySelector(`#step${step}sublist`);
+    if (nextSubList) nextSubList.classList.add('current');
 
     for (let i = 1; i < num; i++) {
       const leStep = document.querySelector(`#step${i}`);
+      const leSubList = document.querySelector(`#step${i}sublist`);
+
       leStep.classList.add("past");
+      if (leSubList) leSubList.classList.add('past');
     }
     document.querySelector(`#step${step}`).classList.add("current");
   }
@@ -637,12 +649,17 @@
       const valid = nameValidation(fileNameInput.value.trim());
       const noClassesSelected = settings["includecourse"].every((e) => !e);
 
-      if (noClassesSelected)
-        return (validateText.textContent =
-          "At least one class needs to be selected to export");
-      if (!valid[0]) return (validateText.textContent = valid[1]);
+      if (noClassesSelected) {
+        validateText.classList.add('message', 'show', 'error');
+        return validateText.textContent = "At least one class needs to be selected to export";
+      }
+      if (!valid[0]) {
+        validateText.classList.add('message', 'show', 'error');
+        return validateText.textContent = valid[1];
+      }
 
       validateText.textContent = "";
+      validateText.classList.remove('show');
       chrome.downloads.download({
         url: createDownload(file),
         filename: `${fileNameInput.value.trim() || "schedule"}.ics`,
@@ -779,8 +796,9 @@
           editingName = true;
 
           const handleSpaceBar = (e) => {
-            if (e.key === " ") e.preventDefault()
+            if (e.key === " ") e.preventDefault();
           }
+
 
           const finalizeText = async (reset = false) => {
             const trimmed = text.value.trim()
@@ -815,6 +833,7 @@
             switch (e.key.toLowerCase()) {
               case "enter": {
                 text.blur();
+                e.preventDefault()
                 break;
               }
             }
@@ -905,8 +924,8 @@
         for (const option of courseOptions) {
           const id = option.trim().replaceAll(" ", "").toLowerCase();
 
-          const element = document.createElement("div");
-          element.classList.add("option");
+          const optionElement = document.createElement("div");
+          optionElement.classList.add("option");
 
           const label = document.createElement("label");
           const checkbox = document.createElement("input");
@@ -925,8 +944,8 @@
           label.setAttribute("for", id + index);
           label.textContent = option;
 
-          element.append(checkbox, label);
-          options.append(element);
+          optionElement.append(checkbox, label);
+          options.append(optionElement);
 
           settings[id].push(checkbox.checked);
         }

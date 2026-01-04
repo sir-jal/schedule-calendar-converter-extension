@@ -57,7 +57,7 @@
     </div>
 
     <div class="fileName">
-      <h3>File Name</h3>
+      <h3 class="inputLabel">File Name</h3>
       <input type="text" name="fileName" id="fileName" placeholder="schedule" maxlength="355" />
     </div>
     <p id="validation"></p>
@@ -67,7 +67,7 @@
     </div>
 
     <div class="school-search">
-      <h3>School Name</h3>
+      <h3 class="inputLabel">School Name</h3>
       <input type="text" name="school-name" id="school-name" />
       <div class="search-results"></div>
     </div>
@@ -79,11 +79,17 @@
       <ol id="steps">
         <li class="step" id="step1">Go to school registration page (Banner)</li>
         <li class="step" id="step2">Click "schedule details"</li>
+        <ul class="sublist" id="step2sublist">
+          <li>This allows the extension to view your classes.</li>
+        </ul>
         <li class="step" id="step3">Click "import schedule"</li>
+        <ul class="sublist" id="step3sublist">
+          <li>This will load your classes into the extension.</li>
+        </ul>
         <li class="step" id="step4">
-          Customize .ics file
+          Customize .ics file, then export
         </li>
-        <ul>
+        <ul class="sublist" id="step4sublist">
           <li>Unchecking a class excludes the class from the .ics file.</li>
           <li>Each class has its own options.</li>
           <li>You may rename a class by double clicking on it or by pressing E or F2 on your keyboard if you're focused
@@ -108,7 +114,6 @@
           </ul>
           <li>Use the textbox to name the .ics file. The name will be validated before downloading.</li>
         </ul>
-        <li class="step" id="step5">Export & Download .ics file</li>
       </ol>
       <div id="popupbuttoncontainer">
         <button id="closePopup">Close</button>

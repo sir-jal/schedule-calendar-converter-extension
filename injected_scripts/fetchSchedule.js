@@ -52,9 +52,10 @@
       index
     ].textContent; // example: 'Differential Calculus | Mathematics 1551 Section L01 | Class Begin: 08/18/2025 | Class End: 12/11/2025'
 
-    const meetingInformation = document.querySelectorAll(
+    const meetingInformationDiv = document.querySelectorAll(
       ".listViewMeetingInformation"
-    )[index].textContent; // example: '08/18/2025 -- 12/11/2025   FridaySMTWTFS   03:30  PM - 04:20  PM Type: Class Location: Georgia Tech-Atlanta * Building: Skiles Room: 254'
+    )[index]
+    const meetingInformation = meetingInformationDiv.textContent; // example: '08/18/2025 -- 12/11/2025   FridaySMTWTFS   03:30  PM - 04:20  PM Type: Class Location: Georgia Tech-Atlanta * Building: Skiles Room: 254'
 
     const [courseTitle, courseDesc, classBegin, classEnd] =
       courseInfo.split(" | ");
@@ -122,7 +123,7 @@
     // day and time
 
 
-
+    const times = meetingInformationDiv.querySelectorAll(".ui-pillbox+span");
     for (const row of rows) {
       // example row: '08/18/2025 -- 12/11/2025   FridaySMTWTFS   03:30  PM - 04:20  PM Type: Class Location: Georgia Tech-Atlanta * Building: Skiles Room: 254'
 
@@ -136,7 +137,10 @@
         "Sunday",
       ];
       const days = dayList.filter((day) => row.includes(day)).join(",");
-      if (!days) {
+
+
+      const time = times?.[rows.indexOf(row)]?.textContent?.trim() ?? row.match(timeRegex12)?.[0] ?? row.match(timeRegex24)?.[0];
+      if (!days || !time) {
         Schedule.push({
           courseTitle,
           displayName: courseTitle,
@@ -154,8 +158,7 @@
         })
         continue;
       }
-      let time = row.match(timeRegex12)?.[0];
-      if (!time) time = row.match(timeRegex24)?.[0]
+
 
 
       const timeSplit = time.split("-")
@@ -164,13 +167,13 @@
       // location
       // building name
       const buildingStringIndex = row.indexOf("Building");
-      const buildingAndRoom = row.substring(buildingStringIndex);
-      const buildingName = buildingAndRoom
-        .substring(0, buildingAndRoom.indexOf("Room"))
+      const toBuildingStr = row.substring(buildingStringIndex);
+      const buildingName = toBuildingStr
+        .substring(0, toBuildingStr.indexOf("Room"))
         .replace("Building: ", "")
         .trim();
-      const roomNumber = buildingAndRoom
-        .substring(buildingAndRoom.indexOf("Room"))
+      const roomNumber = toBuildingStr
+        .substring(toBuildingStr.indexOf("Room"))
         .replace("Room: ", "")
         .trim();
 

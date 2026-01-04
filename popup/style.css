@@ -31,6 +31,10 @@ h2 {
   font-size: 16px;
 }
 
+.inputLabel {
+  font-size: 17px;
+}
+
 hr {
   color: black;
   border: black solid 0.1px;
@@ -135,6 +139,7 @@ img {
 
 #fileName {
   width: 300px;
+  font-size: 14px;
 }
 
 .school-search {
@@ -303,7 +308,7 @@ summary input[type="text"]:focus {
 }
 
 .step.current,
-.step.current li {
+.sublist.current li {
   font-weight: bold;
   text-decoration: underline;
 }
@@ -313,7 +318,7 @@ summary input[type="text"]:focus {
 }
 
 .step.past,
-.step.past li {
+.sublist.past li {
   text-decoration: line-through;
 }
 
@@ -351,6 +356,7 @@ select {
 .courseButton {
   margin-top: 10px;
 }
+
 
 *:focus {
   outline: #F00 solid 1px;
