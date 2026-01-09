@@ -1,8 +1,6 @@
 (() => {
   // DEFINING GLOBAL VARIABLES
 
-  const fileName = document.querySelector(".fileName");
-  const fileNameInput = document.querySelector("#fileName");
   const version = document.querySelector("#versionNumber");
   const schoolName = document.querySelector("#school-name");
   const schoolSection = document.querySelector(".school-search");
@@ -17,6 +15,7 @@
   const actionHistory = [] // may help with replicating errors and debugging
   const colors = ["green", "blue", "yellow", "aqua", "red", "orange", "teal", "purple", "brown", "beige", "white", "bisque", "maroon", "magenta"];
   const keysToEditName = ["e", "f2"];
+  const waitlistedCourses = [];
   let injection_error = false;
   let step = 1;
   let links = {};
@@ -128,7 +127,9 @@
 
   stepsButton.addEventListener("click", async () => {
     stepsPopup.showModal();
-    stepsPopup.scrollTo({ top: 0 })
+    const stepElement = document.querySelector(`#step${step}`);
+    stepsPopup.scroll({ top: 0 });
+    stepElement.scrollIntoView({ behavior: 'smooth' });
     stepsPopup.style.opacity = 1;
     await wait(500);
     popupOpen = true;
@@ -214,7 +215,7 @@
     button.textContent = "Error";
 
     message.classList.add("error", "show");
-    message.innerHTML = `Uh oh! I ran into ${errorLog.length} error(s)! I do apologize for this.<br><br>Below is a log file that has been generated for you to download. If you would like to report this error (highly recommended), please do so in the feedback form (Click 'Give feedback' to access). This would massively help the developer improve the extension to ensure it works for everyone, assuming you're using Banner.<br><br><a href=${url} download="errorlog.txt">Download Error Log</a`;
+    message.innerHTML = `Uh oh! I ran into ${errorLog.length} error(s)! I do apologize for this.<br><br>Below is a log file that has been generated for you to download. If you would like to report this error (highly recommended), please do so in the Help & Feedback Hub (Click 'Help & Feedback' at the bottom to access). This would massively help the developer improve the extension to ensure it works for everyone, assuming you're using Banner.<br><br><a href=${url} download="errorlog.txt">Download Error Log</a`;
   }
 
   window.addEventListener("error", (e) => {
@@ -270,6 +271,7 @@
   function buildICSEvent(
     courseIndex,
     title,
+    courseCode,
     buildingName,
     roomNumber,
     days,
@@ -283,12 +285,13 @@
     settings
   ) {
     // figure out settings
+    const includeCourseCode = settings['includecoursecode'][courseIndex];
     const includeProfName = settings[`includeprofessornames`][courseIndex];
     const includeSection = settings[`includesection`][courseIndex];
     const includeLocation = settings[`includeclasslocation`][courseIndex];
     const onlyPrimaryProfessor =
       includeProfName && settings["onlyincludeprimaryprofessor"][courseIndex];
-    const asynchronous = days === "ASYNCHRONOUS"
+    const asynchronous = days === "ASYNCHRONOUS";
 
     const uid = crypto.randomUUID();
 
@@ -300,7 +303,7 @@
         roomNumber !== "NA" &&
         buildingName !== "Online" &&
         roomNumber !== "Online" && !asynchronous
-        ? `${buildingName} ${roomNumber}`
+        ? `${buildingName}\\, Room ${roomNumber}`
         : "No location found";
 
     // const [month, day, year] = endDate.split("/");
@@ -336,8 +339,8 @@
         `UID:${uid}`,
         `DTSTAMP:${today.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z"}`,
         `COLOR:${chosenColor}`,
-        `SUMMARY:${waitlisted ? "(WAITLISTED) " : ""}${title}` +
-        (includeSection ? `, Section ${section.toUpperCase()}` : ""),
+        `SUMMARY:${waitlisted ? "[WL] " : ""}${includeCourseCode ? `${courseCode}: ` : ""}${title}` +
+        (includeSection ? `(${section.toUpperCase()})` : ""),
         `DESCRIPTION:${includeProfName
           ? `No meeting time; asynchronous\\nProfessor(s): ${onlyPrimaryProfessor ? prof[0] : prof.join(", ")}`
           : "No meeting time; asynchronous"
@@ -360,8 +363,8 @@
         `UID:${uid}`,
         `DTSTAMP:${today.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z"}`,
         `COLOR:${chosenColor}`,
-        `SUMMARY:${waitlisted ? "(WAITLISTED) " : ""}${title}` +
-        (includeSection ? `, Section ${section.toUpperCase()}` : ""),
+        `SUMMARY:${waitlisted ? "[WL] " : ""}${includeCourseCode ? `${courseCode}: ` : ""}${title}` +
+        (includeSection ? ` (${section.toUpperCase()})` : ""),
         `DESCRIPTION:${includeProfName
           ? `Professor(s): ${onlyPrimaryProfessor ? prof[0] : prof.join(", ")}`
           : ""
@@ -456,9 +459,7 @@
     const path = currentUrl.pathname;
     const broaderPath = "/StudentRegistrationSsb/ssb/"; // used to direct the user to the path below
     const targetPath = [
-      "/StudentRegistrationSsb/ssb/registrationHistory/registrationHistory",
-      "/StudentRegistrationSsb/ssb/classRegistration/classRegistration",
-    ]; // this is banner's View Registration Information page, regardless of host name
+      "/StudentRegistrationSsb/ssb/registrationHistory/registrationHistory"]; // this is banner's View Registration Information page, regardless of host name
     if (!targetPath.includes(path)) {
       if (!path.includes(broaderPath)) {
         button.toggleAttribute("disabled", true);
@@ -477,7 +478,7 @@
           const schools = getSchools(schoolInput);
           if (schools.length === 0) {
             let div = document.createElement("div");
-            div.textContent = `No results for ${schoolInput}. If you feel your school is missing, fill out the feedback form that is linked at the bottom of this page. In the meantime, go to your school's Banner registration page. If your school does not use Banner, this extension may not work for you.`;
+            div.textContent = `No results for ${schoolInput}. If you feel your school is missing, fill out the Help & Feedback form that is linked at the bottom of this page. In the meantime, go to your school's Banner registration page. If your school does not use Banner, this extension may not work for you.`;
             results.append(div);
           }
 
@@ -503,7 +504,7 @@
       } else {
         button.toggleAttribute("disabled", true);
         message.textContent =
-          "You seem to be on Banner. Please go to a page where you can view your schedule.";
+          "You seem to be on Banner. Please go to the 'View Registration Information' page.";
         message.classList.add("alert", "show");
       }
 
@@ -521,7 +522,7 @@
     // triggered by function checkForClasses
     if (msg === "noClass") {
       message.textContent =
-        'Please click on "Schedule Details". If you have already done this, I am unable to see your classes. Try switching terms, clicking out and back in "schedule details", or refreshing the page. If nothing works, use the feedback form to receive support.';
+        'Please click on "Schedule Details". If you have already done this, I am unable to see your classes. Try switching terms, clicking out and back in "schedule details", or refreshing the page. If nothing works, use the Help & Feedback form (at the bottom) to receive support.';
       changeStep(2);
       message.classList.add("show", "alert");
       button.toggleAttribute("disabled", true);
@@ -536,7 +537,7 @@
       button.textContent = "No classes detected";
       message.classList.add("error", "show");
       message.textContent =
-        "No class detected! You may need to change your term. Otherwise, please try again later once you have registered for this class.";
+        "No class detected! You may need to change your term. Otherwise, please try again later once you have registered for classes.";
     }
     if (typeof msg === "object") {
       if (Object.keys(msg).includes("error")) {
@@ -559,6 +560,17 @@
   //
   // this is used to detect when checkboxes are checked/unchecked.
   // this will update the settings object which will later be used when downloading the .ics file
+
+  // this is an array of arrays that keep track of per-class settings that overlap each other.
+  // in each array, the first element is always the setting that overlaps the others
+  // if at any point the first element is unchecked, the rest of the settings will be disabled.
+  const optionsOverlap = [];
+
+  function changeSetting(setting, index, change) {
+    if (index !== -1) settings[setting][index] = change;
+    else settings[setting] = change;
+  }
+
   document.addEventListener("change", (event) => {
     if (
       event.target.tagName === "INPUT" &&
@@ -566,13 +578,33 @@
     ) {
       const id = event.target.id;
       if (id.includes("waitlisted")) {
-        settings[id] = event.target.checked;
+
+        changeSetting(id, -1, event.target.checked);
+
+        for (const course of waitlistedCourses) {
+          const leCheckBox = document.querySelector(`#${course}`);
+          const index = parseInt(leCheckBox.id.match(/\d+/)[0]);
+          leCheckBox.disabled = !event.target.checked;
+          leCheckBox.checked = event.target.checked ? settings["includecourse"][index] : false;
+        }
         return;
       }
       const index = parseInt(id.match(/\d+/)[0]);
       const setting = id.match(/\D+/)[0];
+
+      const overlapIndex = optionsOverlap.indexOf(optionsOverlap.find(e => e[0] === setting))
+      if (overlapIndex !== -1) {
+        for (const overlap of optionsOverlap[overlapIndex].slice(1)) {
+
+          const checkbox = document.querySelector(`#${overlap}${index}`);
+          checkbox.disabled = !event.target.checked;
+
+        }
+      }
+
+
       actionHistory.push(`User changed the following setting: ${setting} at index ${index} with a new value of ${event.target.checked}`);
-      settings[setting][index] = event.target.checked;
+      changeSetting(setting, index, event.target.checked);
 
     }
   });
@@ -607,6 +639,7 @@
         const {
           courseTitle,
           displayName,
+          courseCode,
           days,
           time,
           startDate,
@@ -623,6 +656,7 @@
         const event = buildICSEvent(
           schedule.indexOf(course),
           displayName,
+          courseCode,
           buildingName,
           roomNumber,
           days,
@@ -646,24 +680,19 @@
 
 
 
-      const valid = nameValidation(fileNameInput.value.trim());
       const noClassesSelected = settings["includecourse"].every((e) => !e);
-
+      const validateText = document.querySelector('#validation');
       if (noClassesSelected) {
         validateText.classList.add('message', 'show', 'error');
         return validateText.textContent = "At least one class needs to be selected to export";
-      }
-      if (!valid[0]) {
-        validateText.classList.add('message', 'show', 'error');
-        return validateText.textContent = valid[1];
       }
 
       validateText.textContent = "";
       validateText.classList.remove('show');
       chrome.downloads.download({
         url: createDownload(file),
-        filename: `${fileNameInput.value.trim() || "schedule"}.ics`,
-        saveAs: false,
+        filename: `schedule.ics`,
+        saveAs: true,
       });
     } else {
       const selectionContainer = document.querySelector("#selectionContainer");
@@ -674,12 +703,19 @@
         const selectBox = document.querySelector("#optionSelect");
         const value = selectBox.value;
         actionHistory.push(`User clicked on the Select All button with the Select Menu value: ${value}`);
+        const index = optionsOverlap.indexOf(optionsOverlap.find(e => e[0] === value));
+
 
 
         for (let i = 0; i < schedule.length; i++) {
           if (schedule[i].days === "ASYNCHRONOUS") continue;
-          settings[value][i] = true;
+          if (schedule[i].waitlisted && !waitlistedCheckbox.checked) continue;
+          changeSetting(value, i, true);
           document.querySelector(`#${value}${i}`).checked = true;
+
+          if (index !== -1) optionsOverlap[index].forEach(e => {
+            document.querySelector(`#${e}${i}`).disabled = false;
+          })
         }
       };
 
@@ -687,11 +723,16 @@
         const selectBox = document.querySelector("#optionSelect");
         const value = selectBox.value;
         actionHistory.push(`User clicked on the Deselect All button with the Select Menu value: ${value}`);
+        const index = optionsOverlap.indexOf(optionsOverlap.find(e => e[0] === value));
 
         for (let i = 0; i < schedule.length; i++) {
           if (schedule[i].days === "ASYNCHRONOUS") continue;
-          settings[value][i] = false
+          changeSetting(value, i, false);
           document.querySelector(`#${value}${i}`).checked = false;
+
+          if (index !== -1) optionsOverlap[index].forEach(e => {
+            document.querySelector(`#${e}${i}`).disabled = true;
+          })
         }
       };
 
@@ -732,14 +773,21 @@
       waitlistedContainer.append(waitlistedCheckbox, waitlistedLabel);
 
       const courseOptions = [
+        "Include course code",
         "Include professor names",
         "Only include primary professor",
         "Include section",
         "Include class location",
       ]; // options per class
 
+      const convertToId = (str) => {
+        return str.trim().replaceAll(" ", "").toLowerCase()
+      };
+
+      optionsOverlap.push([convertToId(courseOptions[1]), convertToId(courseOptions[2])]);
+
       courseOptions.forEach(
-        (e) => (settings[e.trim().replaceAll(" ", "").toLowerCase()] = [])
+        (e) => (settings[convertToId(e)] = [])
       );
       const id = "includecourse";
       settings[id] = [];
@@ -761,9 +809,11 @@
           section,
           prof,
           waitlisted,
+          courseCode
         } = course;
 
         const asynchronous = days === "ASYNCHRONOUS";
+
 
 
         const index = schedule.indexOf(course);
@@ -860,7 +910,7 @@
         checkbox.id = id + index;
         const courseStr = `${courseTitle}`;
 
-
+        if (waitlisted) waitlistedCourses.push(checkbox.id);
 
         span.textContent = courseStr;
 
@@ -887,6 +937,7 @@
         const infoObj = {
           asynchronous,
           waitlisted,
+          "Course Code": courseCode,
           Section: section.toUpperCase(),
           Professors: prof.join(", "),
           "Class Active": `${startDate} - ${endDate}`,
@@ -902,7 +953,7 @@
 
           if (key === "waitlisted") {
             if (!value) continue;
-            div.append("This class is WAITLISTED");
+            div.append("This class is WAITLISTED. If included, this will be indicated by the prefix: [WL].");
             courseDetails.append(div);
             continue;
           } else if (key === "asynchronous") {
@@ -910,6 +961,8 @@
             div.append(`This class is likely asynchronous as the extension could not find a time/day. If you include this course in your .ics file, it will ONLY (1) create an all-day event on ${startDate}.`);
             courseDetails.append(div);
             continue;
+          } else if (key === "Course Code") {
+            if (!value) continue;
           }
 
 
@@ -937,8 +990,11 @@
             (option.includes("professor") && prof[0] === "No professor")
           )
             checkbox.checked = false;
-
           if (option.includes('location') && asynchronous) checkbox.disabled = true;
+          if (option.includes('code') && !courseCode) {
+            checkbox.disabled = true;
+            checkbox.checked = false;
+          }
           checkbox.name = id + index;
           checkbox.id = id + index;
           label.setAttribute("for", id + index);
@@ -958,11 +1014,9 @@
 
 
       message.textContent =
-        "Classes successfully loaded. Check the steps located at the bottom of the page to learn how to customize your .ics file.";
+        "Classes successfully loaded. View the steps located at the bottom of the page to learn how to customize your .ics file.";
 
       message.classList.add("success", "show");
-
-      fileName.style.display = "flex";
 
 
       button.textContent = "Export .ICS File";

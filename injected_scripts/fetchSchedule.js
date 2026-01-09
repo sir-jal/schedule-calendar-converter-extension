@@ -4,6 +4,7 @@
 (() => {
   const timeRegex12 = /\d{2}:\d{2}\s{2}(?:AM|PM)\s*-\s*\d{2}:\d{2}\s{2}(?:AM|PM)/;
   const timeRegex24 = /\d{2}:\d{2}\s*-\s*\d{2}:\d{2}/;
+  const header = document.querySelector('h1').textContent;
   function findAllIndices(str, sub) {
     // find all indices where a substring occurs in a string
     let indices = [];
@@ -51,6 +52,9 @@
     const courseInfo = document.querySelectorAll(".list-view-course-info-div")[
       index
     ].textContent; // example: 'Differential Calculus | Mathematics 1551 Section L01 | Class Begin: 08/18/2025 | Class End: 12/11/2025'
+
+    const courseCode = Array.from(document.querySelectorAll(`#table1 tr td[data-property=subjectCourseSectionNumber]`))?.[index]?.textContent?.trim()?.split(", ")?.[0] ?? "";
+
 
     const meetingInformationDiv = document.querySelectorAll(
       ".listViewMeetingInformation"
@@ -144,6 +148,7 @@
         Schedule.push({
           courseTitle,
           displayName: courseTitle,
+          courseCode,
           days: "ASYNCHRONOUS",
           time: "ASYNCHRONOUS",
           startDate,
@@ -180,6 +185,7 @@
       Schedule.push({
         courseTitle,
         displayName: courseTitle,
+        courseCode,
         days,
         time,
         startDate,

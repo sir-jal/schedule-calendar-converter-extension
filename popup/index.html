@@ -47,19 +47,16 @@
       <button id="deselectAll">Deselect All</button>
       <select name="optionSelect" id="optionSelect">
         <option value="includecourse">Courses</option>
-        <option value="includeprofessornames">Professor names</option>
+        <option value="includecoursecode">Include course code</option>
+        <option value="includeprofessornames">Include professor names</option>
         <option value="onlyincludeprimaryprofessor">
           Primary professor only
         </option>
-        <option value="includesection">Section</option>
-        <option value="includeclasslocation">Class location</option>
+        <option value="includesection">Include section</option>
+        <option value="includeclasslocation">Include location</option>
       </select>
     </div>
 
-    <div class="fileName">
-      <h3 class="inputLabel">File Name</h3>
-      <input type="text" name="fileName" id="fileName" placeholder="schedule" maxlength="355" />
-    </div>
     <p id="validation"></p>
 
     <div class="buttoncontainer">
@@ -67,7 +64,7 @@
     </div>
 
     <div class="school-search">
-      <h3 class="inputLabel">School Name</h3>
+      <label class="inputLabel" for="school-name">School Name</label>
       <input type="text" name="school-name" id="school-name" />
       <div class="search-results"></div>
     </div>
@@ -77,7 +74,7 @@
       <h1>How to use this extension</h1>
       <h3>Click out or click the button below to close</h3>
       <ol id="steps">
-        <li class="step" id="step1">Go to school registration page (Banner)</li>
+        <li class="step" id="step1">Go to View Registration Information page (Banner)</li>
         <li class="step" id="step2">Click "schedule details"</li>
         <ul class="sublist" id="step2sublist">
           <li>This allows the extension to view your classes.</li>
@@ -106,14 +103,15 @@
           <li>
             Some options may overlap each other. For example, say there are 2
             options: "include professor name" and "put professor name in title".
-            If the former is disabled, the latter will not apply.
+            If the former is disabled, the latter will counsequently be disabled as well.
           </li>
           <li>You can mass (de)select by using the appropriate buttons and the select menu.</li>
           <ul>
             <li>Asynchronous courses will not be affected by these buttons.</li>
           </ul>
-          <li>Use the textbox to name the .ics file. The name will be validated before downloading.</li>
         </ul>
+        <li>If at any point you come across an issue or would like to provide feedback, fill out the feedback form.</li>
+        <li>If you have any questions, <a href="mailto:jalen.smallwood9124@gmail.com">email me.</a></li>
       </ol>
       <div id="popupbuttoncontainer">
         <button id="closePopup">Close</button>
@@ -123,7 +121,7 @@
   </dialog>
 
   <div class="footer">
-    <a href="http://forms.gle/FV54aHLFmzFs9Dqm6" id="feedback" target="_blank">Give feedback</a>
+    <a href="http://forms.gle/FV54aHLFmzFs9Dqm6" id="feedback" target="_blank">Help & Feedback</a>
     <a href="https://github.com/sir-jal/schedule-calendar-converter-extension" target="_blank">GitHub</a>
     <a tabindex="0" id="stepsButton">Steps to using extension</a>
   </div>

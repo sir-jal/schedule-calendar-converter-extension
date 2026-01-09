@@ -33,6 +33,13 @@ h2 {
 
 .inputLabel {
   font-size: 17px;
+  margin-top: 15px;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.export {
+  margin-top: 15px;
 }
 
 hr {
@@ -76,6 +83,8 @@ input[type="text"] {
   border-left: solid rgb(255, 254, 245) 4px;
   background-color: rgb(255, 229, 58);
   padding: 10px;
+  border-radius: 5px;
+
 }
 
 .message.show {
@@ -183,6 +192,7 @@ button {
 
 button:not(:disabled):hover {
   background-color: rgb(97, 97, 255);
+  cursor: pointer;
 }
 
 button:not(:disabled):active {
@@ -358,6 +368,23 @@ select {
 }
 
 
-*:focus {
-  outline: #F00 solid 1px;
+
+
+:focus {
+
+  outline: none
+}
+
+:focus-visible {
+  outline: #F00 solid 5px;
+  outline-offset: 2px;
+}
+
+input[type=text]:focus-visible {
+  outline: auto;
+}
+
+#includewaitlisted {
+  width: 15px;
+  height: 15px;
 }
