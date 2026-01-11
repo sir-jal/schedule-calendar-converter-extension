@@ -15,7 +15,7 @@ First, download the extension, then:
 
 1. Head to Banner
 2. Access the registration section
-3. Go to a page that allows you to view your schedule
+3. Go to the "View Registration Information" page
 4. Hit "Schedule Details". This is usually located next to the Schedule button.
 5. Click on the extension and let the magic begin
 
