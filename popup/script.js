@@ -16,13 +16,12 @@
   const colors = ["green", "blue", "yellow", "aqua", "red", "orange", "teal", "purple", "brown", "beige", "white", "bisque", "maroon", "magenta"];
   const keysToEditName = ["e", "f2"];
   const waitlistedCourses = [];
+
   let injection_error = false;
   let step = 1;
   let links = {};
   let changingLocal = false;
   let editingName = false;
-
-
   let popupOpen = false;
   let revertingChanges = false;
 
@@ -30,134 +29,16 @@
 
 
 
-  // PRELIMINARY
+
+
+  // FUNCTIONS
 
 
 
-  // makes all "a" tags clickable via keyboard
-  const aTags = Array.from(document.querySelectorAll('a'));
-
-  for (const a of aTags) {
-    a.addEventListener("keydown", (e) => {
-      if (e.key === " ") {
-        a.click();
-      }
-    })
-  }
 
 
-  // anti cache editing system
-  chrome.storage.onChanged.addListener(async (changes, namespace) => {
-    if (revertingChanges) return;
-    for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
 
-      if (!changingLocal) {
-        if (key === "lastUpdated") {
-          revertingChanges = true;
-          chrome.storage.local.set({ "lastUpdated": oldValue });
-          console.log(
-            "CONSOLE CACHE CHANGE DETECTED - PLEASE DO NOT MODIFY THE CACHE. YOUR CHANGES HAVE BEEN REVERTED."
-          );
-        } else if (key === "info") {
-          revertingChanges = true;
-          chrome.storage.local.set({ "info": oldValue });
-          console.log(
-            "CONSOLE CACHE CHANGE DETECTED - PLEASE DO NOT MODIFY THE CACHE. YOUR CHANGES HAVE BEEN REVERTED."
-          );
-        } else {
-          revertingChanges = true;
-          await chrome.storage.local.remove(key);
-          console.log(
-            "LOCAL STORAGE CHANGE DETECTED - PLEASE DO NOT MODIFY LOCAL STORAGE. YOUR CHANGES HAVE BEEN REMOVED."
-          );
-        }
-      }
-      await wait(150);
-    }
 
-    revertingChanges = false;
-  });
-
-  // Display version information and update links for school searches (caching)
-
-  async function updateCache() {
-    const e = await chrome.storage?.local?.get(["lastUpdated"]);
-    const lastUpdated = new Date(e?.lastUpdated ?? 0).getTime();
-    changingLocal = true;
-    await wait(150);
-    if (
-      Object.keys(e).length === 0 ||
-      lastUpdated + CACHE_MAX_AGE <= Date.now()
-    ) {
-      await chrome.storage?.local?.set({
-        info: await getJSON(
-          "https://sir-jal.github.io/schedule-calendar-converter-extension/extension_info.json"
-        ),
-        lastUpdated: Date.now(),
-      });
-
-    }
-
-    changingLocal = false;
-    return await chrome.storage?.local?.get(["info"]);
-  }
-
-  window.addEventListener("load", async () => {
-    const versionJson = await getJSON("../manifest.json");
-    version.textContent = versionJson.version;
-
-    const infoJson = await updateCache();
-    links =
-      infoJson.info?.banner_links ??
-      (await getJSON(
-        "https://sir-jal.github.io/schedule-calendar-converter-extension/extension_info.json"
-      ));
-  });
-
-  // everything related to the steps pop up
-
-  const closePopUp = async () => {
-    stepsPopup.style.opacity = 0;
-    await wait(500);
-    popupOpen = false;
-    stepsPopup.close();
-  }
-
-  document.querySelector('#closePopup').addEventListener('click', closePopUp)
-
-  stepsButton.addEventListener("click", async () => {
-    stepsPopup.showModal();
-    const stepElement = document.querySelector(`#step${step}`);
-    stepsPopup.scroll({ top: 0 });
-    stepElement.scrollIntoView({ behavior: 'smooth' });
-    stepsPopup.style.opacity = 1;
-    await wait(500);
-    popupOpen = true;
-  });
-
-  stepsPopup.style.opacity = 0;
-
-  stepsPopup.onclick = async (e) => {
-    const rect = stepsPopup.getBoundingClientRect();
-    const clickedOutside =
-      e.clientX < rect.left ||
-      e.clientX > rect.right ||
-      e.clientY < rect.top ||
-      e.clientY > rect.bottom;
-
-    if (clickedOutside) {
-      closePopUp();
-
-    }
-  };
-  changeStep(1);
-
-  //
-  //
-  //
-  //
-  //
-  // handles errors
 
   function changeStep(num) {
     const steps = document.querySelectorAll(".step");
@@ -218,25 +99,28 @@
     message.innerHTML = `Uh oh! I ran into ${errorLog.length} error(s)! I do apologize for this.<br><br>Below is a log file that has been generated for you to download. If you would like to report this error (highly recommended), please do so in the Help & Feedback Hub (Click 'Help & Feedback' at the bottom to access). This would massively help the developer improve the extension to ensure it works for everyone, assuming you're using Banner.<br><br><a href=${url} download="errorlog.txt">Download Error Log</a`;
   }
 
-  window.addEventListener("error", (e) => {
-    handleError(e, "error");
-  });
-  window.addEventListener("unhandledrejection", (e) => {
-    handleError(e, "promise");
-  });
 
+  async function updateCache() {
+    const e = await chrome.storage?.local?.get(["lastUpdated"]);
+    const lastUpdated = new Date(e?.lastUpdated ?? 0).getTime();
+    changingLocal = true;
+    await wait(150);
+    if (
+      Object.keys(e).length === 0 ||
+      lastUpdated + CACHE_MAX_AGE <= Date.now()
+    ) {
+      await chrome.storage?.local?.set({
+        info: await getJSON(
+          "https://sir-jal.github.io/schedule-calendar-converter-extension/extension_info.json"
+        ),
+        lastUpdated: Date.now(),
+      });
 
+    }
 
-
-
-
-
-  // FUNCTIONS
-
-
-
-
-
+    changingLocal = false;
+    return await chrome.storage?.local?.get(["info"]);
+  }
 
   // get current tab
   async function getCurrentTab() {
@@ -405,32 +289,188 @@
   }
 
   // validates the file name as an error can occur otherwise
-  function nameValidation(name) {
-    const nonoChars = `< > : " / \\ | ? *`.split(" ");
-    const nonoStart = ".".split(" ");
-
-    const hasNonoChars = nonoChars.some((e) => name.includes(e));
-    const startsWithNoNo = nonoStart.some((e) => name.trim().startsWith(e));
-
-    if (hasNonoChars)
-      return [
-        false,
-        `Cannot have the following characters in File Name: ${nonoChars.join(
-          ", "
-        )}`,
-      ];
-    if (name.trim().startsWith("."))
-      return [false, "Cannot start File Name with a period"];
-
-    return [true, "Yes"];
-  }
-
-  // delay function, utilizing Promises
+  // wait function, utilizing Promises
   async function wait(time) {
     return new Promise((res, rej) => {
       setTimeout(res, time);
     });
   }
+
+  // delay function
+  function delay(time, func) {
+    setTimeout(() => {
+      func();
+    }, time);
+  }
+
+
+  // formats date and time to YYYYMMDDTHHmmss format
+  // assumes dateStr argument follows this format: MM/DD/YYYY
+  function formatDate(dateStr, timeStr, justDate) {
+    const [month, day, year] = dateStr.split("/");
+    // turn time to 24h time
+    const [time, AMPM] = timeStr.split("  ");
+    let [hour, minute] = time.split(":");
+
+    if (AMPM) {
+      if (AMPM === "PM" && hour !== "12") {
+        hour = parseInt(hour) + 12; // add 12 to hour to convert to 24 hr time; example: 6 pm + 12 = 18:00
+      }
+
+      if (AMPM === "AM" && hour === "12") {
+        hour = "00";
+      }
+    }
+    return justDate ? `${year}${month}${day}` : `${year}${month}${day}T${hour.toString().padStart(2, "0")}${minute.toString().padStart(2, "0")}00`;
+  }
+
+  // formats days to .ics format. Wednesdays -> WE, Fridays -> FR
+  function formatDays(days) {
+    const split = days.split(",");
+    for (let i = 0; i < split.length; i++) {
+      const day = split[i];
+      const correctFormat = day.substring(0, 2).toUpperCase();
+      split[i] = correctFormat;
+    }
+
+    return split.join(",");
+  }
+
+  function changeSetting(setting, index, change) {
+    if (index !== -1) settings[setting][index] = change;
+    else settings[setting] = change;
+  }
+
+
+
+
+
+
+
+  // PRELIMINARY
+
+
+
+
+
+
+
+
+  // makes all "a" tags clickable via keyboard
+  const aTags = Array.from(document.querySelectorAll('a'));
+
+  for (const a of aTags) {
+    a.addEventListener("keydown", (e) => {
+      if (e.key === " ") {
+        a.click();
+      }
+    })
+  }
+
+
+  // anti cache editing system
+  chrome.storage.onChanged.addListener(async (changes, namespace) => {
+    if (revertingChanges) return;
+    for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
+
+      if (!changingLocal) {
+        if (key === "lastUpdated") {
+          revertingChanges = true;
+          chrome.storage.local.set({ "lastUpdated": oldValue });
+          console.log(
+            "CONSOLE CACHE CHANGE DETECTED - PLEASE DO NOT MODIFY THE CACHE. YOUR CHANGES HAVE BEEN REVERTED."
+          );
+        } else if (key === "info") {
+          revertingChanges = true;
+          chrome.storage.local.set({ "info": oldValue });
+          console.log(
+            "CONSOLE CACHE CHANGE DETECTED - PLEASE DO NOT MODIFY THE CACHE. YOUR CHANGES HAVE BEEN REVERTED."
+          );
+        } else {
+          revertingChanges = true;
+          await chrome.storage.local.remove(key);
+          console.log(
+            "LOCAL STORAGE CHANGE DETECTED - PLEASE DO NOT MODIFY LOCAL STORAGE. YOUR CHANGES HAVE BEEN REMOVED."
+          );
+        }
+      }
+      await wait(150);
+    }
+
+    revertingChanges = false;
+  });
+
+  // Display version information and update links for school searches (caching)
+  window.addEventListener("load", async () => {
+    const versionJson = await getJSON("../manifest.json");
+    version.textContent = versionJson.version;
+
+    const infoJson = await updateCache();
+    links =
+      infoJson.info?.banner_links ??
+      (await getJSON(
+        "https://sir-jal.github.io/schedule-calendar-converter-extension/extension_info.json"
+      ));
+  });
+
+  // everything related to the steps pop up
+
+  const closePopUp = async () => {
+    stepsPopup.style.opacity = 0;
+    await wait(140);
+    popupOpen = false;
+    stepsPopup.close();
+  }
+
+  document.querySelector('#closePopup').addEventListener('click', closePopUp)
+
+  stepsButton.addEventListener("click", async () => {
+    // so if a user is tabbing, it'll try to scroll to the next tabbable element which is NOT what i want to happen.
+    // therefore, whatever the tabbed/focused element is will be blured to prevent the scroll.
+    document.activeElement.blur();
+    document.querySelector('#closePopup').focus();
+
+    await wait(100);
+    stepsPopup.showModal();
+
+    const stepElement = document.querySelector(`#step${step}`);
+    const stepTop = stepElement.offsetTop;
+    const stepMargin = 10;
+
+    stepsPopup.scroll({ top: 0 })
+    // delay(400, () => { stepElement.scrollIntoView({ behavior: 'smooth' }) });
+    delay(200, () => { stepsPopup.scroll({ top: stepTop - stepMargin, behavior: 'smooth' }) });
+    stepsPopup.style.opacity = 1;
+
+    await wait(200);
+
+    popupOpen = true;
+  });
+
+  stepsPopup.style.opacity = 0;
+
+  stepsPopup.onclick = async (e) => {
+    const rect = stepsPopup.getBoundingClientRect();
+    const clickedOutside =
+      e.clientX < rect.left ||
+      e.clientX > rect.right ||
+      e.clientY < rect.top ||
+      e.clientY > rect.bottom;
+
+    if (clickedOutside) {
+      closePopUp();
+
+    }
+  };
+  changeStep(1);
+
+
+  window.addEventListener("error", (e) => {
+    handleError(e, "error");
+  });
+  window.addEventListener("unhandledrejection", (e) => {
+    handleError(e, "promise");
+  });
 
 
 
@@ -566,10 +606,7 @@
   // if at any point the first element is unchecked, the rest of the settings will be disabled.
   const optionsOverlap = [];
 
-  function changeSetting(setting, index, change) {
-    if (index !== -1) settings[setting][index] = change;
-    else settings[setting] = change;
-  }
+
 
   document.addEventListener("change", (event) => {
     if (
@@ -700,6 +737,7 @@
       const deselectAll = document.querySelector("#deselectAll");
 
       selectAll.onclick = () => {
+        console.log(settings);
         const selectBox = document.querySelector("#optionSelect");
         const value = selectBox.value;
         actionHistory.push(`User clicked on the Select All button with the Select Menu value: ${value}`);
@@ -727,6 +765,7 @@
 
         for (let i = 0; i < schedule.length; i++) {
           if (schedule[i].days === "ASYNCHRONOUS") continue;
+          if (schedule[i].waitlisted && !waitlistedCheckbox.checked) continue;
           changeSetting(value, i, false);
           document.querySelector(`#${value}${i}`).checked = false;
 
@@ -1062,41 +1101,5 @@
     }
   });
 
-  // formats date and time to YYYYMMDDTHHmmss format
-  // assumes dateStr argument follows this format: MM/DD/YYYY
-  function formatDate(dateStr, timeStr, justDate) {
-    const [month, day, year] = dateStr.split("/");
-    // turn time to 24h time
-    const [time, AMPM] = timeStr.split("  ");
-    let [hour, minute] = time.split(":");
-
-    if (AMPM) {
-      if (AMPM === "PM" && hour !== "12") {
-        hour = parseInt(hour) + 12; // add 12 to hour to convert to 24 hr time; example: 6 pm + 12 = 18:00
-      }
-
-      if (AMPM === "AM" && hour === "12") {
-        hour = "00";
-      }
-    }
-    return justDate ? `${year}${month}${day}` : `${year}${month}${day}T${hour.toString().padStart(2, "0")}${minute.toString().padStart(2, "0")}00`;
-  }
-
-  // formats days to .ics format. Wednesdays -> WE, Fridays -> FR
-  function formatDays(days) {
-    const split = days.split(",");
-    for (let i = 0; i < split.length; i++) {
-      const day = split[i];
-      const correctFormat = day.substring(0, 2).toUpperCase();
-      split[i] = correctFormat;
-    }
-
-    return split.join(",");
-  }
-
-  function cutOffString(str, charLimit) {
-    if (str.length > charLimit) return str.substring(0, charLimit + 1) + " ...";
-    return str;
-  }
 })();
 

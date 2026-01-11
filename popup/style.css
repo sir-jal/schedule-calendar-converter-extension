@@ -3,6 +3,20 @@
   font-style: normal;
 }
 
+:focus {
+
+  outline: none
+}
+
+:focus-visible {
+  outline: #F00 solid 5px;
+  outline-offset: 2px;
+}
+
+input[type=text]:focus-visible {
+  outline: auto;
+}
+
 body {
   background-color: rgb(228, 200, 45);
   width: 430px;
@@ -84,12 +98,13 @@ input[type="text"] {
   background-color: rgb(255, 229, 58);
   padding: 10px;
   border-radius: 5px;
+  margin-bottom: 15px;
 
 }
 
 .message.show {
   display: block;
-  margin-bottom: 15px;
+
 }
 
 .message.success {
@@ -178,10 +193,8 @@ img {
 
 .footer *:hover {
   cursor: pointer;
-}
-
-.footer *:hover {
   color: black;
+  text-decoration: underline black;
 }
 
 button {
@@ -214,10 +227,6 @@ button:not(:disabled):active {
   text-decoration: underline blue;
 }
 
-.footer:hover {
-  text-decoration: underline black;
-}
-
 .classes {
   margin-top: 50px;
   margin-bottom: 20px;
@@ -227,6 +236,7 @@ button:not(:disabled):active {
 }
 
 summary,
+label,
 .options {
   user-select: none;
 }
@@ -256,12 +266,6 @@ details:has(summary:hover) {
   cursor: pointer;
 }
 
-
-details[open] summary {
-  border-bottom: solid black 2px;
-  padding-bottom: 10px;
-}
-
 summary {
   display: flex;
   font-size: 15px;
@@ -270,13 +274,16 @@ summary {
   gap: 10px;
 }
 
+details[open] summary {
+  border-bottom: solid black 2px;
+  padding-bottom: 10px;
+}
+
 summary input[type="checkbox"] {
   width: 25px;
   height: 25px;
   margin-left: auto;
 }
-
-
 
 summary span,
 summary input[type="text"] {
@@ -295,8 +302,6 @@ summary input[type="text"]:focus {
   background-color: rgb(236, 236, 236)
 }
 
-
-
 .options {
   margin-top: 30px;
 }
@@ -309,7 +314,11 @@ summary input[type="text"]:focus {
   padding: 0;
   width: 400px;
   height: 300px;
-  transition: opacity 0.5s;
+  transition: opacity 0.2s;
+}
+
+#stepsPopup[open]::backdrop {
+  opacity: 0.5;
 }
 
 #steps li {
@@ -365,23 +374,6 @@ select {
 
 .courseButton {
   margin-top: 10px;
-}
-
-
-
-
-:focus {
-
-  outline: none
-}
-
-:focus-visible {
-  outline: #F00 solid 5px;
-  outline-offset: 2px;
-}
-
-input[type=text]:focus-visible {
-  outline: auto;
 }
 
 #includewaitlisted {
