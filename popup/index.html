@@ -7,11 +7,14 @@
   <title>Schedule to Calendar</title>
   <link rel="stylesheet" href="./style.css" />
 
-  <script src="./script.js" defer></script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap"
     rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.1/css/all.css" crossorigin="anonymous">
+
+  <script src="./script.js" defer></script>
 
 </head>
 
@@ -89,6 +92,7 @@
   </div>
 
   <div class="main">
+
     <div class="message">
       This extension will not work on the website you are on. This extension
       only works with universities who use <b><u>Banner</u></b> as their
@@ -96,35 +100,48 @@
       link.
     </div>
 
-    <div class="classes"></div>
-    <div id="selectionContainer">
-      <button id="selectAll">Select All</button>
-      <button id="deselectAll">Deselect All</button>
+    <div id="notOnWebsitePage" style="display: none;">
 
-      <select name="optionSelect" id="optionSelect">
-        <option value="includecourse">Courses</option>
-        <option value="includecoursecode">Include course code</option>
-        <option value="includeprofessornames">Include professor names</option>
-        <option value="onlyincludeprimaryprofessor">
-          Primary professor only
-        </option>
-        <option value="includesection">Include section</option>
-        <option value="includeclasslocation">Include location</option>
-      </select>
+
+      <div class="school-search">
+        <label class="inputLabel" for="school-name">School Name</label>
+        <input type="text" name="school-name" id="school-name" />
+        <div class="search-results"></div>
+      </div>
+
     </div>
 
-    <p id="validation"></p>
+
+    <div id="onWebsitePage" style="display: none;">
+      <div id="classLoadedContainer" style="display: none;">
+        <div class="classes"></div>
+        <div id="selectionContainer">
+          <button id="selectAll">Select All</button>
+          <button id="deselectAll">Deselect All</button>
+
+          <select name="optionSelect" id="optionSelect">
+            <option value="includecourse">Courses</option>
+            <option value="includecoursecode">Include course code</option>
+            <option value="includeprofessornames">Include professor names</option>
+            <option value="onlyincludeprimaryprofessor">
+              Primary professor only
+            </option>
+            <option value="includesection">Include section</option>
+            <option value="includeclasslocation">Include location</option>
+          </select>
+        </div>
+      </div>
+
+      <p id="validation"></p>
 
 
-    <div class="school-search">
-      <label class="inputLabel" for="school-name">School Name</label>
-      <input type="text" name="school-name" id="school-name" />
-      <div class="search-results"></div>
+      <div class="buttoncontainer">
+        <button id="importSchedule">Load Schedule</button>
+        <button id="refreshPopup" title="start over" style="display: none;"><i class="fas fa-undo"></i></button>
+      </div>
     </div>
 
-    <div class="buttoncontainer">
-      <button id="importSchedule">Load Schedule</button>
-    </div>
+
 
 
 

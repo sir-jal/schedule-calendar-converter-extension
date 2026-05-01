@@ -2,22 +2,36 @@
   // DEFINING GLOBAL VARIABLES
 
   const version = document.querySelector("#versionNumber");
+
   const inputFileContainer = document.querySelector(".fileInputContainer");
   const inputFileButton = document.querySelector("#importFile");
+
+  const resetPopUpButton = document.querySelector("#refreshPopup");
+  const popUpButtonIcon = document.querySelector("#refreshPopup i");
+
+  resetPopUpButton.addEventListener('click', resetPopup);
+
   const schoolName = document.querySelector("#school-name");
   const schoolSection = document.querySelector(".school-search");
+
   const settings = {};
   const docLink =
     "https://docs.google.com/document/d/1f6nR1gs8f4Ddj9vVLVmsOS5gwGHIQla28Q6va0HvfN0/edit?usp=sharing";
   const errorLog = [];
+
   const stepsButton = document.querySelector("#stepsButton");
   const stepsPopup = document.querySelector("#stepsPopup");
+
   const validateText = document.querySelector("p#validation");
+
   const CACHE_MAX_AGE = 1000 * 60 * 60 * 24 * 3; // 3 days
   const actionHistory = [] // may help with replicating errors and debugging
   const colors = ["green", "blue", "yellow", "aqua", "red", "orange", "teal", "purple", "brown", "beige", "white", "bisque", "maroon", "magenta"];
   const keysToEditName = ["e", "f2"];
   const waitlistedCourses = [];
+
+  const correctSitePageContainer = document.querySelector("#onWebsitePage");
+  const wrongSitePageContainer = document.querySelector("#notOnWebsitePage");
 
   let injection_error = false;
   let step = 1;
@@ -41,7 +55,10 @@
 
 
 
-
+  /**
+   * Changes the current step. This directly affects the steps popup.
+   * @param {number} num The step number to change to
+   */
   function changeStep(num) {
     const steps = document.querySelectorAll(".step");
     const maxSteps = steps.length;
@@ -68,6 +85,12 @@
     document.querySelector(`#step${step}`).classList.add("current");
   }
 
+  /**
+   * Handles errors and prevents the extension from crashing
+   * @param {Error} e The error
+   * @param {string} type The type of error
+   * @param {boolean} extensionError Whether or not the error was caused by the extension itself or by an injected script
+   */
   function handleError(e, type, extensionError = true) {
     let text;
     const errorType = extensionError ? "extension-error" : "injection-error";
@@ -101,7 +124,10 @@
     message.innerHTML = `Uh oh! I ran into ${errorLog.length} error(s)! I do apologize for this.<br><br>Below is a log file that has been generated for you to download. If you would like to report this error (highly recommended), please do so in the Help & Feedback Hub (Click 'Help & Feedback' at the bottom to access). This would massively help the developer improve the extension to ensure it works for everyone, assuming you're using Banner.<br><br><a href=${url} download="errorlog.txt">Download Error Log</a`;
   }
 
-
+  /**
+   * Updates the cache and returns it
+   * @returns The updated cache
+   */
   async function updateCache() {
     const e = await chrome.storage?.local?.get(["lastUpdated"]);
     const lastUpdated = new Date(e?.lastUpdated ?? 0).getTime();
@@ -124,21 +150,32 @@
     return await chrome.storage?.local?.get(["info"]);
   }
 
-  // get current tab
+  /**
+   * Fetches the current tab the user is on
+   * @returns The current tab
+   */
   async function getCurrentTab() {
     let queryOptions = { active: true, currentWindow: true };
     let [tab] = await chrome.tabs.query(queryOptions);
     return tab;
   }
 
-  // get json from .json files
+  /**
+   * Fetches JSON data via API.
+   * @param {string} fileName The name of the file or resource
+   * @returns A json representation of the data fetched, null if no data is found
+   */
   async function getJSON(fileName) {
     const request = await fetch(fileName);
     const json = await request.json();
     return json;
   }
 
-  // search schools
+  /**
+   * Searches for a school using a search query. The function will search the schools not only by name but also buy aliases.
+   * @param {string} query Search query
+   * @returns an array of schools that matches the search query
+   */
   function getSchools(query) {
     const schools = [];
     for (const school in links) {
@@ -153,24 +190,20 @@
     return schools;
   }
 
-  // build an event in ics format
+  /**
+   * Creates an .ics event for a class
+   * @param {object} course The course
+   * @param {number} courseIndex The index at which the course is located; will be used for settings
+   * @param {object} settings The per-class and general settings
+   * @returns A string representation of an .ics event
+   */
   function buildICSEvent(
+    course,
     courseIndex,
-    displayName,
-    courseTitle,
-    courseCode,
-    buildingName,
-    roomNumber,
-    days,
-    startdate,
-    endDate,
-    startTime,
-    endTime,
-    section,
-    prof,
-    waitlisted,
     settings
   ) {
+
+    console.log(course);
     // figure out settings
     const includeCourseCode = settings['includecoursecode'][courseIndex];
     const includeProfName = settings[`includeprofessornames`][courseIndex];
@@ -178,27 +211,26 @@
     const includeLocation = settings[`includeclasslocation`][courseIndex];
     const onlyPrimaryProfessor =
       includeProfName && settings["onlyincludeprimaryprofessor"][courseIndex];
-    const asynchronous = days === "ASYNCHRONOUS";
+    const asynchronous = course.days === "ASYNCHRONOUS";
 
     const uid = crypto.randomUUID();
 
-    const dayFormat = formatDays(days);
-    const location =
-      buildingName !== "None" &&
-        roomNumber !== "None" &&
-        buildingName !== "NA" &&
-        roomNumber !== "NA" &&
-        buildingName !== "Online" &&
-        roomNumber !== "Online" && !asynchronous
-        ? `${buildingName}\\, Room ${roomNumber}`
+    const dayFormat = formatDays(course.days);
+    course.location =
+      course.buildingName !== "None" &&
+        course.roomNumber !== "None" &&
+        course.buildingName !== "NA" &&
+        course.roomNumber !== "NA" &&
+        course.buildingName !== "Online" &&
+        course.roomNumber !== "Online" && !asynchronous
+        ? `${course.buildingName}\\, Room ${course.roomNumber}`
         : "No location found";
 
-    // const [month, day, year] = endDate.split("/");
 
+    const [endDateObj, startDateObj] = [new Date(course.endDate), new Date(course.startDate)];
 
-    const [endDateObj, startDateObj] = [new Date(endDate), new Date(startdate)];
-    // const [startMonth, startDay, startYear] = startdate.split("/");
-    // this is used to offset the days from the start date of the class. otherwise, every class will appear on the start date in iCloud maps.
+    // this is used to offset the days from the start date of the class. 
+    // otherwise, every class will appear on the start date in iCloud maps.
     const indices = {
       SU: 0,
       MO: 1,
@@ -213,11 +245,6 @@
     const today = new Date();
     const chosenColor = colors.pop();
 
-    // build .ics event manually, since an .ics file is just plain text.
-    // I'm using an array here to properly do the spacing, as seen in lines.join("\r\n"). using a template literal otherwise would have resulted in problems, especially
-    // in google calendar.
-    // .ics date format: YYYYMMDDTHHmmss, which is what formatDate() is converting the time to.
-
     let lines;
 
     if (asynchronous) {
@@ -226,10 +253,10 @@
         `UID:${uid}`,
         `DTSTAMP:${today.toISOString().replace(/[-:]/g, "").split(".")[0]}`,
         `COLOR:${chosenColor}`,
-        `SUMMARY:${waitlisted ? "[WL] " : ""}${includeCourseCode ? `${courseCode}: ` : ""}${displayName}` +
-        (includeSection ? `(${section.toUpperCase()})` : ""),
+        `SUMMARY:${course.waitlisted ? "[WL] " : ""}${includeCourseCode ? `${course.courseCode}: ` : ""}${course.displayName}` +
+        (includeSection ? `(${course.section.toUpperCase()})` : ""),
         `DESCRIPTION:${includeProfName
-          ? `No meeting time; asynchronous\\nProfessor(s): ${onlyPrimaryProfessor ? prof[0] : prof.join(", ")}`
+          ? `No meeting time; asynchronous\\nProfessor(s): ${onlyPrimaryProfessor ? course.prof[0] : course.prof.join(", ")}`
           : "No meeting time; asynchronous"
         }`,
         //
@@ -249,30 +276,39 @@
         `UID:${uid}`,
         `DTSTAMP:${today.toISOString().replace(/[-:]/g, "").split(".")[0]}`,
         `COLOR:${chosenColor}`,
-        `SUMMARY:${waitlisted ? "[WL] " : ""}${includeCourseCode ? `${courseCode}: ` : ""}${displayName}` +
-        (includeSection ? ` (${section.toUpperCase()})` : ""),
+        `SUMMARY:${course.waitlisted ? "[WL] " : ""}${includeCourseCode ? `${course.courseCode}: ` : ""}${course.displayName}` +
+        (includeSection ? ` (${course.section.toUpperCase()})` : ""),
         `DESCRIPTION:${includeProfName
-          ? `Professor(s): ${onlyPrimaryProfessor ? prof[0] : prof.join(", ")}`
+          ? `Professor(s): ${onlyPrimaryProfessor ? course.prof[0] : course.prof.join(", ")}`
           : ""
         }`,
         `DTSTART:${formatDate(
           `${(startDateObj.getMonth() + 1).toString().padStart(2, "0")}/${startDateObj.getDate().toString().padStart(2, "0")}/${startDateObj.getFullYear()}`,
-          startTime
+          course.startTime
         )}`,
         `DTEND:${formatDate(
           `${(startDateObj.getMonth() + 1).toString().padStart(2, "0")}/${startDateObj.getDate().toString().padStart(2, "0")}/${startDateObj.getFullYear()}`,
-          endTime
+          course.endTime
         )}`,
         `RRULE:FREQ=WEEKLY;BYDAY=${dayFormat};UNTIL=${endDateObj.getFullYear()}${(endDateObj.getMonth() + 1).toString().padStart(2, "0")}${endDateObj.getDate().toString().padStart(2, "0")}T235959`,
-        `LOCATION:` + (includeLocation ? `${location}` : ""),
+        `LOCATION:` + (includeLocation ? `${course.location}` : ""),
       ];
     }
-    lines.push(`courseTitle:${courseTitle}`, `displayName:${displayName}`, `prof:${prof.join(", ")}`, `days:${days}`, `startDate:${startdate}`, `endDate:${endDate}`, `startTime:${startTime}`, `endTime:${endTime}`, `section:${section}`, `buildingName:${buildingName}`, `roomNumber:${roomNumber}`, `waitlisted:${waitlisted}`, `courseCode:${courseCode}`, "END:VEVENT");
+
+    // adding information to make importing easier
+    lines.push(`courseTitle:${course.courseTitle}`, `displayName:${course.displayName}`, `prof:${course.prof.join(", ")}`, `days:${course.days}`, `startDate:${course.startDate}`, `endDate:${course.endDate}`, `startTime:${course.startTime}`, `endTime:${course.endTime}`, `section:${course.section}`, `buildingName:${course.buildingName}`, `roomNumber:${course.roomNumber}`, `waitlisted:${course.waitlisted}`, `courseCode:${course.courseCode}`, "END:VEVENT");
+
+    console.log(course.startDate);
+
     return lines.join("\r\n");
   }
 
+  /**
+   * Creates an .ics file
+   * @param {string[]} events Array of events
+   * @returns A string representation of the .ics file
+   */
   function buildICSFile(events) {
-    // simply creates a calendar with the previously created events in it.
     return `BEGIN:VCALENDAR\nVERSION:2.0\nCALSCALE:GREGORIAN\nMETHOD:PUBLISH\nPRODID:-//Sir Jal//Calendar Extension importable//EN\n${events.join(
       "\n"
     )}\nEND:VCALENDAR`
@@ -280,7 +316,11 @@
       .join("\r\n");
   }
 
-  // creates a download
+  /**
+   * Create a download for .ics file
+   * @param {string} content String representation of the .ics file
+   * @returns A blob URL
+   */
   function createDownload(content) {
     // self explanatory
     const blob = new Blob([content], { type: "text/calendar;charset=utf8" });
@@ -290,24 +330,40 @@
     return url;
   }
 
-  // validates the file name as an error can occur otherwise
-  // wait function, utilizing Promises
+  /**
+   * Pauses code for a certain amount of time
+   * @param {number} time The amount of time, in miliseconds, to wait
+   * @returns A promise that sets a timeout
+   */
   async function wait(time) {
     return new Promise((res, rej) => {
       setTimeout(res, time);
     });
   }
 
-  // delay function
-  function delay(time, func) {
+  /**
+   * Delays a function call
+   * @param {number} time The amount of time, in miliseconds, to wait
+   * @param {function} func The function to call after the delay
+   * @param {*[]} args Arguments to pass into the function
+   */
+  function delay(time, func, ...args) {
     setTimeout(() => {
-      func();
+      func(args);
     }, time);
   }
 
 
   // formats date and time to YYYYMMDDTHHmmss format
   // assumes dateStr argument follows this format: MM/DD/YYYY
+
+  /**
+   * Formats a date and time to .ics dates
+   * @param {string} dateStr The string representing the date. Use the format MM/DD/YYYY.
+   * @param {string} timeStr The string representing the time. Can be 12 hour or 24 hour time.
+   * @param {boolean} justDate Whether the formatted string should include just the date.
+   * @returns A formatted string in the appropriate .ics format
+   */
   function formatDate(dateStr, timeStr, justDate) {
     const [month, day, year] = dateStr.split("/");
     // turn time to 24h time
@@ -327,6 +383,14 @@
   }
 
   // formats days to .ics format. Wednesdays -> WE, Fridays -> FR
+
+  /**
+   * Formats a string pf days of the week to .ics format.
+   * 
+   * EXAMPLE: Wednesdays -> WE, Fridays -> FR, etc
+   * @param {string} days A string containing days of the week separated by commas
+   * @returns A string with only the first 2 letters of each day capitalized, split by commas
+   */
   function formatDays(days) {
     const split = days.split(",");
     for (let i = 0; i < split.length; i++) {
@@ -338,335 +402,84 @@
     return split.join(",");
   }
 
+  /**
+   * Change a setting
+   * @param {string} setting The setting to modify
+   * @param {number} index The index at which the setting will be modified. In other words, the class to modify the setting in. 
+   * If this value is -1, the function will asume it is not a class setting.
+   * @param {boolean} change The new value of the setting
+   */
   function changeSetting(setting, index, change) {
     if (index !== -1) settings[setting][index] = change;
     else settings[setting] = change;
   }
 
+  /**
+   * Reads an imported .ics file and loads them up using loadClasses().
+   * @param {string} text The .ics file (text) to read
+   */
+  async function readIcs(text = "") {
 
+    const lines = text.split('\n');
+    const firstEventStart = lines.findIndex(e => e.includes("BEGIN:VEVENT"));
+    const lastEventEnd = lines.findLastIndex(e => e.includes("END:VEVENT"));
+    let linesWithEvents = lines.slice(firstEventStart, lastEventEnd + 1);
 
+    while (linesWithEvents.length > 0) {
+      // event
+      const eventStart = linesWithEvents.findIndex(e => e.includes("BEGIN:VEVENT"));
+      const eventEnd = linesWithEvents.findIndex(e => e.includes("END:VEVENT"));
+      const eventLines = linesWithEvents.slice(eventStart, eventEnd + 1);
 
+      const parseableIndexStart = eventLines.findIndex(e => e.toLowerCase().includes("coursetitle"));
+      const parseable = eventLines.slice(parseableIndexStart);
 
+      console.log(parseableIndexStart)
+      console.log(eventLines);
+      const event = {};
+      for (const line of parseable) {
+        const firstColonIndex = line.indexOf(":");
+        const property = line.substring(0, firstColonIndex);
 
+        if (property === "END") break;
 
-  // PRELIMINARY
+        let value = line.substring(firstColonIndex + 1);
 
+        switch (property) {
+          case "prof":
+            value = value.trim().split(", ");
+            break;
+          case "waitlisted":
+            value = value === "true" ? true : false;
+            break;
+        }
+        event[property] = typeof value !== 'string' ? value : value.trim();
 
-
-
-
-
-
-
-  // makes all "a" tags clickable via keyboard
-  const aTags = Array.from(document.querySelectorAll('a'));
-
-  for (const a of aTags) {
-    a.addEventListener("keydown", (e) => {
-      if (e.key === " ") {
-        a.click();
       }
-    })
+      schedule = schedule === undefined ? [] : schedule;
+
+      schedule.push(event);
+
+      linesWithEvents = linesWithEvents.slice(eventEnd + 1);
+      if (linesWithEvents.length <= 0) {
+        break;
+      }
+    }
+
+    inputFileButton.textContent = "Importing...";
+    inputFileButton.disabled = true;
+    importScheduleButton.disabled = true;
+    await wait(1300);
+    loadClasses(true);
   }
 
-
-  // anti cache editing system
-  chrome.storage.onChanged.addListener(async (changes, namespace) => {
-    if (revertingChanges) return;
-    for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
-
-      if (!changingLocal) {
-        if (key === "lastUpdated") {
-          revertingChanges = true;
-          chrome.storage.local.set({ "lastUpdated": oldValue });
-          console.log(
-            "CONSOLE CACHE CHANGE DETECTED - PLEASE DO NOT MODIFY THE CACHE. YOUR CHANGES HAVE BEEN REVERTED."
-          );
-        } else if (key === "info") {
-          revertingChanges = true;
-          chrome.storage.local.set({ "info": oldValue });
-          console.log(
-            "CONSOLE CACHE CHANGE DETECTED - PLEASE DO NOT MODIFY THE CACHE. YOUR CHANGES HAVE BEEN REVERTED."
-          );
-        } else {
-          revertingChanges = true;
-          await chrome.storage.local.remove(key);
-          console.log(
-            "LOCAL STORAGE CHANGE DETECTED - PLEASE DO NOT MODIFY LOCAL STORAGE. YOUR CHANGES HAVE BEEN REMOVED."
-          );
-        }
-      }
-      await wait(150);
-    }
-
-    revertingChanges = false;
-  });
-
-  // Display version information and update links for school searches (caching)
-  window.addEventListener("load", async () => {
-    const versionJson = await getJSON("../manifest.json");
-    version.textContent = versionJson.version;
-
-    const infoJson = await updateCache();
-    links =
-      infoJson.info?.banner_links ??
-      (await getJSON(
-        "https://sir-jal.github.io/schedule-calendar-converter-extension/extension_info.json"
-      ));
-  });
-
-  // everything related to the steps pop up
-
-  const closePopUp = async () => {
-    stepsPopup.style.opacity = 0;
-    await wait(140);
-    popupOpen = false;
-    stepsPopup.close();
-  }
-
-  document.querySelector('#closePopup').addEventListener('click', closePopUp)
-
-  stepsButton.addEventListener("click", async () => {
-    // so if a user is tabbing, it'll try to scroll to the next tabbable element which is NOT what i want to happen.
-    // therefore, whatever the tabbed/focused element is will be blured to prevent the scroll.
-    document.activeElement.blur();
-    document.querySelector('#closePopup').focus();
-
-    await wait(100);
-    stepsPopup.showModal();
-
-    const stepElement = document.querySelector(`#step${step}`);
-    const stepTop = stepElement.offsetTop;
-    const stepMargin = 10;
-
-    stepsPopup.scroll({ top: 0 })
-    // delay(400, () => { stepElement.scrollIntoView({ behavior: 'smooth' }) });
-    delay(200, () => { stepsPopup.scroll({ top: stepTop - stepMargin, behavior: 'smooth' }) });
-    stepsPopup.style.opacity = 1;
-
-    await wait(200);
-
-    popupOpen = true;
-  });
-
-  stepsPopup.style.opacity = 0;
-
-  stepsPopup.onclick = async (e) => {
-    const rect = stepsPopup.getBoundingClientRect();
-    const clickedOutside =
-      e.clientX < rect.left ||
-      e.clientX > rect.right ||
-      e.clientY < rect.top ||
-      e.clientY > rect.bottom;
-
-    if (clickedOutside) {
-      closePopUp();
-
-    }
-  };
-  changeStep(1);
-
-
-  window.addEventListener("error", (e) => {
-    handleError(e, "error");
-  });
-  window.addEventListener("unhandledrejection", (e) => {
-    handleError(e, "promise");
-  });
-
-
-
-
-
-
-
-
-  // MAIN CODE
-
-
-
-
-
-
-
-
-
-  const importScheduleButton = document.querySelector("#importSchedule"); // fetches the convert button, as it comes first and we are not using .querySelectorAll()
-  const message = document.querySelector(".message"); // fetches the status message
-
-  let schedule; // this is set by fetchSchedule()
-
-  getCurrentTab().then((tab) => {
-    const currentUrl = new URL(tab.url);
-    const path = currentUrl.pathname;
-    const broaderPath = "/StudentRegistrationSsb/ssb/"; // used to direct the user to the path below
-    const targetPath = [
-      "/StudentRegistrationSsb/ssb/registrationHistory/registrationHistory"]; // this is banner's View Registration Information page, regardless of host name
-    if (!targetPath.includes(path)) {
-      if (!path.includes(broaderPath)) {
-        importScheduleButton.toggleAttribute("disabled", true);
-        importScheduleButton.style.display = "none";
-        message.classList.add("error", "show");
-        schoolSection.style.display = "flex";
-
-        schoolName.onblur = () => {
-          const results = document.querySelector(".search-results");
-          results.replaceChildren();
-
-          let schoolInput = schoolName.value.trim();
-          if (!schoolInput) {
-            results.style.display = "none";
-            return;
-          }
-          const schools = getSchools(schoolInput);
-          if (schools.length === 0) {
-            let div = document.createElement("div");
-            div.textContent = `No results for ${schoolInput}. If you feel your school is missing, fill out the Help & Feedback form that is linked at the bottom of this page. In the meantime, go to your school's Banner registration page. If your school does not use Banner, this extension may not work for you.`;
-            results.append(div);
-          }
-
-
-          for (const school of schools) {
-            const div = document.createElement("div");
-            const a = document.createElement('a');
-
-            a.href = links[school].link;
-            a.target = "_blank";
-            a.textContent = school;
-            a.tabIndex = 0;
-            a.addEventListener("keydown", (e) => {
-              if (e.key === " ") {
-                a.click();
-              }
-            })
-
-            div.appendChild(a);
-
-            results.appendChild(div);
-          }
-          results.style.display = "block";
-        };
-      } else {
-        importScheduleButton.toggleAttribute("disabled", true);
-        message.textContent =
-          "You seem to be on Banner. Please go to the 'View Registration Information' page.";
-        message.classList.add("alert", "show");
-      }
-
-      return;
-    }
-    // injects function checkForClasses into the webpage
-    chrome.scripting.executeScript({
-      files: ["injected_scripts/checkForClasses.js"],
-      target: { tabId: tab.id },
-    });
-  });
-
-  // listeners for chrome's messaging system
-  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-    // triggered by function checkForClasses
-    if (msg === "noClass") {
-      message.textContent =
-        'Please click on "Schedule Details". If you have already done this, I am unable to see your classes. Try switching terms, clicking out and back in "schedule details", or refreshing the page. If nothing works, use the Help & Feedback form (at the bottom) to receive support.';
-      changeStep(2);
-      message.classList.add("show", "alert");
-      importScheduleButton.toggleAttribute("disabled", true);
-      return;
-    }
-
-    if (msg === "greenLight") {
-      changeStep(3);
-      return;
-    }
-
-    if (msg === "SCHEDULE FETCHING ATTEMPTED: NO CLASSES FOUND") {
-      importScheduleButton.textContent = "No classes detected";
-      message.classList.add("error", "show");
-      message.classList.remove('alert');
-      message.textContent =
-        "No class detected! You may need to change your term. Otherwise, please try again later once you have registered for classes.";
-      injection_error = true;
-      return;
-    }
-    if (typeof msg === "object") {
-      if (Object.keys(msg).includes("error")) {
-        handleError(msg.error, "error", false);
-        injection_error = true;
-        return;
-      }
-    }
-
-    // otherwise, message triggered by function fetchSchedule, which means we are receiving the schedule.
-
-    schedule = msg;
-  });
-  //
-  ///
-  ///
-  //
-  //
-  //
-  //
-  // this is used to detect when checkboxes are checked/unchecked.
-  // this will update the settings object which will later be used when downloading the .ics file
-
-  // this is an array of arrays that keep track of per-class settings that overlap each other.
-  // in each array, the first element is always the setting that overlaps the others
-  // if at any point the first element is unchecked, the rest of the settings will be disabled.
-  const optionsOverlap = [];
-
-
-
-  document.addEventListener("change", (event) => {
-    if (
-      event.target.tagName === "INPUT" &&
-      event.target.getAttribute("type") === "checkbox"
-    ) {
-      const id = event.target.id;
-      if (id.includes("waitlisted")) {
-
-        changeSetting(id, -1, event.target.checked);
-
-        for (const course of waitlistedCourses) {
-          const leCheckBox = document.querySelector(`#${course}`);
-          const index = parseInt(leCheckBox.id.match(/\d+/)[0]);
-          leCheckBox.disabled = !event.target.checked;
-          leCheckBox.checked = event.target.checked ? settings["includecourse"][index] : false;
-        }
-        return;
-      }
-      const index = parseInt(id.match(/\d+/)[0]);
-      const setting = id.match(/\D+/)[0];
-
-      const overlapIndex = optionsOverlap.indexOf(optionsOverlap.find(e => e[0] === setting))
-      if (overlapIndex !== -1) {
-        for (const overlap of optionsOverlap[overlapIndex].slice(1)) {
-
-          const checkbox = document.querySelector(`#${overlap}${index}`);
-          checkbox.disabled = !event.target.checked;
-
-        }
-      }
-
-
-      actionHistory.push(`User changed the following setting: ${setting} at index ${index} with a new value of ${event.target.checked}`);
-      changeSetting(setting, index, event.target.checked);
-
-    }
-  });
-
-
-
-
-  ///
-  ///
-  ///
-  ///
-  ///
-  // event listener for button(s)
-
-
+  /**
+   * Loads the user's classes, whether via file import or script injection
+   * @param {boolean} importing Whether or not the extension is importing a file. If false, this function will inject
+   * fetchSchedule.js into the current user tab. 
+   */
   async function loadClasses(importing = false) {
+    const classesLoadedContainer = document.querySelector("#classLoadedContainer");
     const selectionContainer = document.querySelector("#selectionContainer");
     const selectAll = document.querySelector("#selectAll");
     const deselectAll = document.querySelector("#deselectAll");
@@ -731,12 +544,19 @@
     message.classList.toggle('success', true);
     message.classList.toggle('error', false);
     message.classList.toggle("alert", false);
+
     inputFileContainer.style.display = "none";
     importScheduleButton.style.display = "";
 
-
-
     selectionContainer.style.display = "flex";
+
+    classesLoadedContainer.style.display = "";
+
+    resetPopUpButton.style.display = "";
+
+    wrongSitePageContainer.style.display = "none";
+    correctSitePageContainer.style.display = "";
+
     const classes = document.querySelector(".classes");
     classes.style.display = "flex";
 
@@ -1062,6 +882,341 @@
 
   }
 
+  /**
+   * Resets the extension's popup.
+   */
+  function resetPopup() {
+    window.location.reload();
+  }
+
+
+
+
+
+  // PRELIMINARY
+
+
+
+
+
+
+
+
+  // makes all "a" tags clickable via keyboard
+  const aTags = Array.from(document.querySelectorAll('a'));
+
+  for (const a of aTags) {
+    a.addEventListener("keydown", (e) => {
+      if (e.key === " ") {
+        a.click();
+      }
+    })
+  }
+
+
+  // anti cache editing system
+
+  chrome.storage.onChanged.addListener(async (changes, namespace) => {
+    if (revertingChanges) return;
+    for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
+
+      if (!changingLocal) {
+        if (key === "lastUpdated") {
+          revertingChanges = true;
+          chrome.storage.local.set({ "lastUpdated": oldValue });
+          console.log(
+            "CONSOLE CACHE CHANGE DETECTED - PLEASE DO NOT MODIFY THE CACHE. YOUR CHANGES HAVE BEEN REVERTED."
+          );
+        } else if (key === "info") {
+          revertingChanges = true;
+          chrome.storage.local.set({ "info": oldValue });
+          console.log(
+            "CONSOLE CACHE CHANGE DETECTED - PLEASE DO NOT MODIFY THE CACHE. YOUR CHANGES HAVE BEEN REVERTED."
+          );
+        } else {
+          revertingChanges = true;
+          await chrome.storage.local.remove(key);
+          console.log(
+            "LOCAL STORAGE CHANGE DETECTED - PLEASE DO NOT MODIFY LOCAL STORAGE. YOUR CHANGES HAVE BEEN REMOVED."
+          );
+        }
+      }
+      await wait(150);
+    }
+
+    revertingChanges = false;
+  });
+
+  // Display version information and update links for school searches (caching)
+  window.addEventListener("load", async () => {
+    const versionJson = await getJSON("../manifest.json");
+    version.textContent = versionJson.version;
+
+    const infoJson = await updateCache();
+    links =
+      infoJson.info?.banner_links ??
+      (await getJSON(
+        "https://sir-jal.github.io/schedule-calendar-converter-extension/extension_info.json"
+      ));
+  });
+
+  // everything related to the steps pop up
+
+  const closePopUp = async () => {
+    stepsPopup.style.opacity = 0;
+    await wait(140);
+    popupOpen = false;
+    stepsPopup.close();
+  }
+
+  document.querySelector('#closePopup').addEventListener('click', closePopUp)
+
+  stepsButton.addEventListener("click", async () => {
+    // so if a user is tabbing, it'll try to scroll to the next tabbable element which is NOT what i want to happen.
+    // therefore, whatever the tabbed/focused element is will be blured to prevent the scroll.
+    document.activeElement.blur();
+    document.querySelector('#closePopup').focus();
+
+    await wait(100);
+    stepsPopup.showModal();
+
+    const stepElement = document.querySelector(`#step${step}`);
+    const stepTop = stepElement.offsetTop;
+    const stepMargin = 10;
+
+    stepsPopup.scroll({ top: 0 })
+    // delay(400, () => { stepElement.scrollIntoView({ behavior: 'smooth' }) });
+    delay(200, () => { stepsPopup.scroll({ top: stepTop - stepMargin, behavior: 'smooth' }) });
+    stepsPopup.style.opacity = 1;
+
+    await wait(200);
+
+    popupOpen = true;
+  });
+
+  stepsPopup.style.opacity = 0;
+
+  stepsPopup.onclick = async (e) => {
+    const rect = stepsPopup.getBoundingClientRect();
+    const clickedOutside =
+      e.clientX < rect.left ||
+      e.clientX > rect.right ||
+      e.clientY < rect.top ||
+      e.clientY > rect.bottom;
+
+    if (clickedOutside) {
+      closePopUp();
+
+    }
+  };
+  changeStep(1);
+
+
+  window.addEventListener("error", (e) => {
+    handleError(e, "error");
+  });
+  window.addEventListener("unhandledrejection", (e) => {
+    handleError(e, "promise");
+  });
+
+
+
+
+
+
+
+
+  // MAIN CODE
+
+
+
+
+
+
+
+
+
+  const importScheduleButton = document.querySelector("#importSchedule");
+  const message = document.querySelector(".message");
+
+  let schedule; // this is set by fetchSchedule()
+
+  getCurrentTab().then((tab) => {
+    const currentUrl = new URL(tab.url);
+    const path = currentUrl.pathname;
+    const broaderPath = "/StudentRegistrationSsb/ssb/"; // used to direct the user to the path below
+    const targetPath = [
+      "/StudentRegistrationSsb/ssb/registrationHistory/registrationHistory"]; // this is banner's View Registration Information page, regardless of host name
+    if (!targetPath.includes(path)) {
+      if (!path.includes(broaderPath)) {
+        wrongSitePageContainer.style.display = "";
+        importScheduleButton.toggleAttribute("disabled", true);
+        importScheduleButton.style.display = "none";
+        message.classList.add("error", "show");
+        schoolSection.style.display = "flex";
+
+        schoolName.onblur = () => {
+          const results = document.querySelector(".search-results");
+          results.replaceChildren();
+
+          let schoolInput = schoolName.value.trim();
+          if (!schoolInput) {
+            results.style.display = "none";
+            return;
+          }
+          const schools = getSchools(schoolInput);
+          if (schools.length === 0) {
+            let div = document.createElement("div");
+            div.textContent = `No results for ${schoolInput}. If you feel your school is missing, fill out the Help & Feedback form that is linked at the bottom of this page. In the meantime, go to your school's Banner registration page. If your school does not use Banner, this extension may not work for you.`;
+            results.append(div);
+          }
+
+
+          for (const school of schools) {
+            const div = document.createElement("div");
+            const a = document.createElement('a');
+
+            a.href = links[school].link;
+            a.target = "_blank";
+            a.textContent = school;
+            a.tabIndex = 0;
+            a.addEventListener("keydown", (e) => {
+              if (e.key === " ") {
+                a.click();
+              }
+            })
+
+            div.appendChild(a);
+
+            results.appendChild(div);
+          }
+          results.style.display = "block";
+        };
+      } else {
+        correctSitePageContainer.style.display = "";
+        importScheduleButton.toggleAttribute("disabled", true);
+        message.textContent =
+          "You seem to be on Banner. Please go to the 'View Registration Information' page.";
+        message.classList.add("alert", "show");
+      }
+
+      return;
+    } else {
+      correctSitePageContainer.style.display = "";
+    }
+    // injects function checkForClasses into the webpage
+    chrome.scripting.executeScript({
+      files: ["injected_scripts/checkForClasses.js"],
+      target: { tabId: tab.id },
+    });
+  });
+
+  // listeners for chrome's messaging system
+  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    // triggered by function checkForClasses
+    if (msg === "noClass") {
+
+      message.textContent =
+        'Please click on "Schedule Details". If you have already done this, I am unable to see your classes. Try switching terms, clicking out and back in "schedule details", or refreshing the page. If nothing works, use the Help & Feedback form (at the bottom) to receive support.';
+      changeStep(2);
+      message.classList.add("show", "alert");
+      importScheduleButton.toggleAttribute("disabled", true);
+      return;
+    }
+
+    if (msg === "greenLight") {
+      changeStep(3);
+      return;
+    }
+
+    if (msg === "SCHEDULE FETCHING ATTEMPTED: NO CLASSES FOUND") {
+      importScheduleButton.textContent = "No classes detected";
+      message.classList.add("error", "show");
+      message.classList.remove('alert');
+      message.textContent =
+        "No class detected! You may need to change your term. Otherwise, please try again later once you have registered for classes.";
+      injection_error = true;
+      return;
+    }
+    if (typeof msg === "object") {
+      if (Object.keys(msg).includes("error")) {
+        handleError(msg.error, "error", false);
+        injection_error = true;
+        return;
+      }
+    }
+
+    // otherwise, message triggered by function fetchSchedule, which means we are receiving the schedule.
+
+    schedule = msg;
+  });
+  //
+  ///
+  ///
+  //
+  //
+  //
+  //
+  // this is used to detect when checkboxes are checked/unchecked.
+  // this will update the settings object which will later be used when downloading the .ics file
+
+  // this is an array of arrays that keep track of per-class settings that overlap each other.
+  // in each array, the first element is always the setting that overlaps the others
+  // if at any point the first element is unchecked, the rest of the settings will be disabled.
+  const optionsOverlap = [];
+
+
+
+  document.addEventListener("change", (event) => {
+    if (
+      event.target.tagName === "INPUT" &&
+      event.target.getAttribute("type") === "checkbox"
+    ) {
+      const id = event.target.id;
+      if (id.includes("waitlisted")) {
+
+        changeSetting(id, -1, event.target.checked);
+
+        for (const course of waitlistedCourses) {
+          const leCheckBox = document.querySelector(`#${course}`);
+          const index = parseInt(leCheckBox.id.match(/\d+/)[0]);
+          leCheckBox.disabled = !event.target.checked;
+          leCheckBox.checked = event.target.checked ? settings["includecourse"][index] : false;
+        }
+        return;
+      }
+      const index = parseInt(id.match(/\d+/)[0]);
+      const setting = id.match(/\D+/)[0];
+
+      const overlapIndex = optionsOverlap.indexOf(optionsOverlap.find(e => e[0] === setting))
+      if (overlapIndex !== -1) {
+        for (const overlap of optionsOverlap[overlapIndex].slice(1)) {
+
+          const checkbox = document.querySelector(`#${overlap}${index}`);
+          checkbox.disabled = !event.target.checked;
+
+        }
+      }
+
+
+      actionHistory.push(`User changed the following setting: ${setting} at index ${index} with a new value of ${event.target.checked}`);
+      changeSetting(setting, index, event.target.checked);
+
+    }
+  });
+
+
+
+
+  ///
+  ///
+  ///
+  ///
+  ///
+  // event listener for button(s)
+
+
+
   let validating = false;
   importScheduleButton.addEventListener("click", async () => {
     // this only runs when the button is clicked after the classes are imported
@@ -1095,23 +1250,7 @@
           waitlisted,
         } = course;
 
-        const event = buildICSEvent(
-          schedule.indexOf(course),
-          displayName,
-          courseTitle,
-          courseCode,
-          buildingName,
-          roomNumber,
-          days,
-          startDate,
-          endDate,
-          startTime,
-          endTime,
-          section,
-          prof,
-          waitlisted,
-          settings
-        );
+        const event = buildICSEvent(course, schedule.indexOf(course), settings);
         if (!event) continue;
         events.push(
           event
@@ -1161,7 +1300,7 @@
       return;
     }
     const reader = new FileReader();
-    console.log(file.type);
+
     reader.onload = (event) => {
       msg.classList.toggle("show", false);
       const content = event.target.result;
@@ -1185,72 +1324,6 @@
   })
 
 
-  async function readIcs(text = "") {
 
-    const lines = text.split('\n');
-    const firstEventStart = lines.findIndex(e => e.includes("BEGIN:VEVENT"));
-    const lastEventEnd = lines.findLastIndex(e => e.includes("END:VEVENT"));
-    let linesWithEvents = lines.slice(firstEventStart, lastEventEnd + 1);
-    console.log(linesWithEvents);
-
-
-    while (linesWithEvents.length > 0) {
-      // event
-      const eventStart = linesWithEvents.findIndex(e => e.includes("BEGIN:VEVENT"));
-      const eventEnd = linesWithEvents.findIndex(e => e.includes("END:VEVENT"));
-      const eventLines = linesWithEvents.slice(eventStart, eventEnd + 1);
-
-      const parseableIndexStart = eventLines.findIndex(e => e.toLowerCase().includes("coursetitle"));
-      const parseable = eventLines.slice(parseableIndexStart);
-
-      console.log(parseableIndexStart)
-      console.log(eventLines);
-      const event = {};
-      for (const line of parseable) {
-        /**
- * "SUMMARY:CS 1301R: CS 1301 Recitation (D03)\r\r"
- * "DESCRIPTION:Professor(s): Iretta Kearse\r\r"
- * "DTSTART:20250821T183000\r\r"
- * "DTEND:20250821T194500\r\r"
- * "RRULE:FREQ=WEEKLY;BYDAY=TH;UNTIL=20251211T235959\r\r"
- * "LOCATION:J. Erskine Love Manufacturing\\, Room 184\r\r"
- */
-
-        //    lines.push(`COURSETITLE:${courseTitle}`, `DISPLAYNAME:${displayName}`, `PROFESSORS:${prof.join(", ")}`, `MEETINGDAYS:${days}`, `STARTDATE:${startdate}`, `ENDDATE:${endDate}`, `STARTTIME:${startTime}`, `ENDTIME:${endTime}`, `COURSESECTION:${section}`, `BUILDINGNAME:${buildingName}`, `ROOMNUMBER:${roomNumber}`, `WAITLISTED:${waitlisted}`, `COURSECODE:${courseCode}`);
-
-        const firstColonIndex = line.indexOf(":");
-        const property = line.substring(0, firstColonIndex);
-        if (property === "END") break;
-        let value = line.substring(firstColonIndex + 1);
-
-        switch (property) {
-          case "prof":
-            value = value.trim().split(", ");
-            break;
-          case "waitlisted":
-            value = value === "true" ? true : false;
-            break;
-        }
-        event[property] = typeof value !== 'string' ? value : value.trim();
-
-      }
-
-      console.log(event);
-      schedule = schedule === undefined ? [] : schedule;
-
-      schedule.push(event);
-
-      linesWithEvents = linesWithEvents.slice(eventEnd + 1);
-      if (linesWithEvents.length <= 0) {
-        break;
-      }
-    }
-
-    inputFileButton.textContent = "Importing...";
-    inputFileButton.disabled = true;
-    importScheduleButton.disabled = true;
-    await wait(1300);
-    loadClasses(true);
-  }
 })();
 
