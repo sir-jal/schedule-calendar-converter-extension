@@ -11,6 +11,9 @@
 
   resetPopUpButton.addEventListener('click', resetPopup);
 
+  const stepsButton = document.querySelector("#stepsButton");
+  const stepsPopup = document.querySelector("#stepsPopup");
+
   const schoolName = document.querySelector("#school-name");
   const schoolSection = document.querySelector(".school-search");
 
@@ -19,12 +22,10 @@
     "https://docs.google.com/document/d/1f6nR1gs8f4Ddj9vVLVmsOS5gwGHIQla28Q6va0HvfN0/edit?usp=sharing";
   const errorLog = [];
 
-  const stepsButton = document.querySelector("#stepsButton");
-  const stepsPopup = document.querySelector("#stepsPopup");
 
   const validateText = document.querySelector("p#validation");
 
-  const CACHE_MAX_AGE = 1000 * 60 * 60 * 24 * 3; // 3 days
+  const CACHE_MAX_AGE = 1000 * 60 // * 60 * 24 * 3; // 3 days
   const actionHistory = [] // may help with replicating errors and debugging
   const colors = ["green", "blue", "yellow", "aqua", "red", "orange", "teal", "purple", "brown", "beige", "white", "bisque", "maroon", "magenta"];
   const keysToEditName = ["e", "f2"];
@@ -172,7 +173,7 @@
   }
 
   /**
-   * Searches for a school using a search query. The function will search the schools not only by name but also buy aliases.
+   * Searches for a school using a search query. The function will search the schools not only by name but also by aliases.
    * @param {string} query Search query
    * @returns an array of schools that matches the search query
    */
@@ -195,7 +196,7 @@
    * @param {object} course The course
    * @param {number} courseIndex The index at which the course is located; will be used for settings
    * @param {object} settings The per-class and general settings
-   * @returns A string representation of an .ics event
+   * @returns A string representation of the created .ics event
    */
   function buildICSEvent(
     course,
@@ -434,8 +435,6 @@
       const parseableIndexStart = eventLines.findIndex(e => e.toLowerCase().includes("coursetitle"));
       const parseable = eventLines.slice(parseableIndexStart);
 
-      console.log(parseableIndexStart)
-      console.log(eventLines);
       const event = {};
       for (const line of parseable) {
         const firstColonIndex = line.indexOf(":");
@@ -450,7 +449,8 @@
             value = value.trim().split(", ");
             break;
           case "waitlisted":
-            value = value === "true" ? true : false;
+            console.log(`VALUE FOR ${event.displayName}: ${value}`)
+            value = value.trim().toLowerCase() === "true" ? true : false;
             break;
         }
         event[property] = typeof value !== 'string' ? value : value.trim();
@@ -716,8 +716,9 @@
       checkbox.type = "checkbox";
       checkbox.checked = !asynchronous
       checkbox.id = id + index;
+      checkbox.classList.add('courseCheckbox');
 
-      const courseStr = `${displayName}`;
+      const courseStr = displayName;
 
       displayNameSpan.classList.add("displayName");
       courseCodeSpan.classList.add("courseCode");
@@ -753,12 +754,12 @@
         asynchronous,
         waitlisted,
         "Course Code": courseCode,
-        Section: section.toUpperCase(),
-        Professors: prof.join(", "),
+        "Section": section.toUpperCase(),
+        "Professors": prof.join(", "),
         "Class Active": `${startDate} - ${endDate}`,
-        Days: days.replaceAll(",", ", "),
-        Time: `${startTime} - ${endTime}`,
-        Location: hasLocation ? `${buildingName} ${roomNumber}` : "No location found; likely online",
+        "Days": days.replaceAll(",", ", "),
+        "Time": `${startTime} - ${endTime}`,
+        "Location": hasLocation ? `${buildingName} ${roomNumber}` : "No location found; likely online",
 
       }
 
@@ -768,18 +769,17 @@
         const keySpan = document.createElement('span');
         const b = document.createElement('b');
 
+        if (!value) continue;
+
         if (key === "waitlisted") {
-          if (!value) continue;
           div.append("This class is WAITLISTED. If included, this will be indicated by the prefix: [WL].");
           courseDetails.append(div);
           continue;
         } else if (key === "asynchronous") {
-          if (!value) continue;
           div.append(`This class is likely asynchronous as the extension could not find a time/day. If you include this course in your .ics file, it will ONLY (1) create an all-day event on ${startDate}.`);
           courseDetails.append(div);
           continue;
         } else if (key === "Course Code") {
-          if (!value) continue;
         }
 
 
@@ -1326,4 +1326,3 @@
 
 
 })();
-

@@ -5,8 +5,15 @@
   const timeRegex12 = /\d{2}:\d{2}\s{2}(?:AM|PM)\s*-\s*\d{2}:\d{2}\s{2}(?:AM|PM)/;
   const timeRegex24 = /\d{2}:\d{2}\s*-\s*\d{2}:\d{2}/;
   const header = document.querySelector('h1').textContent;
+
+  /**
+   * Finds the indices at which a substring is in a string
+   * @param {string} str The string to search in
+   * @param {string} sub The substring to search for
+   * @returns An array of indices at which the substring appears. An empty array is returned if the substring is not in the string.
+   */
   function findAllIndices(str, sub) {
-    // find all indices where a substring occurs in a string
+    if (!str.includes(sub)) return [];
     let indices = [];
     let index = str.indexOf(sub);
 
@@ -18,6 +25,10 @@
     return indices;
   }
 
+  /**
+   * Reports an error back to the extension. Keep in mind this code is being injected into the webpage
+   * @param {ErrorEvent} e The error to report
+   */
   function reportError(e) {
     chrome.runtime.sendMessage({
       error: {
@@ -42,24 +53,19 @@
 
   for (const _class of classes) {
     const rows = []; // holds all rows of class times and meetings
-    const index = classes.indexOf(_class); // allows us to easily access course info
-    const status = document
-      .querySelectorAll(".list-view-status")
-    [index].textContent.trim()
-      .toLowerCase();
+    const index = classes.indexOf(_class); // allows us to easily access course info using .querySelectorAll()
+    const status = document.querySelectorAll(".list-view-status")[index].textContent.trim().toLowerCase();
     const isWaitlisted = status === "waitlisted";
-    // course info
-    const courseInfo = document.querySelectorAll(".list-view-course-info-div")[
-      index
-    ].textContent; // example: 'Differential Calculus | Mathematics 1551 Section L01 | Class Begin: 08/18/2025 | Class End: 12/11/2025'
+
+    // example: 'Differential Calculus | Mathematics 1551 Section L01 | Class Begin: 08/18/2025 | Class End: 12/11/2025'
+    const courseInfo = document.querySelectorAll(".list-view-course-info-div")[index].textContent;
 
     const courseCode = Array.from(document.querySelectorAll(`#table1 tr td[data-property=subjectCourseSectionNumber]`))?.[index]?.textContent?.trim()?.split(", ")?.[0] ?? "";
 
+    const meetingInformationDiv = document.querySelectorAll(".listViewMeetingInformation")[index]
 
-    const meetingInformationDiv = document.querySelectorAll(
-      ".listViewMeetingInformation"
-    )[index]
-    const meetingInformation = meetingInformationDiv.textContent; // example: '08/18/2025 -- 12/11/2025   FridaySMTWTFS   03:30  PM - 04:20  PM Type: Class Location: Georgia Tech-Atlanta * Building: Skiles Room: 254'
+    // example: '08/18/2025 -- 12/11/2025   FridaySMTWTFS   03:30  PM - 04:20  PM Type: Class Location: Georgia Tech-Atlanta * Building: Skiles Room: 254'
+    const meetingInformation = meetingInformationDiv.textContent;
 
     const [courseTitle, courseDesc, classBegin, classEnd] =
       courseInfo.split(" | ");
@@ -71,8 +77,8 @@
     const endDate = classEnd.substring(endColonIndex + 1).trim();
 
 
-
-    const rowEndPoints = findAllIndices(meetingInformation, startDate); // since in meetingInformation, a new row is indicated each time the start date appears, this will tell us at which indices does each row begin.
+    // in meetingInformation, a new row is indicated by the start date; this will therefore the indices at which the start date appears
+    const rowEndPoints = findAllIndices(meetingInformation, startDate);
 
     for (let i = 0; i < rowEndPoints.length; i++) {
       // this is responsible for slicing the string into different rows.
@@ -82,41 +88,26 @@
       );
     }
 
-    // if (courseTitle == "Integral Calculus") {
-
-    //   console.log(meetingInformation)
-    //   console.log('integral calculus')
-
-    //   const firstRow = meetingInformation.indexOf(startDate) // 0
-    //   const secondRow = meetingInformation.indexOf(startDate, 1)
-    //   console.log('indices', firstRow, secondRow)
-    //   console.log(meetingInformation.substring(firstRow, secondRow))
-    //   console.log(meetingInformation.substring(secondRow))
-    // }
-    const courseSection = document
-      .querySelectorAll(".list-view-subj-course-section")
-    [index].textContent.toLowerCase();
+    const courseSection = document.querySelectorAll(".list-view-subj-course-section")[index].textContent.toLowerCase();
 
     const section = courseSection
       .substring(courseSection.indexOf("section"))
       .replace("section ", "")
       .trim();
-    //
-    //
-    //
-    const professorInformation = document.querySelectorAll(
-      ".listViewInstructorInformation"
-    )[index];
-    const parsableProfessors = Array.from(
-      professorInformation.querySelectorAll(".email")
-    );
+
+
+    const professorInformation = document.querySelectorAll(".listViewInstructorInformation")[index];
+    const parsableProfessors = Array.from(professorInformation.querySelectorAll(".email"));
 
     const prof = [];
     if (parsableProfessors.length === 0) {
       prof.push("No professor");
     } else {
       for (const elProf of parsableProfessors) {
-        const [first, last] = elProf.textContent.trim().split(", ").reverse();
+        const [first, last] = elProf.textContent
+          .trim()
+          .split(", ")
+          .reverse();
         prof.push(`${first} ${last}`);
       }
     }

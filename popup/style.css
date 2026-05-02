@@ -309,8 +309,22 @@ details.class:not(.notIncluded):has(summary:hover) {
   cursor: pointer;
 }
 
+details.class:not(.notIncluded):has(.courseCheckbox:not(:checked)) {
+  background-color: rgb(189, 189, 189);
+  color: rgba(0, 0, 0, 0.411);
+}
+
+details.class:not(.notIncluded):has(.courseCheckbox:not(:checked)):has(summary:hover) {
+  background-color: rgb(167, 167, 167);
+  color: rgba(0, 0, 0, 0.411);
+}
+
 details.class.notIncluded {
   background-color: rgb(255, 201, 201);
+}
+
+details.class.notIncluded:has(summary:hover) {
+  background-color: rgb(231, 180, 180);
 }
 
 details.class.notIncluded summary input[type="text"]:focus {
