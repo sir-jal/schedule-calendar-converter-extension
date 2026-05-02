@@ -13,7 +13,8 @@
       "aliases": [
         "Georgia Tech",
         "Gatech",
-        "Yellow Jackets"
+        "Yellow Jackets",
+        "gt"
       ]
     },
     "Kennesaw State University": {
@@ -102,6 +103,143 @@
       "aliases": [
         "HAH GOT EM",
         "DN"
+      ]
+    },
+    "Samford University": {
+      "link": "https://ssb.samford.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": [
+        "SAMU",
+        "SU"
+      ]
+    },
+    "Augusta University": {
+      "link": "http://pounce.augusta.edu/StudentRegistrationSSb/ssb/registration",
+      "aliases": [
+        "AU",
+        "pounce the jaguar"
+      ]
+    },
+    "SUNY Empire State University": {
+      "link": "https://banner.esc.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": [
+        "ESU",
+        "SUNY",
+        "blue the bluebird"
+      ]
+    },
+    "Cuyahoga Community College": {
+      "link": "https://banstup.tri-c.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": [
+        "CCC",
+        "tri-c"
+      ]
+    },
+    "New Jersey Institute of Technology": {
+      "link": "https://reg-prod.ec.njit.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": [
+        "New Jersey Tech",
+        "NJ Tech",
+        "NJIT"
+      ]
+    },
+    "Miami University": {
+      "link": "https://banss.miamioh.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": [
+        "MU"
+      ]
+    },
+    "Texas State University": {
+      "link": "https://reg-prod.ec.txstate.edu/StudentRegistrationSsb/ssb/registration/registration",
+      "aliases": [
+        "txstate",
+        "tx state",
+        "TSU",
+        "txst"
+      ]
+    },
+    "Pace University": {
+      "link": "https://ban9prodss.pace.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": [
+        "PU"
+      ]
+    },
+    "Oakland University": {
+      "link": "https://bstreg.oakland.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": [
+        "OU"
+      ]
+    },
+    "Stark State College": {
+      "link": "https://selfservice-registration.starkstate.edu/StudentRegistrationSsb/ssb/term/termSelection?mode=search",
+      "aliases": [
+        "SSC"
+      ]
+    },
+    "Kern Community College District": {
+      "link": "https://reg-prod.ec.kccd.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": [
+        "KCCD",
+        "Bakersfield College",
+        "Porterville College",
+        "BC-PC"
+      ]
+    },
+    "SUNY Buffalo State University": {
+      "link": "https://banner.buffalostate.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": [
+        "BSU"
+      ]
+    },
+    "Aurburn University at Montgomery": {
+      "link": "https://ssb9.aum.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": [
+        "AUM"
+      ]
+    },
+    "Portland State University": {
+      "link": "https://app.banner.pdx.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": [
+        "PSU",
+        "pdx"
+      ]
+    },
+    "Connecticut State Colleges and Universities": {
+      "link": "https://reg-prod.ec.ct.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": [
+        "CT state",
+        "CTstate"
+      ]
+    },
+    "Coast Colleges": {
+      "link": "https://reg-prod.ec.cccd.edu/StudentRegistrationSsb/ssb/registration/registration",
+      "aliases": []
+    },
+    "Florida Atlantic University": {
+      "link": "https://bannerxe.fau.edu/StudentRegistrationSsb/ssb/registration/registration",
+      "aliases": [
+        "FAU"
+      ]
+    },
+    "University of Wyoming": {
+      "link": "https://wyossb.uwyo.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": [
+        "UWYO"
+      ]
+    },
+    "AIEP": {
+      "link": "https://registro.aiep.cl/StudentRegistrationSsb/ssb/registration",
+      "aliases": []
+    },
+    "University of California, Merced": {
+      "link": "https://reg-prod.ec.ucmerced.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": [
+        "UC merced"
+      ]
+    },
+    "Eastern Washington University": {
+      "link": "https://reg-prod.ec.ewu.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": [
+        "EWU"
       ]
     }
   }
