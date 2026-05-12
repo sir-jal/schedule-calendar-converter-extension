@@ -26,7 +26,7 @@
   }
 
   /**
-   * Reports an error back to the extension. Keep in mind this code is being injected into the webpage
+   * Reports an error back to the extension (keep in mind this code is being injected into the webpage)
    * @param {ErrorEvent} e The error to report
    */
   function reportError(e) {

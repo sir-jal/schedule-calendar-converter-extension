@@ -291,7 +291,8 @@ input[type="file"]::file-selector-button {
 
 summary,
 label,
-.options {
+.options,
+.classDetailKey {
   user-select: none;
 }
 

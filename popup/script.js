@@ -127,20 +127,22 @@
 
   /**
    * Updates the cache and returns it
+   * 
+   * @param {boolean} force Whether or not to force the cache update
    * @returns The updated cache
    */
-  async function updateCache() {
+  async function updateCache(force = false) {
     const e = await chrome.storage?.local?.get(["lastUpdated"]);
     const lastUpdated = new Date(e?.lastUpdated ?? 0).getTime();
     changingLocal = true;
     await wait(150);
     if (
       Object.keys(e).length === 0 ||
-      lastUpdated + CACHE_MAX_AGE <= Date.now()
+      lastUpdated + CACHE_MAX_AGE <= Date.now() || force
     ) {
       await chrome.storage?.local?.set({
         info: await getJSON(
-          "https://sir-jal.github.io/schedule-calendar-converter-extension/extension_info.json"
+          "../extension_info.json"
         ),
         lastUpdated: Date.now(),
       });
@@ -485,43 +487,41 @@
     const deselectAll = document.querySelector("#deselectAll");
     schoolSection.style.display = "none";
 
-    selectAll.onclick = () => {
-      console.log(settings);
+    /**
+     * Mass changes all settings
+     * @param {boolean} booleanValue The value for the mass change, either true or false
+     */
+    const massChange = (booleanValue) => {
       const selectBox = document.querySelector("#optionSelect");
       const value = selectBox.value;
-      actionHistory.push(`User clicked on the Select All button with the Select Menu value: ${value}`);
       const index = optionsOverlap.indexOf(optionsOverlap.find(e => e[0] === value));
+
+      actionHistory.push(`User clicked on the ${value ? "Select" : "Deselect"} All button with the Select Menu value: ${value}`);
 
 
 
       for (let i = 0; i < schedule.length; i++) {
         if (schedule[i].days === "ASYNCHRONOUS") continue;
         if (schedule[i].waitlisted && !waitlistedCheckbox.checked) continue;
-        changeSetting(value, i, true);
-        document.querySelector(`#${value}${i}`).checked = true;
 
-        if (index !== -1) optionsOverlap[index].forEach(e => {
-          document.querySelector(`#${e}${i}`).disabled = false;
-        })
+        const checkbox = document.querySelector(`#${value}${i}`);
+        if (checkbox.disabled) continue;
+
+        changeSetting(value, i, booleanValue);
+
+        checkbox.checked = booleanValue;
+
+        handleChange(false, checkbox);
+
       }
+    }
+
+    selectAll.onclick = () => {
+      massChange(true);
     };
 
     deselectAll.onclick = () => {
-      const selectBox = document.querySelector("#optionSelect");
-      const value = selectBox.value;
-      actionHistory.push(`User clicked on the Deselect All button with the Select Menu value: ${value}`);
-      const index = optionsOverlap.indexOf(optionsOverlap.find(e => e[0] === value));
-
-      for (let i = 0; i < schedule.length; i++) {
-        if (schedule[i].days === "ASYNCHRONOUS") continue;
-        if (schedule[i].waitlisted && !waitlistedCheckbox.checked) continue;
-        changeSetting(value, i, false);
-        document.querySelector(`#${value}${i}`).checked = false;
-
-        if (index !== -1) optionsOverlap[index].forEach(e => {
-          document.querySelector(`#${e}${i}`).disabled = true;
-        })
-      }
+      massChange(false);
     };
 
     // import classes into extension
@@ -712,12 +712,14 @@
       if (asynchronous) clas.classList.add('notIncluded');
 
 
+      // add checkbox
 
       checkbox.type = "checkbox";
       checkbox.checked = !asynchronous
       checkbox.id = id + index;
       checkbox.classList.add('courseCheckbox');
 
+      // add course code + name
       const courseStr = displayName;
 
       displayNameSpan.classList.add("displayName");
@@ -763,6 +765,7 @@
 
       }
 
+      // adds the class deatils
       for (const [key, value] of Object.entries(infoObj)) {
         const div = document.createElement('div');
         const valueSpan = document.createElement('span');
@@ -786,7 +789,10 @@
 
         b.textContent = key + "";
         keySpan.append(b);
+        keySpan.classList.add('classDetailKey');
+
         valueSpan.textContent = value;
+        valueSpan.classList.add('classDetailValue');
 
         div.append(keySpan, " ", valueSpan);
         courseDetails.append(div);
@@ -806,14 +812,13 @@
         checkbox.type = "checkbox";
         checkbox.checked = true;
         if (
-          (option.includes("location") && (!hasLocation || asynchronous)) || (option.includes("professor") && prof[0] === "No professor")
+          (option.includes("location") && (!hasLocation || asynchronous)) ||
+          (option.includes("professor") && prof[0] === "No professor") ||
+          (option.includes('code') && !courseCode)
         ) {
           checkbox.checked = false;
           checkbox.disabled = true;
-        }
-        if (option.includes('code') && !courseCode) {
-          checkbox.disabled = true;
-          checkbox.checked = false;
+          checkbox.classList.add("disabled");
         }
         checkbox.name = id + index;
         checkbox.id = id + index;
@@ -1150,42 +1155,45 @@
 
     schedule = msg;
   });
-  //
-  ///
-  ///
-  //
-  //
-  //
-  //
-  // this is used to detect when checkboxes are checked/unchecked.
-  // this will update the settings object which will later be used when downloading the .ics file
 
-  // this is an array of arrays that keep track of per-class settings that overlap each other.
-  // in each array, the first element is always the setting that overlaps the others
-  // if at any point the first element is unchecked, the rest of the settings will be disabled.
   const optionsOverlap = [];
 
-
-
-  document.addEventListener("change", (event) => {
+  /**
+   * Handles when a checkmark is changed
+   * @param {Event} event The event to handle
+   * @param {*} checkbox You must provide the checkbox element if the function is being called outside of an event listener
+   */
+  function handleChange(event, checkbox = null) {
+    const element = checkbox ?? event.target;
     if (
-      event.target.tagName === "INPUT" &&
-      event.target.getAttribute("type") === "checkbox"
+      element.tagName === "INPUT" &&
+      element.getAttribute("type") === "checkbox"
     ) {
-      const id = event.target.id;
+      const id = element.id;
       if (id.includes("waitlisted")) {
 
-        changeSetting(id, -1, event.target.checked);
+        changeSetting(id, -1, element.checked);
 
         for (const course of waitlistedCourses) {
           const leCheckBox = document.querySelector(`#${course}`);
           const index = parseInt(leCheckBox.id.match(/\d+/)[0]);
-          leCheckBox.disabled = !event.target.checked;
-          leCheckBox.checked = event.target.checked ? settings["includecourse"][index] : false;
+          leCheckBox.disabled = !element.checked;
+          leCheckBox.checked = element.checked ? settings["includecourse"][index] : false;
         }
         return;
       }
+
       const index = parseInt(id.match(/\d+/)[0]);
+      if (element.classList.contains("courseCheckbox")) {
+        const leClass = document.querySelectorAll('.class')[index];
+        const checkboxes = Array.from(leClass.querySelectorAll('.option input[type="checkbox"]'));
+
+        for (const checkbox of checkboxes) {
+          if (checkbox.classList.contains("disabled")) continue;
+          checkbox.disabled = !element.checked;
+        }
+      }
+
       const setting = id.match(/\D+/)[0];
 
       const overlapIndex = optionsOverlap.indexOf(optionsOverlap.find(e => e[0] === setting))
@@ -1193,17 +1201,19 @@
         for (const overlap of optionsOverlap[overlapIndex].slice(1)) {
 
           const checkbox = document.querySelector(`#${overlap}${index}`);
-          checkbox.disabled = !event.target.checked;
+          checkbox.disabled = !element.checked;
 
         }
       }
 
 
-      actionHistory.push(`User changed the following setting: ${setting} at index ${index} with a new value of ${event.target.checked}`);
-      changeSetting(setting, index, event.target.checked);
+      actionHistory.push(`User changed the following setting: ${setting} at index ${index} with a new value of ${element.checked}`);
+      changeSetting(setting, index, element.checked);
 
     }
-  });
+  }
+
+  document.addEventListener("change", handleChange)
 
 
 
