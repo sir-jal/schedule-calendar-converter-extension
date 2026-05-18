@@ -206,7 +206,6 @@
     settings
   ) {
 
-    console.log(course);
     // figure out settings
     const includeCourseCode = settings['includecoursecode'][courseIndex];
     const includeProfName = settings[`includeprofessornames`][courseIndex];
@@ -298,7 +297,7 @@
       ];
     }
 
-    // adding information to make importing easier
+    // adding non-ics-related information to make importing easier
     lines.push(`courseTitle:${course.courseTitle}`, `displayName:${course.displayName}`, `prof:${course.prof.join(", ")}`, `days:${course.days}`, `startDate:${course.startDate}`, `endDate:${course.endDate}`, `startTime:${course.startTime}`, `endTime:${course.endTime}`, `section:${course.section}`, `buildingName:${course.buildingName}`, `roomNumber:${course.roomNumber}`, `waitlisted:${course.waitlisted}`, `courseCode:${course.courseCode}`, "END:VEVENT");
 
     console.log(course.startDate);
@@ -427,6 +426,8 @@
     const firstEventStart = lines.findIndex(e => e.includes("BEGIN:VEVENT"));
     const lastEventEnd = lines.findLastIndex(e => e.includes("END:VEVENT"));
     let linesWithEvents = lines.slice(firstEventStart, lastEventEnd + 1);
+    const msg = document.querySelector('#fileInputMessage');
+
 
     while (linesWithEvents.length > 0) {
       // event
@@ -444,28 +445,35 @@
 
         if (property === "END") break;
 
-        let value = line.substring(firstColonIndex + 1);
+        let value = line.substring(firstColonIndex + 1).trim();
 
         switch (property) {
           case "prof":
-            value = value.trim().split(", ");
+            value = value.split(", ");
             break;
           case "waitlisted":
             console.log(`VALUE FOR ${event.displayName}: ${value}`)
-            value = value.trim().toLowerCase() === "true" ? true : false;
+            value = value.toLowerCase() === "true" ? true : false;
             break;
         }
-        event[property] = typeof value !== 'string' ? value : value.trim();
+        event[property] = value;
 
       }
+
       schedule = schedule === undefined ? [] : schedule;
 
-      schedule.push(event);
+      if (Object.keys(event).length !== 0) schedule.push(event);
 
       linesWithEvents = linesWithEvents.slice(eventEnd + 1);
       if (linesWithEvents.length <= 0) {
         break;
       }
+    }
+
+    if (schedule.length === 0) {
+      msg.textContent = "The .ics file you provided contained no valid events. Please double check the file or export the file again. If issues persist, that likely means the extension is exporting the file incorrectly and it needs to be reported via the Help & Feedback form.";
+      msg.classList.toggle("show", true);
+      return;
     }
 
     inputFileButton.textContent = "Importing...";
@@ -493,25 +501,24 @@
      */
     const massChange = (booleanValue) => {
       const selectBox = document.querySelector("#optionSelect");
-      const value = selectBox.value;
-      const index = optionsOverlap.indexOf(optionsOverlap.find(e => e[0] === value));
+      const settingToChange = selectBox.value;
+      const index = optionsOverlap.indexOf(optionsOverlap.find(e => e[0] === settingToChange));
 
-      actionHistory.push(`User clicked on the ${value ? "Select" : "Deselect"} All button with the Select Menu value: ${value}`);
+      actionHistory.push(`User clicked on the ${booleanValue ? "Select" : "Deselect"} All button with the Select Menu value: ${settingToChange}`);
 
 
 
       for (let i = 0; i < schedule.length; i++) {
         if (schedule[i].days === "ASYNCHRONOUS") continue;
-        if (schedule[i].waitlisted && !waitlistedCheckbox.checked) continue;
 
-        const checkbox = document.querySelector(`#${value}${i}`);
+        const checkbox = document.querySelector(`#${settingToChange}${i}`);
         if (checkbox.disabled) continue;
 
-        changeSetting(value, i, booleanValue);
+        changeSetting(settingToChange, i, booleanValue);
 
         checkbox.checked = booleanValue;
 
-        handleChange(false, checkbox);
+        handleCheckmarkChange(false, checkbox);
 
       }
     }
@@ -576,6 +583,8 @@
     waitlistedContainer.classList.add("waitlistedContainer");
     waitlistedContainer.append(waitlistedCheckbox, waitlistedLabel);
 
+    classesLoadedContainer.append(waitlistedContainer);
+
     const courseOptions = [
       "Include course code",
       "Include professor names",
@@ -635,13 +644,21 @@
       const renameClass = (e, isKeyBoard = false) => {
         if (e.target.tagName !== "SPAN" && !isKeyBoard) return;
         if (editingName) return;
-        actionHistory.push(`User double clicks Class #${index + 1} to rename it`);
-        clas.open = true;
 
         const displayNameSpan = summary.querySelector('span.displayName');
         const courseCodeSpan = summary.querySelector("span.courseCode");
         const checkbox = summary.querySelector('input[type="checkbox"]')
         const text = document.createElement('input');
+        if (!checkbox.checked) return;
+
+        summary.classList.toggle("nameEdit", true);
+
+        actionHistory.push(`User double clicks Class #${index + 1} to rename it`);
+        clas.open = true;
+
+
+
+
 
         text.type = "text";
         text.value = displayNameSpan.textContent;
@@ -650,6 +667,7 @@
         summary.replaceChildren(courseCodeSpan);
         text.focus();
         text.select();
+
 
         editingName = true;
 
@@ -672,6 +690,7 @@
           courseCodeSpan.replaceChildren(`${courseCode}: `, displayNameSpan);
           summary.replaceChildren(courseCodeSpan, checkbox);
           summary.removeEventListener('keyup', handleSpaceBar);
+          summary.classList.toggle("nameEdit", false);
 
 
           editingName = false;
@@ -718,6 +737,8 @@
       checkbox.checked = !asynchronous
       checkbox.id = id + index;
       checkbox.classList.add('courseCheckbox');
+
+
 
       // add course code + name
       const courseStr = displayName;
@@ -833,8 +854,8 @@
 
       clas.append(summary, br, courseDetails, options);
       classes.append(clas);
+      if (asynchronous) handleCheckmarkChange(null, checkbox);
     }
-    classes.append(waitlistedContainer);
     settings[waitlistedCheckbox.id] = waitlistedCheckbox.checked;
 
 
@@ -848,6 +869,7 @@
     importScheduleButton.classList.add("export");
     importScheduleButton.toggleAttribute("disabled", false);
     actionHistory.push("User has imported schedule into extension");
+
 
     // const events = []; // contains all events (courses) for .ics file creation
 
@@ -1044,7 +1066,7 @@
   const importScheduleButton = document.querySelector("#importSchedule");
   const message = document.querySelector(".message");
 
-  let schedule; // this is set by fetchSchedule()
+  let schedule = []; // this is set by fetchSchedule()
 
   getCurrentTab().then((tab) => {
     const currentUrl = new URL(tab.url);
@@ -1163,7 +1185,7 @@
    * @param {Event} event The event to handle
    * @param {*} checkbox You must provide the checkbox element if the function is being called outside of an event listener
    */
-  function handleChange(event, checkbox = null) {
+  function handleCheckmarkChange(event, checkbox = null) {
     const element = checkbox ?? event.target;
     if (
       element.tagName === "INPUT" &&
@@ -1177,8 +1199,13 @@
         for (const course of waitlistedCourses) {
           const leCheckBox = document.querySelector(`#${course}`);
           const index = parseInt(leCheckBox.id.match(/\d+/)[0]);
+          settings["includecourse"][index] = element.checked;
+
           leCheckBox.disabled = !element.checked;
           leCheckBox.checked = element.checked ? settings["includecourse"][index] : false;
+
+
+          handleCheckmarkChange(null, leCheckBox);
         }
         return;
       }
@@ -1213,7 +1240,7 @@
     }
   }
 
-  document.addEventListener("change", handleChange)
+  document.addEventListener("change", handleCheckmarkChange)
 
 
 
@@ -1280,7 +1307,7 @@
       }
 
       validateText.textContent = "";
-      validateText.classList.remove('show');
+      validateText.classList.toggle("message", false);
       chrome.downloads.download({
         url: createDownload(file),
         filename: `schedule.ics`,
@@ -1322,8 +1349,13 @@
           return;
         }
       } else {
-        msg.textContent = "The .ics file you provided wasn't created by this extension."
+        if (lowercase.trim().length === 0) {
+          msg.textContent = "The .ics file you provided is empty.";
+        } else {
+          msg.textContent = "The .ics file you provided wasn't created by this extension."
+        }
         msg.classList.toggle("show", true);
+        return;
       }
       readIcs(content);
 

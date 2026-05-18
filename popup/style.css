@@ -223,8 +223,8 @@ a {
 .footer *:hover,
 a:hover {
   cursor: pointer;
-  color: black;
-  text-decoration: underline black;
+  color: rgb(255, 95, 170);
+  text-decoration: underline rgb(255, 95, 170);
 }
 
 button,
@@ -233,6 +233,8 @@ input[type="file"]::file-selector-button {
   padding: 10px;
   border: black solid 2px;
   background-color: white;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 
@@ -332,10 +334,23 @@ details.class.notIncluded summary input[type="text"]:focus {
   background-color: rgb(253, 209, 209);
 }
 
+details.class.notIncluded:has(.courseCheckbox:not(:checked)) {
+  background-color: rgb(160, 125, 125);
+  color: rgba(0, 0, 0, 0.411);
+}
+
+details.class.notIncluded:has(.courseCheckbox:not(:checked)):has(summary:hover) {
+  background-color: rgb(114, 90, 90);
+  color: rgba(0, 0, 0, 0.411);
+}
+
 details div {
   font-size: 16.5px
 }
 
+div::after {
+  background-color: black;
+}
 
 
 summary {
@@ -354,6 +369,7 @@ details[open] summary {
 summary input[type="checkbox"] {
   width: 25px;
   height: 25px;
+  margin-left: auto;
 }
 
 summary span,
@@ -364,11 +380,15 @@ summary input[type="text"] {
 
 summary span.courseCode {
   margin-right: auto;
+  width: 89%;
 }
 
-summary input[type="text"] {
-  margin-right: auto;
+summary.nameEdit span.courseCode {
+  width: 100%;
 }
+
+
+summary input[type="text"] {}
 
 summary span {
   white-space: nowrap;
@@ -432,6 +452,12 @@ summary input[type="text"]:focus {
   margin-left: 4px;
 }
 
+#waitlistedContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 #selectionContainer {
   display: none;
   justify-content: center;
@@ -442,7 +468,7 @@ summary input[type="text"]:focus {
 }
 
 #optionSelect {
-  height: 30px;
+  height: 35px;
 }
 
 select {

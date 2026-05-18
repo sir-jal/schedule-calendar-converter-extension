@@ -1,11 +1,6 @@
 // this is injected into the webpage, therefore is utilizing the webpage's DOM, not the extension's.
-// regular expressions to match the start and end times and the start and end dates.
 
 (() => {
-  const timeRegex12 = /\d{2}:\d{2}\s{2}(?:AM|PM)\s*-\s*\d{2}:\d{2}\s{2}(?:AM|PM)/;
-  const timeRegex24 = /\d{2}:\d{2}\s*-\s*\d{2}:\d{2}/;
-  const header = document.querySelector('h1').textContent;
-
   /**
    * Finds the indices at which a substring is in a string
    * @param {string} str The string to search in
@@ -44,8 +39,14 @@
     window.removeEventListener("error", reportError);
   }
   window.addEventListener("error", reportError);
+
+
+  // regular expressions to match the start and end times and the start and end dates.
+  const timeRegex12 = /\d{2}:\d{2}\s{2}(?:AM|PM)\s*-\s*\d{2}:\d{2}\s{2}(?:AM|PM)/;
+  const timeRegex24 = /\d{2}:\d{2}\s*-\s*\d{2}:\d{2}/;
   const classes = Array.from(document.querySelectorAll(".listViewWrapper")); // i despise the ElementList type, so im converting it to Array
   const Schedule = [];
+
 
   if (classes.length === 0) {
     chrome.runtime.sendMessage("SCHEDULE FETCHING ATTEMPTED: NO CLASSES FOUND");
