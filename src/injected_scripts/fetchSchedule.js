@@ -1,6 +1,10 @@
 // this is injected into the webpage, therefore is utilizing the webpage's DOM, not the extension's.
 
-(() => {
+
+(async () => {
+
+  const { Course } = await import(chrome.runtime.getURL("src/classes/course.js"))
+
   /**
    * Finds the indices at which a substring is in a string
    * @param {string} str The string to search in
@@ -136,30 +140,11 @@
 
 
       const time = times?.[rows.indexOf(row)]?.textContent?.trim() ?? row.match(timeRegex12)?.[0] ?? row.match(timeRegex24)?.[0];
-      if (!days || !time) {
-        Schedule.push({
-          courseTitle,
-          displayName: courseTitle,
-          courseCode,
-          days: "ASYNCHRONOUS",
-          time: "ASYNCHRONOUS",
-          startDate,
-          endDate,
-          startTime: "ASYNCHRONOUS",
-          endTime: "ASYNCHRONOUS",
-          buildingName: "ASYNCHRONOUS",
-          roomNumber: "ASYNCHRONOUS",
-          section,
-          prof,
-          waitlisted: isWaitlisted
-        })
-        continue;
-      }
 
 
 
-      const timeSplit = time.split("-")
-      const [startTime, endTime] = [timeSplit[0].trim(), timeSplit[1].trim()];
+      const timeSplit = time?.split("-")
+      const [startTime, endTime] = [timeSplit?.[0]?.trim(), timeSplit?.[1]?.trim()];
 
       // location
       // building name
@@ -193,6 +178,7 @@
 
     }
   }
+
 
   // this allow the chrome extension to receive the Schedule. keep in mind that this function is being injected into the webpage
   // and is not being ran in respect to the chrome extension.

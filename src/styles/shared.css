@@ -1,0 +1,523 @@
+/* shared css styles between webpage and extension popup */
+
+* {
+    font-family: "PT Serif", serif;
+    font-style: normal;
+}
+
+
+body {
+    background-color: #343740;
+    color: white;
+    width: 430px;
+    overflow: scroll;
+    overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+    width: 0;
+    background: transparent;
+}
+
+:focus {
+
+    outline: none
+}
+
+:focus-visible {
+    outline: #F00 solid 5px;
+    outline-offset: 2px;
+}
+
+input[type=text]:focus-visible {
+    outline: auto;
+}
+
+
+h1,
+h2,
+h3,
+.message {
+    text-align: center;
+}
+
+h1 {
+    font-size: 25px;
+}
+
+
+h2 {
+    font-size: 16px;
+}
+
+.inputLabel {
+    font-size: 15px;
+    margin-top: 15px;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.export {
+    margin-top: 15px;
+}
+
+hr {
+    color: black;
+    border: black solid 0.1px;
+}
+
+hr.sectionBreak {
+    width: 27em;
+    margin-top: 19px;
+    margin-bottom: 19px;
+    height: 0.01px;
+}
+
+.inputcontainer {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.version {
+    display: block;
+    text-align: center;
+    font-size: 15px;
+}
+
+.input {
+    padding: 5px;
+}
+
+.ics {
+    font-size: 20px;
+}
+
+input[type="text"] {
+    border: black solid 2px;
+    border-radius: 6px;
+    padding: 5px;
+    width: 200px;
+    text-align: center;
+}
+
+.message {
+    margin-top: 18px;
+    display: none;
+    color: white;
+    font-size: 18px;
+    border-left: solid rgb(255, 254, 245) 4px;
+    background-color: rgb(255, 229, 58);
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+
+}
+
+.message.show {
+    display: block;
+
+}
+
+.message.success {
+    color: rgb(0, 0, 0);
+    border-left: solid #008d1e 4px;
+    background-color: rgb(106, 255, 108);
+}
+
+.message.error {
+    color: rgb(78, 0, 14);
+    border-left: solid rgb(255, 0, 0) 4px;
+    background-color: rgb(255, 133, 133);
+}
+
+.message.alert {
+    color: rgb(34, 33, 32);
+    border-left: solid rgb(204 119 0) 4px;
+    background-color: rgb(237 170 75);
+}
+
+.imagecontainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+}
+
+img {
+    width: 100px;
+    height: 100px;
+}
+
+#rightarrow {
+    width: 60px;
+    height: 60px;
+}
+
+#popupbuttoncontainer,
+.school-search,
+.fileInputContainer,
+.fileName {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.buttoncontainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.buttoncontainer * {
+    margin: 4px;
+    margin-bottom: 20px;
+}
+
+#popupbuttoncontainer {
+    margin-bottom: 10px;
+}
+
+.fileName {
+    margin-bottom: 30px;
+    display: none;
+}
+
+#fileName {
+    width: 300px;
+    font-size: 14px;
+}
+
+.school-search {
+    display: none;
+    margin-bottom: 30px;
+}
+
+.search-results {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 15px;
+    margin-bottom: 10px;
+    display: none;
+}
+
+
+.school-search a {
+    font-weight: bold;
+    color: rgb(255, 254, 254);
+    text-decoration: underline white;
+}
+
+.school-search a:hover {
+    font-weight: bold;
+    color: #f49c9c;
+    text-decoration: underline #f49c9c;
+}
+
+.footer *,
+.footer *:visited,
+a {
+    color: #FFC759;
+    text-decoration: underline #FFC759;
+}
+
+.footer *:hover,
+a:hover {
+    cursor: pointer;
+    color: rgb(255, 95, 170);
+    text-decoration: underline rgb(255, 95, 170);
+}
+
+button,
+input[type="file"]::file-selector-button {
+    border-radius: 10px;
+    padding: 10px;
+    border: black solid 2px;
+    background-color: white;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+
+button:not(:disabled):hover,
+input[type="file"]::file-selector-button:hover {
+    background-color: rgb(97, 97, 255);
+    cursor: pointer;
+}
+
+button:not(:disabled):active,
+input[type="file"]::file-selector-button:active {
+    background-color: rgb(34, 34, 244);
+}
+
+#refreshPopup {
+    height: 40px;
+    width: 40px;
+    text-align-last: center;
+    border-radius: 50%;
+}
+
+#refreshPopup i {
+    display: flex;
+    height: 0.8em;
+    justify-content: center;
+    align-items: center;
+}
+
+
+input[type="file"]::file-selector-button {
+    font-size: 12px;
+}
+
+.header {
+    margin-bottom: 30px;
+}
+
+.footer {
+    position: sticky;
+    margin-top: 40px;
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    width: 100%;
+    font-size: 15px;
+    text-decoration: underline blue;
+}
+
+.classes {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+}
+
+summary,
+label,
+.options,
+.classDetailKey {
+    user-select: none;
+}
+
+details.class {
+    border: 1px solid black;
+    background-color: #ffffff;
+    border-radius: 4px;
+    padding: 10px;
+    width: 338px;
+    color: black;
+}
+
+details.class:not(.notIncluded):has(summary:hover) {
+    background-color: #dedcdc;
+    cursor: pointer;
+}
+
+details.class:not(.notIncluded):has(.courseCheckbox:not(:checked)) {
+    background-color: rgb(189, 189, 189);
+    color: rgba(0, 0, 0, 0.411);
+}
+
+details.class:not(.notIncluded):has(.courseCheckbox:not(:checked)):has(summary:hover) {
+    background-color: rgb(167, 167, 167);
+    color: rgba(0, 0, 0, 0.411);
+}
+
+details.class.notIncluded {
+    background-color: rgb(255, 201, 201);
+}
+
+details.class.notIncluded:has(summary:hover) {
+    background-color: rgb(231, 180, 180);
+}
+
+details.class.notIncluded summary input[type="text"]:focus {
+    background-color: rgb(253, 209, 209);
+}
+
+details.class.notIncluded:has(.courseCheckbox:not(:checked)) {
+    background-color: rgb(160, 125, 125);
+    color: rgba(0, 0, 0, 0.411);
+}
+
+details.class.notIncluded:has(.courseCheckbox:not(:checked)):has(summary:hover) {
+    background-color: rgb(114, 90, 90);
+    color: rgba(0, 0, 0, 0.411);
+}
+
+details div {
+    font-size: 16.5px
+}
+
+div::after {
+    background-color: black;
+}
+
+
+summary {
+    display: flex;
+    font-size: 15px;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+details[open] summary {
+    border-bottom: solid black 2px;
+    padding-bottom: 10px;
+}
+
+summary input[type="checkbox"] {
+    width: 25px;
+    height: 25px;
+    margin-left: auto;
+}
+
+summary span,
+summary input[type="text"] {
+    font-size: 16px;
+    text-align: left;
+}
+
+summary span.courseCode {
+    margin-right: auto;
+    width: 89%;
+}
+
+summary.nameEdit span.courseCode {
+    width: 100%;
+}
+
+
+summary input[type="text"] {}
+
+summary span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+summary input[type="text"]:focus {
+    background-color: rgb(236, 236, 236)
+}
+
+.options {
+    margin-top: 15px;
+}
+
+.courseDetails {
+    padding: 20px;
+}
+
+#stepsPopup {
+    padding: 0;
+    width: 400px;
+    height: 300px;
+    transition: opacity 0.2s;
+}
+
+#stepsPopup a {
+    color: red
+}
+
+#stepsPopup[open]::backdrop {
+    opacity: 0.5;
+}
+
+#steps li {
+    margin: 10px;
+    font-size: 15px;
+}
+
+.step.current,
+.sublist.current li {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+#validation {
+    text-align: center;
+}
+
+.step.past,
+.sublist.past li {
+    text-decoration: line-through;
+}
+
+#waitlistedContainer {
+    margin-top: 10px;
+    font-size: 17px;
+}
+
+#waitlistedContainer label {
+    margin-left: 4px;
+}
+
+#waitlistedContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#selectionContainer {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 5px;
+}
+
+#optionSelect {
+    height: 35px;
+}
+
+select {
+    border: black solid 2.5px;
+    border-radius: 5px;
+}
+
+.classDetails div {
+    margin-bottom: 5px;
+}
+
+.classDetails div span {
+    display: block;
+}
+
+.classDetails div:not(:nth-child(1)) {
+    margin-top: 10px
+}
+
+.classDetails div b {
+    display: inline-block;
+    width: 300px;
+}
+
+
+.courseButton {
+    margin-top: 10px;
+}
+
+#includewaitlisted {
+    width: 15px;
+    height: 15px;
+}
+
+input[type="file"] {
+    text-align-last: center;
+    margin: auto;
+    font-size: 15px;
+}
+
+.fileInputContainer * {
+    margin: 9px;
+}
+
+.fileInputContainer p {
+    text-align: center;
+    font-size: 14.5px;
+    font-weight: 200;
+    margin-bottom: 3px;
+}
