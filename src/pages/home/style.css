@@ -1,0 +1,44 @@
+h1 {
+    font-size: 4em;
+    margin-top: 0.1em;
+}
+
+.subheader {
+    display: block;
+    text-align: center;
+    font-size: 1.7em;
+    width: 45em;
+}
+
+hr {
+    border: 2px white solid;
+    width: 60em;
+}
+
+hr.short {
+    width: 10em;
+}
+
+h2 {
+    font-size: 3em;
+    margin-bottom: 0.4em;
+}
+
+h2.underline {
+    text-decoration: underline solid white 2px;
+}
+
+.links {
+    display: flex;
+    gap: 10px;
+    font-size: 1.9em;
+    flex-direction: column;
+    align-items: center;
+}
+
+.main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}

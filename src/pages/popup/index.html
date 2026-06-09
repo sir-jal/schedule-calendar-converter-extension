@@ -5,7 +5,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Schedule to Calendar</title>
+  <link rel="stylesheet" href="../../styles/shared.css" />
   <link rel="stylesheet" href="./style.css" />
+
 
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -113,49 +115,22 @@
 
 
     <div id="onWebsitePage" style="display: none;">
-      <div id="classLoadedContainer" style="display: none;">
-        <div class="classes"></div>
-        <div id="selectionContainer">
-          <button id="selectAll">Select All</button>
-          <button id="deselectAll">Deselect All</button>
-
-          <select name="optionSelect" id="optionSelect" title="select a setting to mass change">
-            <option value="includecourse">Courses</option>
-            <option value="includecoursecode">Include course code</option>
-            <option value="includeprofessornames">Include professor names</option>
-            <option value="onlyincludeprimaryprofessor"> Primary professor only</option>
-            <option value="includesection">Include section</option>
-            <option value="includeclasslocation">Include location</option>
-          </select>
-        </div>
-      </div>
-
-      <p id="validation"></p>
-
-
-      <div class="buttoncontainer">
-        <button id="importSchedule">Load Schedule</button>
-        <button id="refreshPopup" title="start over" style="display: none;"><i class="fas fa-undo"></i></button>
-      </div>
     </div>
 
+    <p id="validation"></p>
 
 
-
-
-    <div class="fileInputContainer">
-      <h2 class="inputLabel">Or import a valid .ics file to edit it</h2>
-
-      <div class="fileInputElementContainer">
-        <input type="file" name="icsfileinput" id="icsfileinput" accept=".ics">
-      </div>
-
-      <button id="importFile">Import File</button>
-
-      <div id="fileInputMessage" class="message error">
-        The file you provided is not an .ics file.
-      </div>
+    <div class="buttonContainer">
+      <button id="importSchedule">Load Schedule</button>
+      <i class="fas fa-undo" id="refreshPopup" title="start over" style="display: none;" tabindex="0"></i>
     </div>
+  </div>
+
+
+
+
+
+
 
   </div>
 
@@ -219,7 +194,7 @@
   <div class="footer">
     <a href="http://forms.gle/FV54aHLFmzFs9Dqm6" id="feedback" target="_blank">Help & Feedback</a>
     <a href="https://github.com/sir-jal/schedule-calendar-converter-extension" target="_blank">GitHub</a>
-    <a tabindex="0" id="stepsButton">Steps to using extension</a>
+    <a href="../home/index.html" target="_blank" tabindex="0" id="extensionWebpage">Extension Webpage</a>
   </div>
 </body>
 

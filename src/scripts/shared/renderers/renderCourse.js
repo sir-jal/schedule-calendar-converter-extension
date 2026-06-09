@@ -1,13 +1,17 @@
-import { Course } from "../../classes/course.js";
-import { wait } from "../../utils/timeRelatedUtils.js";
+import { Schedule, Course } from "../../../classes/index.js";
+import { updateSessionStorage } from "../../../utils/tools/storage.js";
+import { wait } from "../../../utils/tools/timeRelatedUtils.js";
 
 /**
- * Renders a course into the DOM.
+ * Renders a course
+ * @param {Schedule} schedule
  * @param {Course} course the course to render
+ * @param {boolean} [popUpPage=false] Whether or not the course is being rendered into the extension popup. Defaults to **`false`**
+ * @returns {Element} the rendered html "details" element
  */
-export function renderCourse(course) {
+export function renderCourse(schedule, course, popUpPage = false) {
     const keysToEditName = ["e", "f2"];
-    let editingName;
+    let editingName = false;
     const {
         courseTitle,
         displayName,
@@ -24,7 +28,7 @@ export function renderCourse(course) {
         prof,
         waitlisted,
         asynchronous
-    } = course.getAllDetails();
+    } = course.toJSON();
 
     const clas = document.createElement("details");
     const summary = document.createElement("summary");
@@ -34,9 +38,9 @@ export function renderCourse(course) {
     const options = document.createElement("div");
     const courseDetails = document.createElement("div");
     const br = document.createElement("br");
-    const classes = document.querySelector(".classes");
     const existingClasses = Array.from(document.querySelectorAll(".class"));
-    const index = existingClasses.length;
+    const index = schedule.findCourseIndex(course.id);
+
 
     const renameClass = (e, isKeyBoard = false) => {
 
@@ -90,7 +94,7 @@ export function renderCourse(course) {
             summary.removeEventListener('keyup', handleSpaceBar);
             summary.classList.toggle("nameEdit", false);
 
-
+            if (popUpPage) updateSessionStorage(schedule);
             editingName = false;
 
         }
@@ -131,7 +135,8 @@ export function renderCourse(course) {
 
     // configure checkbox
     checkbox.type = "checkbox";
-    checkbox.checked = !asynchronous;
+    checkbox.checked = !asynchronous && course.getSetting("includecourse");
+    checkbox.setAttribute("data-setting", "includecourse");
     checkbox.id = "includecourse" + index;
     checkbox.classList.add("courseCheckbox");
 
@@ -146,8 +151,6 @@ export function renderCourse(course) {
     courseCodeSpan.append(displayNameSpan);
     summary.append(courseCodeSpan, checkbox);
 
-    if (waitlisted) waitlistedCourses.push(checkbox.id);
-
     course.setSetting("includecourse", checkbox.checked);
 
     clas.classList.add("class");
@@ -158,7 +161,7 @@ export function renderCourse(course) {
 
 
 
-    const hasLocation = !course.isOnline() && !asynchronous;
+    const hasLocation = !course.isOnline();
 
 
     const infoObj = {
@@ -188,7 +191,7 @@ export function renderCourse(course) {
             courseDetails.append(div);
             continue;
         } else if (key === "asynchronous") {
-            div.append(`This class is likely asynchronous as the extension could not find a time/day. If you include this course in your .ics file, it will ONLY (1) create an all-day event on ${startDate}.`);
+            div.append(`This class is likely asynchronous as the extension could not find a time/day. If you include this course in your .ics file, it will create only ONE (1) all-day event on ${startDate}.`);
             courseDetails.append(div);
             continue;
         } else if (key === "Course Code") {
@@ -209,7 +212,7 @@ export function renderCourse(course) {
     }
 
     // load in per-class options
-    for (const option of Course.CourseSettings) {
+    for (const option of Course.CourseSettings.slice(1)) {
         const id = option.trim().replaceAll(" ", "").toLowerCase();
 
         const optionElement = document.createElement("div");
@@ -219,7 +222,7 @@ export function renderCourse(course) {
         const checkbox = document.createElement("input");
 
         checkbox.type = "checkbox";
-        checkbox.checked = true;
+        checkbox.checked = course.getSetting(id);
         if (
             ((option.includes("location") && (!hasLocation || asynchronous))) ||
             ((option.includes("professor") && prof[0] === "No professor")) ||
@@ -228,22 +231,25 @@ export function renderCourse(course) {
             checkbox.checked = false;
             checkbox.disabled = true;
             checkbox.classList.add("disabled");
+            course.setSetting(id, checkbox.checked);
         }
         checkbox.name = id + index;
         checkbox.id = id + index;
+        checkbox.setAttribute("data-setting", id);
         label.setAttribute("for", id + index);
         label.textContent = option;
 
         optionElement.append(checkbox, label);
         options.append(optionElement);
 
-        course.setSetting(id, checkbox.checked);
+
     }
 
 
     clas.append(summary, br, courseDetails, options);
-    classes.append(clas);
     if (asynchronous) {
         course.setSetting("includecourse", false);
     }
+
+    return clas;
 }

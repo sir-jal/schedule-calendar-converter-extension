@@ -1,5 +1,3 @@
-/* shared css styles between webpage and extension popup */
-
 * {
     font-family: "PT Serif", serif;
     font-style: normal;
@@ -9,7 +7,6 @@
 body {
     background-color: #343740;
     color: white;
-    width: 430px;
     overflow: scroll;
     overflow-x: hidden;
 }
@@ -164,15 +161,16 @@ img {
     flex-direction: column;
 }
 
-.buttoncontainer {
+.buttonContainer {
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.buttoncontainer * {
+.buttonContainer * {
     margin: 4px;
     margin-bottom: 20px;
+    margin-top: 10px;
 }
 
 #popupbuttoncontainer {
@@ -229,7 +227,18 @@ a:hover {
     text-decoration: underline rgb(255, 95, 170);
 }
 
+.message.error a {
+    color: #000000;
+    text-decoration: underline #1d1d1d;
+}
+
+.message.error a:hover {
+    color: #726161;
+    text-decoration: underline #696262;
+}
+
 button,
+#refreshPopup,
 input[type="file"]::file-selector-button {
     border-radius: 10px;
     padding: 10px;
@@ -241,30 +250,22 @@ input[type="file"]::file-selector-button {
 
 
 button:not(:disabled):hover,
+#refreshPopup:hover,
 input[type="file"]::file-selector-button:hover {
     background-color: rgb(97, 97, 255);
     cursor: pointer;
 }
 
 button:not(:disabled):active,
+#refreshPopup:active,
 input[type="file"]::file-selector-button:active {
     background-color: rgb(34, 34, 244);
 }
 
 #refreshPopup {
-    height: 40px;
-    width: 40px;
-    text-align-last: center;
+    color: black;
     border-radius: 50%;
 }
-
-#refreshPopup i {
-    display: flex;
-    height: 0.8em;
-    justify-content: center;
-    align-items: center;
-}
-
 
 input[type="file"]::file-selector-button {
     font-size: 12px;
@@ -288,7 +289,7 @@ input[type="file"]::file-selector-button {
 .classes {
     margin-top: 20px;
     margin-bottom: 20px;
-    display: none;
+    display: flex;
     flex-direction: column;
     align-items: center;
 }
@@ -300,7 +301,7 @@ label,
     user-select: none;
 }
 
-details.class {
+details {
     border: 1px solid black;
     background-color: #ffffff;
     border-radius: 4px;
@@ -309,39 +310,40 @@ details.class {
     color: black;
 }
 
-details.class:not(.notIncluded):has(summary:hover) {
+details:not(.notIncluded):has(summary:hover) {
     background-color: #dedcdc;
     cursor: pointer;
 }
 
-details.class:not(.notIncluded):has(.courseCheckbox:not(:checked)) {
+details:not(.notIncluded):has(.courseCheckbox:not(:checked)),
+details:not(.notIncluded):has(.courseCheckbox:disabled) {
     background-color: rgb(189, 189, 189);
     color: rgba(0, 0, 0, 0.411);
 }
 
-details.class:not(.notIncluded):has(.courseCheckbox:not(:checked)):has(summary:hover) {
+details:not(.notIncluded):has(.courseCheckbox:not(:checked)):has(summary:hover) {
     background-color: rgb(167, 167, 167);
     color: rgba(0, 0, 0, 0.411);
 }
 
-details.class.notIncluded {
+details.notIncluded {
     background-color: rgb(255, 201, 201);
 }
 
-details.class.notIncluded:has(summary:hover) {
+details.notIncluded:has(summary:hover) {
     background-color: rgb(231, 180, 180);
 }
 
-details.class.notIncluded summary input[type="text"]:focus {
+details.notIncluded summary input[type="text"]:focus {
     background-color: rgb(253, 209, 209);
 }
 
-details.class.notIncluded:has(.courseCheckbox:not(:checked)) {
+details.notIncluded:has(.courseCheckbox:not(:checked)) {
     background-color: rgb(160, 125, 125);
     color: rgba(0, 0, 0, 0.411);
 }
 
-details.class.notIncluded:has(.courseCheckbox:not(:checked)):has(summary:hover) {
+details.notIncluded:has(.courseCheckbox:not(:checked)):has(summary:hover) {
     background-color: rgb(114, 90, 90);
     color: rgba(0, 0, 0, 0.411);
 }
@@ -445,31 +447,30 @@ summary input[type="text"]:focus {
     text-decoration: line-through;
 }
 
-#waitlistedContainer {
+.scheduleSettings {
     margin-top: 10px;
     font-size: 17px;
-}
-
-#waitlistedContainer label {
-    margin-left: 4px;
-}
-
-#waitlistedContainer {
     display: flex;
     justify-content: center;
     align-items: center;
+    margin-bottom: 15px;
 }
 
-#selectionContainer {
-    display: none;
+.scheduleSettings .scheduleSetting>label {
+    margin-left: 4px;
+}
+
+.selectionContainer {
+    display: flex;
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 15px;
     margin-bottom: 5px;
+    margin-top: 10px;
 }
 
-#optionSelect {
+.optionSelect {
     height: 35px;
 }
 
@@ -500,7 +501,7 @@ select {
     margin-top: 10px;
 }
 
-#includewaitlisted {
+#includewaitlistedcourses {
     width: 15px;
     height: 15px;
 }

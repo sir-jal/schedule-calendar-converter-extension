@@ -1,4 +1,5 @@
-import { formatDays, formatDate } from "../utils/formatting.js";
+import { formatDays, formatDate } from "../utils/tools/formatting.js";
+import { Schedule } from "./schedule.js";
 
 /**
  * A class representing a course. Contains methods and constants useful for managing a course
@@ -35,6 +36,7 @@ export class Course {
      */
     static get CourseSettings() {
         return [
+            "Include course",
             "Include course code",
             "Include professor names",
             "Only include primary professor",
@@ -46,7 +48,7 @@ export class Course {
     /**
      * An array of string arrays that represent course settings that overlap each other
      * 
-     * Setting A overlaps Setting B if Setting A is required to be checked in order for Setting B to even be considered.
+     * Setting A overlaps Setting B if Setting A is required for Setting B to function.
      * 
      */
     static get SettingOverwrites() {
@@ -56,25 +58,34 @@ export class Course {
     }
 
     /**
+     * Converts a setting (string) to an id by trimming it, removing all spaces, and lowercasing all characters
+     * @param {string} setting The setting to convert
+     * @returns {string} The id
+     */
+    static convertSettingToId(setting) {
+        return setting.trim().replaceAll(" ", "").toLowerCase();
+    }
+
+    /**
      * Creates a course object
      * @param {object} data The class object
      */
     constructor(data) {
         this.#courseTitle = data.courseTitle;
-        this.#displayName = data.courseTitle;
+        this.#displayName = data.displayName ?? data.courseTitle;
         this.#courseCode = data.courseCode;
         this.#days = data.days;
-        this.#time = data.time;
         this.#startDate = data.startDate;
         this.#endDate = data.endDate;
         this.#startTime = data.startTime;
         this.#endTime = data.endTime;
+        this.#time = `${this.#startTime} - ${this.#endTime}`;
         this.#buildingName = data.buildingName;
         this.#roomNumber = data.roomNumber;
         this.#section = data.section;
         this.#prof = data.prof;
         this.#waitlisted = data.waitlisted;
-        this.#id = crypto.randomUUID();
+        this.#id = data.id ?? crypto.randomUUID();
     }
 
     /**
@@ -96,6 +107,7 @@ export class Course {
     isWaitlisted() {
         return this.#waitlisted;
     }
+
 
     /**
     * Sets the display name
@@ -213,15 +225,15 @@ export class Course {
      * 
      * @returns {string}
      */
-    getId() {
+    get id() {
         return this.#id;
     }
 
     /**
-     * Gets every class property
-     * @returns an object containing every property
+     * Converts the course to JSON (object)
+     * @returns {object} the json
      */
-    getAllDetails() {
+    toJSON() {
         return {
             courseTitle: this.getCourseTitle(),
             displayName: this.getDisplayName(),
@@ -237,8 +249,26 @@ export class Course {
             section: this.getSection(),
             prof: this.getProf(),
             waitlisted: this.isWaitlisted(),
-            asynchronous: this.isAsync()
+            asynchronous: this.isAsync(),
+            settings: this.#settings,
+            id: this.#id
         }
+    }
+
+    /**
+     * Converts a JSON/object to a course object
+     * 
+     * @param {object} obj the object to convert
+     * @returns {Course} the schedule
+     */
+    static fromJSON(obj) {
+        const course = new Course(obj);
+
+        for (const [key, value] of Object.entries(obj.settings)) {
+            course.setSetting(key, value);
+        }
+
+        return course;
     }
 
 
@@ -278,19 +308,18 @@ export class Course {
      * @returns {boolean} Whether or not the class is online
      */
     isOnline() {
-        return (this.#buildingName === "None" &&
-            this.#roomNumber === "None" &&
-            this.#buildingName === "NA" &&
-            this.#roomNumber === "NA" &&
-            this.#buildingName === "Online" &&
-            this.#roomNumber === "Online") || this.isAsync();
+        return (
+            (this.#buildingName === "None" && this.#roomNumber === "None") ||
+            (this.#buildingName === "NA" && this.#roomNumber === "NA") ||
+            (this.#buildingName === "Online" && this.#roomNumber === "Online"))
+            || this.isAsync();
     }
 
     /**
      * Converts the course into an .ics event. An empty string will be returned if the class is not included, unless forced
      * 
-     * @param {boolean} force Whether or not to force the conversion regardless of whether or 
-     * not the course is being included. Defaults to **`false`** 
+     * @param {boolean} force Whether or not to force the conversion regardless of if
+     * the course is being included. Defaults to **`false`** 
      * @returns {string} The course as an .ics event
      */
     toICS(force = false) {
@@ -303,8 +332,6 @@ export class Course {
         const onlyPrimaryProfessor =
             includeProfName && this.getSetting("onlyincludeprimaryprofessor");
         const asynchronous = this.isAsync();
-
-        const uid = crypto.randomUUID();
 
         const dayFormat = formatDays(this.getDays());
         const location = !this.isOnline() ? `${this.#buildingName}\\, Room ${this.#roomNumber}` : "No location found";
@@ -340,8 +367,8 @@ export class Course {
         let lines = [];
         lines.push(
             "BEGIN:VEVENT",
-            `UID:${uid}`,
-            `DTSTAMP:${today.toISOString().replace(/[-:]/g)}`,
+            `UID:${this.#id}`,
+            `DTSTAMP:${today.toISOString().replace(/[-:]/g, "").split(".")[0]}`,
             `SUMMARY:${this.#waitlisted ? "[WL] " : ""}${includeCourseCode ? `${this.#courseCode}: ` : ""}${this.#displayName}` + (includeSection ? ` (${this.#section.toUpperCase()})` : ""),
             `DESCRIPTION:${description()}`
         )
@@ -374,12 +401,25 @@ export class Course {
         }
 
         // adding non-ics-related information to make importing easier
-        lines.push(`courseTitle:${this.#courseTitle}`, `displayName:${this.#displayName}`, `prof:${this.#prof.join(", ")}`, `days:${this.#days}`, `startDate:${this.#startDate}`, `endDate:${this.#endDate}`, `startTime:${this.#startTime}`, `endTime:${this.#endTime}`, `time:${this.#time}`, `section:${this.#section}`, `buildingName:${this.#buildingName}`, `roomNumber:${this.#roomNumber}`, `waitlisted:${this.#waitlisted}`, `courseCode:${this.#courseCode}`, "END:VEVENT");
+        lines.push(
+            `courseTitle:${this.#courseTitle}`,
+            `displayName:${this.#displayName}`,
+            `prof:${this.#prof.join(", ")}`,
+            `days:${this.#days}`,
+            `startDate:${this.#startDate}`,
+            `endDate:${this.#endDate}`,
+            `startTime:${this.#startTime}`,
+            `endTime:${this.#endTime}`, `section:${this.#section}`,
+            `buildingName:${this.#buildingName}`,
+            `roomNumber:${this.#roomNumber}`,
+            `waitlisted:${this.#waitlisted}`,
+            `courseCode:${this.#courseCode}`,
+            "END:VEVENT");
 
-
-        return lines.join("\r\n");
+        return lines.join("\n");
     }
 
 }
 
 const course = new Course("");
+Course.convertSettingToId("")

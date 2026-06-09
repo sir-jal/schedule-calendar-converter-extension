@@ -1,10 +1,16 @@
 "use strict";
 
-import { Course } from "../../classes/course.js";
-import { renderCourse } from "../../scripts/shared/renderCourse.js";
-import { Schedule } from "../../classes/schedule.js";
-import { wait, delay } from "../../utils/timeRelatedUtils.js";
-import { handleCheckmarkChange } from "../../scripts/shared/handleCheckmarkChange.js";
+import { Course, Schedule } from "../../classes/index.js";
+import { renderCourse, renderSchedule, updateCourseSetting, updateUI, addSettingListener } from "../../scripts/shared/index.js";
+import { wait, delay } from "../../utils/tools/timeRelatedUtils.js";
+import { getJSON } from "../../utils/tools/getJSON.js";
+import { createDownload } from "../../utils/tools/download.js";
+import { createExportButton } from "../../utils/components/exportButton.js";
+import { createBulkSettings } from "../../utils/components/bulkSettings.js";
+import { createScheduleSettings } from "../../utils/components/scheduleSettings.js";
+
+
+
 
 // (() => {
 // DEFINING GLOBAL VARIABLES
@@ -12,14 +18,20 @@ const version = document.querySelector("#versionNumber");
 
 
 const inputFileContainer = document.querySelector(".fileInputContainer");
-const inputFileButton = document.querySelector("#importFile");
 
 const resetPopUpButton = document.querySelector("#refreshPopup");
 const popUpButtonIcon = document.querySelector("#refreshPopup i");
 
 resetPopUpButton.addEventListener('click', resetPopup);
+document.addEventListener('keypress', e => {
+  console.log(e.key);
+  if (e.key.toLowerCase() === " " || e.key.toLowerCase() === "enter") {
+    if (document.activeElement.id === "refreshPopup") {
+      resetPopUpButton.click()
+    }
+  }
+})
 
-const stepsButton = document.querySelector("#stepsButton");
 const stepsPopup = document.querySelector("#stepsPopup");
 
 const schoolName = document.querySelector("#school-name");
@@ -40,7 +52,12 @@ const keysToEditName = ["e", "f2"];
 const waitlistedCourses = [];
 
 const correctSitePageContainer = document.querySelector("#onWebsitePage");
-const wrongSitePageContainer = document.querySelector("#notOnWebsitePage");
+const wrongSitePageContainer = document.querySelector("#notOnWebsitePage")
+
+const message = document.querySelector(".message");
+
+let schedule = new Schedule(); // this is configured by fetchSchedule();
+
 
 let injection_error = false;
 let step = 1;
@@ -49,7 +66,7 @@ let changingLocal = false;
 let editingName = false;
 let popupOpen = false;
 let revertingChanges = false;
-
+let classesLoaded = false;
 
 
 
@@ -130,7 +147,7 @@ function handleError(e, type, extensionError = true) {
   importScheduleButton.textContent = "Error";
 
   message.classList.add("error", "show");
-  message.innerHTML = `Uh oh! I ran into ${errorLog.length} error(s)! I do apologize for this.<br><br>Below is a log file that has been generated for you to download. If you would like to report this error (highly recommended), please do so in the Help & Feedback Hub (Click 'Help & Feedback' at the bottom to access). This would massively help the developer improve the extension to ensure it works for everyone, assuming you're using Banner.<br><br><a href=${url} download="errorlog.txt">Download Error Log</a`;
+  message.innerHTML = `Uh oh! I ran into ${errorLog.length} error(s)!<br><br>Below is a log file that has been generated for you to download. If you would like to report this error (highly recommended), please do so in the Help & Feedback Hub (Click 'Help & Feedback' at the bottom to access). This will help the developer debug the problem.<br><br><a href=${url} download="errorlog.txt">Download Error Log</a`;
 }
 
 /**
@@ -172,17 +189,6 @@ async function getCurrentTab() {
 }
 
 /**
- * Fetches JSON data via API.
- * @param {string} fileName The name of the file or resource
- * @returns A json representation of the data fetched, null if no data is found
- */
-async function getJSON(fileName) {
-  const request = await fetch(fileName);
-  const json = await request.json();
-  return json;
-}
-
-/**
  * Searches for a school using a search query. The function will search the schools not only by name but also by aliases.
  * @param {string} query Search query
  * @returns an array of schools that matches the search query
@@ -201,200 +207,27 @@ function getSchools(query) {
   return schools;
 }
 
-
 /**
- * Create a download for .ics file
- * @param {string} content String representation of the .ics file
- * @returns A blob URL
+ * Loads the user's classes, whether via file import or script injection 
  */
-function createDownload(content) {
-  // self explanatory
-  const blob = new Blob([content], { type: "text/calendar;charset=utf8" });
-  const url = URL.createObjectURL(blob);
+async function loadClasses() {
 
 
-  return url;
-}
-
-
-
-/**
- * Reads an imported .ics file and loads them up using loadClasses().
- * @param {string} text The .ics file (text) to read
- */
-async function readIcs(text = "") {
-
-  const lines = text.split('\n');
-  const firstEventStart = lines.findIndex(e => e.includes("BEGIN:VEVENT"));
-  const lastEventEnd = lines.findLastIndex(e => e.includes("END:VEVENT"));
-  let linesWithEvents = lines.slice(firstEventStart, lastEventEnd + 1);
-  const msg = document.querySelector('#fileInputMessage');
-
-
-  while (linesWithEvents.length > 0) {
-    // event
-    const eventStart = linesWithEvents.findIndex(e => e.includes("BEGIN:VEVENT"));
-    const eventEnd = linesWithEvents.findIndex(e => e.includes("END:VEVENT"));
-    const eventLines = linesWithEvents.slice(eventStart, eventEnd + 1);
-
-    const parseableIndexStart = eventLines.findIndex(e => e.toLowerCase().includes("coursetitle"));
-    const parseable = eventLines.slice(parseableIndexStart);
-
-    const event = {};
-    for (const line of parseable) {
-      const firstColonIndex = line.indexOf(":");
-      const property = line.substring(0, firstColonIndex);
-
-      if (property === "END") break;
-
-      let value = line.substring(firstColonIndex + 1).trim();
-
-      switch (property) {
-        case "prof":
-          value = value.split(", ");
-          break;
-        case "waitlisted":
-          value = value.toLowerCase() === "true" ? true : false;
-          break;
-      }
-      event[property] = value;
-
-    }
-
-    const course = new Course(event);
-
-    if (Object.keys(event).length !== 0) schedule.addCourse(course);
-    linesWithEvents = linesWithEvents.slice(eventEnd + 1);
-    if (linesWithEvents.length <= 0) {
-      break;
-    }
-  }
-
-  if (schedule.length === 0) {
-    msg.textContent = "The .ics file you provided contained no valid events. Please double check the file or export the file again. If issues persist, that likely means the extension is exporting the file incorrectly and it needs to be reported via the Help & Feedback form.";
-    msg.classList.toggle("show", true);
-    return;
-  }
-
-  inputFileButton.textContent = "Importing...";
-  inputFileButton.disabled = true;
-  importScheduleButton.disabled = true;
-  await wait(1300);
-  loadClasses(true);
-}
-
-/**
- * Loads the user's classes, whether via file import or script injection
- * @param {boolean} importing Whether or not the extension is importing a file. If false, this function will inject
- * fetchSchedule.js into the current user tab. 
- */
-async function loadClasses(importing = false) {
-  const classesLoadedContainer = document.querySelector("#classLoadedContainer");
-  const selectionContainer = document.querySelector("#selectionContainer");
-  const selectAll = document.querySelector("#selectAll");
-  const deselectAll = document.querySelector("#deselectAll");
   schoolSection.style.display = "none";
 
-  /**
-   * Mass changes all settings
-   * @param {boolean} booleanValue The value for the mass change, either true or false
-   */
-  const massChange = (booleanValue) => {
-    const selectBox = document.querySelector("#optionSelect");
-    const settingToChange = selectBox.value;
-    const index = optionsOverlap.indexOf(optionsOverlap.find(e => e[0] === settingToChange));
-
-    actionHistory.push(`User clicked on the ${booleanValue ? "Select" : "Deselect"} All button with the Select Menu value: ${settingToChange}`);
-
-
-
-    for (let i = 0; i < schedule.length; i++) {
-      const course = schedule.getAtIndex(i);
-      if (course.isAsync()) continue;
-
-      const checkbox = document.querySelector(`#${settingToChange}${i}`);
-      if (checkbox.disabled) continue;
-
-
-      course.setSetting(settingToChange, booleanValue);
-
-      checkbox.checked = booleanValue;
-
-      handleCheckmarkChange(false, schedule, checkbox);
-
-    }
-  }
-
-  selectAll.onclick = () => {
-    massChange(true);
-  };
-
-  deselectAll.onclick = () => {
-    massChange(false);
-  };
-
   // import classes into extension
-  importScheduleButton.textContent = "Fetching classes...";
-  importScheduleButton.toggleAttribute("disabled", true);
+
+
 
   message.classList.toggle('success', true);
   message.classList.toggle('error', false);
   message.classList.toggle("alert", false);
-
-  inputFileContainer.style.display = "none";
-  importScheduleButton.style.display = "";
-
-  selectionContainer.style.display = "flex";
-
-  classesLoadedContainer.style.display = "";
 
   resetPopUpButton.style.display = "";
 
   wrongSitePageContainer.style.display = "none";
   correctSitePageContainer.style.display = "";
 
-  const classes = document.querySelector(".classes");
-  classes.style.display = "flex";
-
-  const waitlistedLabel = document.createElement("label");
-  const waitlistedCheckbox = document.createElement("input");
-  const waitlistedContainer = document.createElement("div");
-
-  waitlistedCheckbox.type = "checkbox";
-  waitlistedCheckbox.checked = true;
-  waitlistedCheckbox.id = "includewaitlisted";
-
-  waitlistedContainer.id = "waitlistedContainer";
-
-  waitlistedLabel.textContent = "Include waitlisted courses";
-  waitlistedLabel.setAttribute("for", "includewaitlisted");
-
-  waitlistedContainer.classList.add("waitlistedContainer");
-  waitlistedContainer.append(waitlistedCheckbox, waitlistedLabel);
-
-  classesLoadedContainer.append(waitlistedContainer);
-
-  const courseOptions = Course.CourseSettings; // options per class
-
-  const convertToId = (str) => {
-    return str.trim().replaceAll(" ", "").toLowerCase()
-  };
-
-  optionsOverlap.push([convertToId(courseOptions[1]), convertToId(courseOptions[2])]);
-
-  courseOptions.forEach(
-    (e) => (settings[convertToId(e)] = [])
-  );
-  const id = "includecourse";
-  settings[id] = [];
-
-  for (const course of schedule.getCourses()) {
-    renderCourse(course);
-    handleCheckmarkChange(
-      null, schedule, document.querySelector(`#includecourse${schedule.findCourseIndex(course.getId())}`)
-    );
-  }
-  settings[waitlistedCheckbox.id] = waitlistedCheckbox.checked;
 
 
   message.textContent =
@@ -403,106 +236,104 @@ async function loadClasses(importing = false) {
   message.classList.add("success", "show");
 
 
-  importScheduleButton.textContent = "Export .ICS File";
-  importScheduleButton.classList.add("export");
-  importScheduleButton.toggleAttribute("disabled", false);
+  document.querySelector(".buttonContainer").remove();
   actionHistory.push("User has imported schedule into extension");
 
+  addSettingListener(schedule, true);
 
-  // const events = []; // contains all events (courses) for .ics file creation
+  const scheduleElement = renderSchedule(schedule, true);
 
-  // for (const course of schedule) {
-  //   const {
-  //     courseTitle,
-  //     days,
-  //     time,
-  //     startDate,
-  //     endDate,
-  //     startTime,
-  //     endTime,
-  //     buildingName,
-  //     roomNumber,
-  //     section,
-  //   } = course;
+  scheduleElement.append(
+    createScheduleSettings(schedule),
+    createBulkSettings(schedule, scheduleElement, true),
+    createExportButton(schedule)
+  )
 
-  //   const event = buildICSEvent(
-  //     courseTitle,
-  //     buildingName,
-  //     roomNumber,
-  //     days,
-  //     startDate,
-  //     endDate,
-  //     startTime,
-  //     endTime,
-  //     section
-  //   );
-  //   events.push(event);
-  // }
-  // // use events to build .ics file
-  // const icsText = buildICSFile(events);
-  // // creates "a" tag that links to the download
-  // await createDownload(icsText, input.value || "schedule");
+  correctSitePageContainer.append(scheduleElement);
 
-  // button.textContent = "Conversion Completed";
+  document.querySelector(".buttonContainer").append(resetPopUpButton);
+
+  classesLoaded = true;
+
 
 
 }
+
+async function detectSchedule() {
+  const loadedSchedule = await chrome.storage.session.get(["loadedSchedule"]);
+  if (Object.keys(loadedSchedule).length === 0) return;
+
+  const theSchedule = loadedSchedule.loadedSchedule;
+
+  console.log(loadedSchedule);
+
+  const continueButton = document.createElement("button");
+  const doneButton = document.createElement("button");
+  const container = document.createElement('div');
+
+  container.id = "messageButtonContainer";
+
+  doneButton.textContent = "Discard"
+  doneButton.id = "doneButton";
+
+  continueButton.textContent = "Continue";
+  continueButton.id = "continueButton"
+
+  container.append(continueButton, doneButton);
+
+  message.textContent = "The schedule you imported last time is still available. Wanna continue where you left off?"
+  message.append(container);
+
+
+
+  message.classList.toggle("alert", true);
+  message.classList.toggle("show", true);
+
+  continueButton.addEventListener('click', async () => {
+
+    schedule = Schedule.fromJSON(theSchedule);
+    loadClasses();
+    container.remove();
+  })
+
+  doneButton.addEventListener("click", async () => {
+    await chrome.storage.session.remove("loadedSchedule");
+    resetPopup();
+  })
+
+}
+
+detectSchedule();
 
 const importScheduleButton = document.querySelector("#importSchedule");
 
 
 importScheduleButton.addEventListener("click", async () => {
   // this only runs when the button is clicked after the classes are imported
-  if (importScheduleButton.classList.contains("export")) {
-    // await wait(500);
-    // if (validating) return;
-    actionHistory.push("User attempted .ics export");
 
-    const noClassesSelected = schedule.getIncludedCourses().length === 0;
-    const validateText = document.querySelector('#validation');
-    if (noClassesSelected) {
-      validateText.classList.add('message', 'show', 'error');
-      return validateText.textContent = "At least one class needs to be selected to export";
-    }
+  const tab = await getCurrentTab();
 
+  // injects function fetchSchedule into webpage
+  chrome.scripting.executeScript({
+    files: ["src/injected_scripts/fetchSchedule.js"],
+    target: { tabId: tab.id },
+  });
 
-    const file = schedule.toICS(settings["includewaitlisted"]);
+  importScheduleButton.setAttribute("disabled", true);
 
+  await wait(1000); // 1 second delay
+  if (injection_error) return;
 
+  changeStep(4);
 
-
-
-    validateText.textContent = "";
-    validateText.classList.toggle("message", false);
-    chrome.downloads.download({
-      url: createDownload(file),
-      filename: `schedule.ics`,
-      saveAs: true,
-    });
-  } else {
-
-    const tab = await getCurrentTab();
-
-    // injects function fetchSchedule into webpage
-    chrome.scripting.executeScript({
-      files: ["src/injected_scripts/fetchSchedule.js"],
-      target: { tabId: tab.id },
-    });
-
-    await wait(1000); // 1 second delay
-    if (injection_error) return;
-
-    changeStep(4);
-
-    inputFileButton.disabled = true;
-    loadClasses();
-  }
+  loadClasses();
 });
 
 /**
  * Resets the extension's popup.
  */
-function resetPopup() {
+async function resetPopup() {
+  await wait(200)
   window.location.reload();
 }
 
@@ -588,46 +419,6 @@ const closePopUp = async () => {
 
 document.querySelector('#closePopup').addEventListener('click', closePopUp)
 
-stepsButton.addEventListener("click", async () => {
-  // so if a user is tabbing, it'll try to scroll to the next tabbable element which is NOT what i want to happen.
-  // therefore, whatever the tabbed/focused element is will be blured to prevent the scroll.
-  document.activeElement.blur();
-  document.querySelector('#closePopup').focus();
-
-  await wait(100);
-  stepsPopup.showModal();
-
-  const stepElement = document.querySelector(`#step${step}`);
-  const stepTop = stepElement.offsetTop;
-  const stepMargin = 10;
-
-  stepsPopup.scroll({ top: 0 })
-  // delay(400, () => { stepElement.scrollIntoView({ behavior: 'smooth' }) });
-  delay(200, () => { stepsPopup.scroll({ top: stepTop - stepMargin, behavior: 'smooth' }) });
-  stepsPopup.style.opacity = 1;
-
-  await wait(200);
-
-  popupOpen = true;
-});
-
-stepsPopup.style.opacity = 0;
-
-stepsPopup.onclick = async (e) => {
-  const rect = stepsPopup.getBoundingClientRect();
-  const clickedOutside =
-    e.clientX < rect.left ||
-    e.clientX > rect.right ||
-    e.clientY < rect.top ||
-    e.clientY > rect.bottom;
-
-  if (clickedOutside) {
-    closePopUp();
-
-  }
-};
-changeStep(1);
-
 
 window.addEventListener("error", (e) => {
   handleError(e, "error");
@@ -652,9 +443,8 @@ window.addEventListener("unhandledrejection", (e) => {
 
 
 // const importScheduleButton = document.querySelector("#importSchedule");
-const message = document.querySelector(".message");
 
-const schedule = new Schedule(); // this is configured by fetchSchedule()
+
 
 getCurrentTab().then((tab) => {
   const currentUrl = new URL(tab.url);
@@ -730,6 +520,7 @@ getCurrentTab().then((tab) => {
   });
 });
 
+
 // listeners for chrome's messaging system
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
@@ -737,7 +528,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg === "noClass") {
 
     message.textContent =
-      'Please click on "Schedule Details". If you have already done this, I am unable to see your classes. Try switching terms, clicking out and back in "schedule details", or refreshing the page. If nothing works, use the Help & Feedback form (at the bottom) to receive support.';
+      'Please click on "Schedule Details". If you have already done so, I cannot detect any classes.';
     changeStep(2);
     message.classList.add("show", "alert");
     importScheduleButton.toggleAttribute("disabled", true);
@@ -776,9 +567,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 const optionsOverlap = [];
 
 
-document.addEventListener("change", e => {
-  handleCheckmarkChange(e, schedule);
-})
+
 
 
 
@@ -793,54 +582,6 @@ document.addEventListener("change", e => {
 
 
 let validating = false;
-
-
-inputFileButton.addEventListener("click", async () => {
-  const fileInput = document.querySelector("#icsfileinput");
-  const msg = document.querySelector('#fileInputMessage');
-
-  const file = fileInput.files.item(0)
-  const fileType = file?.type;
-
-  if (!file) {
-    msg.classList.toggle('show', true);
-    msg.textContent = "You have not provided a file.";
-    return;
-  }
-  if (fileType !== "text/calendar") {
-    msg.classList.toggle('show', true);
-    msg.textContent = "The file you provided is not an .ics file.";
-    return;
-  }
-  const reader = new FileReader();
-
-  reader.onload = (event) => {
-    msg.classList.toggle("show", false);
-    const content = event.target.result;
-    const lowercase = content.toLowerCase();
-    if (lowercase.includes("sir jal//calendar extension")) {
-      if (!lowercase.includes("importable")) {
-        msg.textContent = "The .ics file you provided was exported using a version older than 2.0.0. You will have to export a new file. Ensure you are updated to the latest version.";
-        msg.classList.toggle('show', true);
-        return;
-      }
-    } else {
-      if (lowercase.trim().length === 0) {
-        msg.textContent = "The .ics file you provided is empty.";
-      } else {
-        msg.textContent = "The .ics file you provided wasn't created by this extension."
-      }
-      msg.classList.toggle("show", true);
-      return;
-    }
-    readIcs(content);
-
-
-  }
-
-  reader.readAsText(file);
-})
-
 
 
 // })();

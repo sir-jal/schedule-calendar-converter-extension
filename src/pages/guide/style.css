@@ -1,0 +1,125 @@
+h1 {
+    font-size: 4em;
+    margin-top: 0.1em;
+}
+
+.introToGuide,
+.guide {
+    display: flex;
+    text-align: center;
+    font-size: 1.7em;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+
+.introToGuide p {
+    width: 40em;
+}
+
+.guide>ol,
+.guide>ul {
+    margin: 0.2em;
+}
+
+ol>li:not(:last-child) {
+    margin-bottom: 0.3em;
+}
+
+li {
+    text-align: left;
+}
+
+hr {
+    border: 2px white solid;
+    width: 60em;
+}
+
+hr.short {
+    width: 10em;
+}
+
+h2 {
+    font-size: 1.8em;
+    margin-bottom: 0.1em;
+    margin-top: 0.1em;
+    text-decoration: underline;
+}
+
+h2.underline {
+    text-decoration: underline solid white 2px;
+}
+
+.links {
+    display: flex;
+    gap: 10px;
+    font-size: 1.9em;
+    flex-direction: column;
+    align-items: center;
+}
+
+.main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+#guideOptions {
+    margin-top: 3em;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 2em;
+}
+
+.guideOption {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: rgb(255, 255, 255);
+    background-color: rgba(66, 66, 66, 0.39);
+    padding: 0.4em;
+    border: rgb(94, 94, 94) solid 2px;
+    border-radius: 2%;
+    width: 10%;
+    font-size: 100%;
+    text-decoration: none;
+}
+
+.guideOption:hover {
+    background-color: rgba(189, 214, 230, 0.39);
+    border-color: white;
+    cursor: pointer;
+    color: white;
+    text-decoration: none;
+
+}
+
+.optionImage {
+    border-bottom: solid rgb(173, 173, 173) 2px;
+    width: 80%;
+    text-align: center;
+    margin-bottom: 0.5em;
+}
+
+.optionImage img {
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
+}
+
+details {
+    width: 70%;
+}
+
+details>summary {
+    font-size: 1.8em;
+}
+
+details>summary {}
+
+details div:first-child {
+    margin-top: 5em;
+}
