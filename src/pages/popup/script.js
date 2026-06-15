@@ -8,6 +8,7 @@ import { createDownload } from "../../utils/tools/download.js";
 import { createExportButton } from "../../utils/components/exportButton.js";
 import { createBulkSettings } from "../../utils/components/bulkSettings.js";
 import { createScheduleSettings } from "../../utils/components/scheduleSettings.js";
+import { updateSessionStorage } from "../../utils/tools/storage.js";
 
 
 
@@ -24,7 +25,6 @@ const popUpButtonIcon = document.querySelector("#refreshPopup i");
 
 resetPopUpButton.addEventListener('click', resetPopup);
 document.addEventListener('keypress', e => {
-  console.log(e.key);
   if (e.key.toLowerCase() === " " || e.key.toLowerCase() === "enter") {
     if (document.activeElement.id === "refreshPopup") {
       resetPopUpButton.click()
@@ -207,10 +207,11 @@ function getSchools(query) {
   return schools;
 }
 
+
 /**
  * Loads the user's classes, whether via file import or script injection 
  */
-async function loadClasses() {
+async function loadClasses(fromCache = false) {
 
 
   schoolSection.style.display = "none";
@@ -229,9 +230,10 @@ async function loadClasses() {
   correctSitePageContainer.style.display = "";
 
 
+  const icsGuide = chrome.runtime.getURL("src/pages/webpages/guide/customization.html");
 
-  message.textContent =
-    "Classes successfully loaded. View the steps located at the bottom of the page to learn how to customize your .ics file.";
+  message.innerHTML =
+    `Classes successfully loaded. View <a href="${icsGuide}" target=_blank> this guide</a> to learn how to customize your file.`;
 
   message.classList.add("success", "show");
 
@@ -239,13 +241,13 @@ async function loadClasses() {
   document.querySelector(".buttonContainer").remove();
   actionHistory.push("User has imported schedule into extension");
 
-  addSettingListener(schedule, true);
+  addSettingListener(schedule);
 
-  const scheduleElement = renderSchedule(schedule, true);
+  const scheduleElement = renderSchedule(schedule, !fromCache);
 
   scheduleElement.append(
     createScheduleSettings(schedule),
-    createBulkSettings(schedule, scheduleElement, true),
+    createBulkSettings(schedule, scheduleElement),
     createExportButton(schedule)
   )
 
@@ -255,7 +257,22 @@ async function loadClasses() {
 
   classesLoaded = true;
 
-
+  document.addEventListener("course-change", async e => {
+    console.log(e.detail.isBulk);
+    if (e.detail.isBulk) return;
+    changingLocal = true;
+    await wait(400);
+    updateSessionStorage(schedule);
+    await wait(400);
+    changingLocal = false;
+  })
+  document.addEventListener("course-bulk-settings", async e => {
+    changingLocal = true;
+    await wait(400);
+    updateSessionStorage(schedule);
+    await wait(400);
+    changingLocal = false;
+  })
 
 }
 
@@ -265,7 +282,6 @@ async function detectSchedule() {
 
   const theSchedule = loadedSchedule.loadedSchedule;
 
-  console.log(loadedSchedule);
 
   const continueButton = document.createElement("button");
   const doneButton = document.createElement("button");
@@ -292,7 +308,7 @@ async function detectSchedule() {
   continueButton.addEventListener('click', async () => {
 
     schedule = Schedule.fromJSON(theSchedule);
-    loadClasses();
+    loadClasses(true);
     container.remove();
   })
 
@@ -397,7 +413,7 @@ chrome.storage.onChanged.addListener(async (changes, namespace) => {
 
 // Display version information and update links for school searches (caching)
 window.addEventListener("load", async () => {
-  const versionJson = await getJSON("../../../manifest.json");
+  const versionJson = await getJSON(chrome.runtime.getURL("manifest.json"));
   version.textContent = versionJson.version;
 
   const infoJson = await updateCache();

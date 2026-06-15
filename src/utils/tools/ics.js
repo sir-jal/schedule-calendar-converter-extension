@@ -133,59 +133,69 @@ import { Schedule, Course } from "../../classes/index.js";
 export function readIcs(text = "") {
 
     const lines = text.split('\n');
-    const firstEventStart = lines.findIndex(e => e.includes("BEGIN:VEVENT"));
-    const lastEventEnd = lines.findLastIndex(e => e.includes("END:VEVENT"));
-    let linesWithEvents = lines.slice(firstEventStart, lastEventEnd + 1);
-    const msg = document.querySelector('#fileInputMessage');
-    const schedule = new Schedule();
+    const dataLine = lines.find(e => e.includes("SCHEDULE-DATA"));
+    let schedule = new Schedule();
+
+    if (!dataLine) {
+        const firstEventStart = lines.findIndex(e => e.includes("BEGIN:VEVENT"));
+        const lastEventEnd = lines.findLastIndex(e => e.includes("END:VEVENT"));
+        let linesWithEvents = lines.slice(firstEventStart, lastEventEnd + 1);
+        const msg = document.querySelector('#fileInputMessage');
 
 
-    while (linesWithEvents.length > 0) {
-        // event
-        const eventStart = linesWithEvents.findIndex(e => e.includes("BEGIN:VEVENT"));
-        const eventEnd = linesWithEvents.findIndex(e => e.includes("END:VEVENT"));
-        const eventLines = linesWithEvents.slice(eventStart, eventEnd + 1);
 
-        const parseableIndexStart = eventLines.findIndex(e => e.toLowerCase().includes("coursetitle"));
-        const parseable = eventLines.slice(parseableIndexStart);
+        while (linesWithEvents.length > 0) {
+            // event
+            const eventStart = linesWithEvents.findIndex(e => e.includes("BEGIN:VEVENT"));
+            const eventEnd = linesWithEvents.findIndex(e => e.includes("END:VEVENT"));
+            const eventLines = linesWithEvents.slice(eventStart, eventEnd + 1);
 
-        const event = {};
+            const parseableIndexStart = eventLines.findIndex(e => e.toLowerCase().includes("coursetitle"));
+            const parseable = eventLines.slice(parseableIndexStart);
 
-        const idField = eventLines.find(e => e.toLowerCase().includes('uid'));
+            const event = {};
 
-        if (idField) {
-            event.id = idField.replace("UID:", "").trim();
-        }
-        for (const line of parseable) {
-            const firstColonIndex = line.indexOf(":");
-            const property = line.substring(0, firstColonIndex);
+            const idField = eventLines.find(e => e.toLowerCase().includes('uid'));
 
-            if (line.toLowerCase().includes("display")) console.log(line);
-
-            if (property === "END") break;
-
-            let value = line.substring(firstColonIndex + 1).trim();
-
-            switch (property) {
-                case "prof":
-                    value = value.split(", ");
-                    break;
-                case "waitlisted":
-                    value = value.toLowerCase() === "true" ? true : false;
-                    break;
+            if (idField) {
+                event.id = idField.replace("UID:", "").trim();
             }
-            event[property] = value;
+            for (const line of parseable) {
+                const firstColonIndex = line.indexOf(":");
+                const property = line.substring(0, firstColonIndex);
 
+
+                if (property === "END") break;
+
+                let value = line.substring(firstColonIndex + 1).trim();
+
+                switch (property) {
+                    case "prof":
+                        value = value.split(", ");
+                        break;
+                    case "waitlisted":
+                        value = value.toLowerCase() === "true" ? true : false;
+                        break;
+                }
+                event[property] = value;
+
+            }
+
+            const course = new Course(event);
+
+            if (Object.keys(event).length !== 0) schedule.addCourse(course);
+            linesWithEvents = linesWithEvents.slice(eventEnd + 1);
+            if (linesWithEvents.length <= 0) {
+                break;
+            }
         }
 
-        const course = new Course(event);
+    } else {
+        const colonIndex = dataLine.indexOf(":");
+        const obj = JSON.parse(dataLine.substring(colonIndex + 1));
+        schedule = Schedule.fromJSON(obj);
 
-        if (Object.keys(event).length !== 0) schedule.addCourse(course);
-        linesWithEvents = linesWithEvents.slice(eventEnd + 1);
-        if (linesWithEvents.length <= 0) {
-            break;
-        }
+
     }
-
     return schedule;
 }

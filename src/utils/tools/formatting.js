@@ -24,11 +24,11 @@ export function formatDate(dateStr, timeStr, justDate) {
 }
 
 /**
- * Formats a string pf days of the week to .ics format.
+ * Converts a string of weekdays to .ics format
  * 
  * EXAMPLE: Wednesdays -> WE, Fridays -> FR, etc
- * @param {string} days A string containing days of the week separated by commas
- * @returns A string with only the first 2 letters of each day capitalized, split by commas
+ * @param {string} days A string containing days of the week separated by commas (with no space)
+ * @returns A string with only the first 2 letters of each day capitalized, split by commas (with no space)
  */
 export function formatDays(days) {
     const split = days.split(",");

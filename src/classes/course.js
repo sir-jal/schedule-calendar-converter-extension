@@ -1,5 +1,7 @@
 import { formatDays, formatDate } from "../utils/tools/formatting.js";
 import { Schedule } from "./schedule.js";
+import { Settings } from "../utils/tools/setting.js";
+import { InvalidSettingError } from "./Errors/InvalidSettingError.js";
 
 /**
  * A class representing a course. Contains methods and constants useful for managing a course
@@ -46,27 +48,6 @@ export class Course {
     }
 
     /**
-     * An array of string arrays that represent course settings that overlap each other
-     * 
-     * Setting A overlaps Setting B if Setting A is required for Setting B to function.
-     * 
-     */
-    static get SettingOverwrites() {
-        return [
-            ["includeprofessornames", "onlyincludeprimaryprofessor"]
-        ]
-    }
-
-    /**
-     * Converts a setting (string) to an id by trimming it, removing all spaces, and lowercasing all characters
-     * @param {string} setting The setting to convert
-     * @returns {string} The id
-     */
-    static convertSettingToId(setting) {
-        return setting.trim().replaceAll(" ", "").toLowerCase();
-    }
-
-    /**
      * Creates a course object
      * @param {object} data The class object
      */
@@ -85,16 +66,20 @@ export class Course {
         this.#section = data.section;
         this.#prof = data.prof;
         this.#waitlisted = data.waitlisted;
-        this.#id = data.id ?? crypto.randomUUID();
+        this.#id = data.id ?? "C" + crypto.randomUUID(); // the "C" prevents .querySelector errors in the case that the uuid starts with a number
     }
 
     /**
-     * Checks if the class is asynchronous. 
-     * A class is asynchronous if the class doesn't have a meet time or weekday(s)
+     * Checks if the class has any meeting information.
+     * If not, that means the course could be either:
+     * 
+     * - An asynchronous course
+     * - TBA, meaning the meeting information hasn't been finalized yet
+     * - A research class
      *
-     * @returns {boolean} A boolean value; whether or not the class is async
+     * @returns {boolean} A boolean value; whether or not the meeting info is not present
      */
-    isAsync() {
+    hasNoMeetingInfo() {
         const isAsyncTimeDay = (!this.#endTime && !this.#startTime) || !this.#days;
         const isAsyncText = this.#endTime === "ASYNCHRONOUS";
         return isAsyncText || isAsyncTimeDay;
@@ -229,9 +214,13 @@ export class Course {
         return this.#id;
     }
 
+    set id(id) {
+        this.#id = id;
+    }
+
     /**
      * Converts the course to JSON (object)
-     * @returns {object} the json
+     * @returns the json
      */
     toJSON() {
         return {
@@ -249,9 +238,9 @@ export class Course {
             section: this.getSection(),
             prof: this.getProf(),
             waitlisted: this.isWaitlisted(),
-            asynchronous: this.isAsync(),
+            noMeetingInfo: this.hasNoMeetingInfo(),
             settings: this.#settings,
-            id: this.#id
+            id: this.id
         }
     }
 
@@ -259,7 +248,7 @@ export class Course {
      * Converts a JSON/object to a course object
      * 
      * @param {object} obj the object to convert
-     * @returns {Course} the schedule
+     * @returns {Course} the course
      */
     static fromJSON(obj) {
         const course = new Course(obj);
@@ -280,7 +269,7 @@ export class Course {
      */
     setSetting(key, value) {
         const keys = Object.keys(this.#settings);
-        if (!keys.includes(key)) throw new Error(`Invalid key: ${key} is not a valid key for class settings`);
+        if (!keys.includes(key)) throw new InvalidSettingError(`\nInvalid key: ${key} is not a valid key for class settings`);
         this.#settings[key] = value;
     }
 
@@ -309,10 +298,10 @@ export class Course {
      */
     isOnline() {
         return (
-            (this.#buildingName === "None" && this.#roomNumber === "None") ||
-            (this.#buildingName === "NA" && this.#roomNumber === "NA") ||
-            (this.#buildingName === "Online" && this.#roomNumber === "Online"))
-            || this.isAsync();
+            (this.#buildingName === "None" || this.#roomNumber === "None") ||
+            (this.#buildingName === "NA" || this.#roomNumber === "NA") ||
+            (this.#buildingName.toLowerCase().includes("online") || this.#roomNumber.toLowerCase().includes("online")))
+            || this.hasNoMeetingInfo();
     }
 
     /**
@@ -331,7 +320,7 @@ export class Course {
         const includeLocation = this.getSetting("includeclasslocation");
         const onlyPrimaryProfessor =
             includeProfName && this.getSetting("onlyincludeprimaryprofessor");
-        const asynchronous = this.isAsync();
+        const asynchronous = this.hasNoMeetingInfo();
 
         const dayFormat = formatDays(this.getDays());
         const location = !this.isOnline() ? `${this.#buildingName}\\, Room ${this.#roomNumber}` : "No location found";
@@ -400,21 +389,22 @@ export class Course {
             );
         }
 
-        // adding non-ics-related information to make importing easier
-        lines.push(
-            `courseTitle:${this.#courseTitle}`,
-            `displayName:${this.#displayName}`,
-            `prof:${this.#prof.join(", ")}`,
-            `days:${this.#days}`,
-            `startDate:${this.#startDate}`,
-            `endDate:${this.#endDate}`,
-            `startTime:${this.#startTime}`,
-            `endTime:${this.#endTime}`, `section:${this.#section}`,
-            `buildingName:${this.#buildingName}`,
-            `roomNumber:${this.#roomNumber}`,
-            `waitlisted:${this.#waitlisted}`,
-            `courseCode:${this.#courseCode}`,
-            "END:VEVENT");
+        lines.push("END:VEVENT");
+        // // adding non-ics-related information to make importing easier
+        // lines.push(
+        //     `courseTitle:${this.#courseTitle}`,
+        //     `displayName:${this.#displayName}`,
+        //     `prof:${this.#prof.join(", ")}`,
+        //     `days:${this.#days}`,
+        //     `startDate:${this.#startDate}`,
+        //     `endDate:${this.#endDate}`,
+        //     `startTime:${this.#startTime}`,
+        //     `endTime:${this.#endTime}`, `section:${this.#section}`,
+        //     `buildingName:${this.#buildingName}`,
+        //     `roomNumber:${this.#roomNumber}`,
+        //     `waitlisted:${this.#waitlisted}`,
+        //     `courseCode:${this.#courseCode}`,
+        //     "END:VEVENT");
 
         return lines.join("\n");
     }
@@ -422,4 +412,3 @@ export class Course {
 }
 
 const course = new Course("");
-Course.convertSettingToId("")

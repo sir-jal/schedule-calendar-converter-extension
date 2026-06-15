@@ -5,8 +5,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Home</title>
-    <link rel="stylesheet" href="../../styles/shared.css" />
+    <link rel="stylesheet" href="../../../styles/shared.css" />
     <link rel="stylesheet" href="./style.css">
+
+    <!--nav bar-->
+    <link rel="stylesheet" href="../../../styles/webpage/navBar.css">
+    <script src="../../../scripts/webpage/loadNav.js" defer></script>
 
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,13 +22,14 @@
     <!-- <script src="../../scripts/shared.js" defer></script> -->
     <script type="module" src="./script.js" defer></script>
 
+
 </head>
 
-<body>
+<body class="webPage">
+
+    <div class="navigation">
+    </div>
     <div class="header">
-        <div class="imagecontainer">
-            <img src="../../images/extension logo.png" alt="extension logo">
-        </div>
         <h1>Welcome to SCC</h1>
 
     </div>
@@ -38,13 +43,8 @@
             <br>
             <strong><u>This extension only works on Ellucian Banner!</u></strong>
             <br><br>
-            Below you will find links to the other pages and links to external pages.
+            Below you will find some helpful links.
         </p>
-        <h2 class="underline">Page Links</h2>
-        <div class="links" id="pageLinks">
-            <a href="../import/index.html" id="importPageLink">Import Schedule</a>
-        </div>
-        <h2 class="underline">Other Links</h2>
         <div class="links" id="miscLinks">
             <a href="http://youtube.com" target="_blank" rel="noopener noreferrer">YouTube Video</a>
             <a href="http://forms.gle/FV54aHLFmzFs9Dqm6" id="feedback" target="_blank">Help & Feedback</a>

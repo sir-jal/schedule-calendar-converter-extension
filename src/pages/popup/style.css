@@ -1,5 +1,8 @@
 body {
     width: 430px;
+    padding: 7px;
+    margin: 0;
+    border: solid rgba(255, 255, 255, 0.342) 2.5px;
 }
 
 .message button {
@@ -10,4 +13,14 @@ body {
     display: flex;
     gap: 10px;
     justify-content: center;
+}
+
+.message>a {
+    color: blue;
+    text-decoration: underline blue solid;
+}
+
+.message>a:hover {
+    color: rgb(255, 0, 76);
+    text-decoration: underline rgb(141, 5, 102) solid;
 }

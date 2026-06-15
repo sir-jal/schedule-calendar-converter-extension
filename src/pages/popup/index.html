@@ -20,7 +20,8 @@
 
 </head>
 
-<body>
+<body class="extensionPopup">
+
   <div class="header">
     <h1>Schedule to Calendar Converter</h1>
     <p class="version">
@@ -115,15 +116,17 @@
 
 
     <div id="onWebsitePage" style="display: none;">
+
+      <div class="buttonContainer">
+        <button id="importSchedule">Load Schedule</button>
+        <i class="fas fa-undo" id="refreshPopup" title="start over" style="display: none;" tabindex="0"></i>
+      </div>
     </div>
 
     <p id="validation"></p>
 
 
-    <div class="buttonContainer">
-      <button id="importSchedule">Load Schedule</button>
-      <i class="fas fa-undo" id="refreshPopup" title="start over" style="display: none;" tabindex="0"></i>
-    </div>
+
   </div>
 
 
@@ -191,11 +194,9 @@
 
   </dialog>
 
-  <div class="footer">
-    <a href="http://forms.gle/FV54aHLFmzFs9Dqm6" id="feedback" target="_blank">Help & Feedback</a>
-    <a href="https://github.com/sir-jal/schedule-calendar-converter-extension" target="_blank">GitHub</a>
-    <a href="../home/index.html" target="_blank" tabindex="0" id="extensionWebpage">Extension Webpage</a>
-  </div>
+  <footer class="footer">
+    <a href="../webpages/home/index.html" target="_blank" tabindex="0" id="extensionWebpage">Extension Webpage</a>
+  </footer>
 </body>
 
 </html>

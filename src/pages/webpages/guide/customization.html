@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Customization Guide</title>
+    <link rel="icon" type="image/png" href="../../../images/settings customization logo.png">
+
+    <link rel="stylesheet" href="../../../styles/shared.css" />
+    <link rel="stylesheet" href="./style.css">
+
+    <!--nav bar-->
+    <link rel="stylesheet" href="../../../styles/webpage/navBar.css">
+    <script src="../../../scripts/webpage/loadNav.js" defer></script>
+
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.1/css/all.css" crossorigin="anonymous">
+
+    <!-- <script src="../../scripts/shared.js" defer></script> -->
+
+</head>
+
+<body>
+    <div id="yoo">
+        <div class="navigation">
+        </div>
+        <div class="header">
+            <h1>File Customization Guide</h1>
+
+        </div>
+        <hr>
+        <div class="introToGuide">
+            <h2>Intro</h2>
+            <p>
+                This page serves as a guide for customizing your .ics file once you import your classes.
+                This applies to both the extension popup and the <a href="../import/index.html">import page</a>.
+            </p>
+        </div>
+
+        <div class="guide">
+            <h2>Guide</h2>
+
+            <p>
+                There are many ways to customize your .ics file. Click on a dropdown menu below to learn more.
+            </p>
+
+            <details>
+                <summary>
+                    Per course settings
+                </summary>
+                <div class="body" id="classSettingsGuide">
+                    <p>Each course has its own settings. These settings are:</p>
+                    <ul>
+                        <li>Include course code</li>
+                        <li>Include professor names</li>
+                        <li>Only include primary professor</li>
+                        <li>Include section</li>
+                        <li>Include class location</li>
+                    </ul>
+                    <p>
+                        Some of these settings may be disabled due to the lack of their corresponding information.
+                        <br><br>
+                        To toggle a setting, simply click on its checkbox.
+                    </p>
+                </div>
+            </details>
+
+            <details>
+                <summary>Schedule Settings</summary>
+                <div class="body">
+                    <p>
+                        The schedule itself also has settings. These settings are located at the bottom of the course
+                        list. Below are the schedule settings:
+                    </p>
+                    <ul>
+                        <li>Include waitlisted courses</li>
+                    </ul>
+                    <p>
+                        To toggle a schedule setting, simply click on its checkbox just like you would a course setting.
+                    </p>
+                </div>
+            </details>
+
+            <details>
+                <summary>Settings that affect other settings</summary>
+                <div class="body" id="settingsOverlapGuide">
+                    <p>
+                        Below are the settings that affect other settings:
+                    </p>
+
+                    <h3>Include waitlisted courses (schedule setting)</h3>
+                    <ul>
+                        <li>
+                            If disabled, all waitlisted courses will be excluded.
+                        </li>
+                    </ul>
+
+                    <h3>Include professor names (class setting)</h3>
+                    <ul>
+                        <li>
+                            This setting will affect all professor-related settings.
+                        </li>
+                    </ul>
+                    <p>
+                        Toggling a parent setting will affect its child settings. You will see this in action in
+                        the UI.
+                    </p>
+                </div>
+            </details>
+
+            <details>
+                <summary>Renaming a class</summary>
+                <div class="body">
+                    <p>
+                        You may rename a class. This is especially helpful if you have multiple classes with the same
+                        name. For example, at Georgia Tech, a math course typically has a <b>lecture</b>,
+                        <b>studio</b>, and <b>exam</b> block; all of which can have the same name.
+                        Renaming these courses can help you differentiate them.
+
+                    </p>
+
+                    <h2>How to Rename</h2>
+                    <p>A course can only be renamed if it's included. To rename a course, you may either:</p>
+                    <ul>
+                        <li>Double click the course, or</li>
+                        <li>While focused on the course, click on one of the following keys on your keyboard:</li>
+                        <ul>
+                            <li>F2</li>
+                            <li>E</li>
+                        </ul>
+                    </ul>
+                    <p>
+                        A textbox will appear. Use that to rename the course.
+                        Once you rename it, either click enter or click out of the textbox to save the name.
+                        <br><br>
+                        If you leave the textbox blank, the name will return to the orignial course name.
+                    </p>
+                </div>
+            </details>
+
+            <details>
+                <summary>Bulk Settings</summary>
+                <div class="body">
+                    <img src="../../../images/bulk change settings.png" alt="bulk change settings menu">
+                    <p>
+                        You may bulk change settings by using the buttons and dropdown menu located under the schedule
+                        settings. Courses with no meeting information (indicated by a red tint) and settings that are
+                        disabled will not be affected by bulk changes. <br><br>
+
+                        Overlapping settings still apply.
+                    </p>
+                </div>
+            </details>
+        </div>
+    </div>
+</body>
+
+</html>

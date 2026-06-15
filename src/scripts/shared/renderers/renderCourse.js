@@ -1,15 +1,16 @@
 import { Schedule, Course } from "../../../classes/index.js";
 import { updateSessionStorage } from "../../../utils/tools/storage.js";
 import { wait } from "../../../utils/tools/timeRelatedUtils.js";
+import { Settings } from "../../../utils/tools/setting.js";
 
 /**
  * Renders a course
  * @param {Schedule} schedule
  * @param {Course} course the course to render
- * @param {boolean} [popUpPage=false] Whether or not the course is being rendered into the extension popup. Defaults to **`false`**
  * @returns {Element} the rendered html "details" element
  */
-export function renderCourse(schedule, course, popUpPage = false) {
+export function renderCourse(schedule, course, excludeAsyncByDefault = true) {
+    const popUpPage = window.location.pathname.includes("pages/popup");
     const keysToEditName = ["e", "f2"];
     let editingName = false;
     const {
@@ -27,8 +28,11 @@ export function renderCourse(schedule, course, popUpPage = false) {
         section,
         prof,
         waitlisted,
-        asynchronous
+        noMeetingInfo,
+        id
     } = course.toJSON();
+
+    const isImport = window.location.pathname.includes("webpages/import");
 
     const clas = document.createElement("details");
     const summary = document.createElement("summary");
@@ -41,6 +45,8 @@ export function renderCourse(schedule, course, popUpPage = false) {
     const existingClasses = Array.from(document.querySelectorAll(".class"));
     const index = schedule.findCourseIndex(course.id);
 
+    clas.id = course.id;
+
 
     const renameClass = (e, isKeyBoard = false) => {
 
@@ -50,7 +56,9 @@ export function renderCourse(schedule, course, popUpPage = false) {
         const displayNameSpan = summary.querySelector('span.displayName');
         const courseCodeSpan = summary.querySelector("span.courseCode");
         const checkbox = summary.querySelector('input[type="checkbox"]')
-        const text = document.createElement('input');
+        const summaryContentContainer = summary.querySelector(".summaryContent");
+
+        const textInput = document.createElement('input');
         if (!checkbox.checked) return;
 
         summary.classList.toggle("nameEdit", true);
@@ -62,13 +70,12 @@ export function renderCourse(schedule, course, popUpPage = false) {
 
 
 
-        text.type = "text";
-        text.value = displayNameSpan.textContent;
+        textInput.type = "text";
+        textInput.value = displayNameSpan.textContent;
 
-        courseCodeSpan.replaceChildren(`${courseCode}: `, text);
-        summary.replaceChildren(courseCodeSpan);
-        text.focus();
-        text.select();
+        summaryContentContainer.replaceChildren(courseCodeSpan, textInput);
+        textInput.focus();
+        textInput.select();
 
 
         editingName = true;
@@ -79,22 +86,35 @@ export function renderCourse(schedule, course, popUpPage = false) {
 
 
         const finalizeText = async (reset = false) => {
-            const trimmed = text.value.trim()
-            if (!reset && !/^\s*$/.test(text.value) && trimmed.toLowerCase() !== courseTitle.toLowerCase()) {
+            const oldName = displayNameSpan.textContent.slice();
+
+            const trimmed = textInput.value.trim()
+            if (!reset && !/^\s*$/.test(textInput.value) && trimmed.toLowerCase() !== courseTitle.toLowerCase()) {
                 // actionHistory.push(`User renames Class #${index + 1} from ${displayNameSpan.textContent} to \`${trimmed}\``);
                 displayNameSpan.textContent = trimmed;
             } else {
                 // actionHistory.push(`User resets Class #${index + 1}'s name from ${displayNameSpan.textContent} to \`${courseTitle}\``);
                 displayNameSpan.textContent = courseTitle;
             }
+
+            const event = new CustomEvent("course-change", {
+                detail: {
+                    course,
+                    changedProperty: "displayName",
+                    oldValue: oldName,
+                    newValue: displayNameSpan.textContent
+
+                },
+                bubbles: true,
+                cancelable: true
+            });
+            document.dispatchEvent(event);
+
             course.setDisplayName(displayNameSpan.textContent);
 
-            courseCodeSpan.replaceChildren(`${courseCode}: `, displayNameSpan);
-            summary.replaceChildren(courseCodeSpan, checkbox);
-            summary.removeEventListener('keyup', handleSpaceBar);
+            summaryContentContainer.replaceChildren(courseCodeSpan, displayNameSpan);
             summary.classList.toggle("nameEdit", false);
 
-            if (popUpPage) updateSessionStorage(schedule);
             editingName = false;
 
         }
@@ -103,16 +123,16 @@ export function renderCourse(schedule, course, popUpPage = false) {
 
         summary.addEventListener('keyup', handleSpaceBar);
 
-        text.addEventListener('blur', () => {
-            finalizeText()
+        textInput.addEventListener('blur', () => {
+            finalizeText();
         })
-        text.addEventListener('keydown', async (e) => {
+        textInput.addEventListener('keydown', async (e) => {
             if (!editingName) return;
 
             switch (e.key.toLowerCase()) {
                 case "enter": {
-                    text.blur();
-                    e.preventDefault()
+                    textInput.blur();
+                    e.preventDefault();
                     break;
                 }
             }
@@ -128,33 +148,44 @@ export function renderCourse(schedule, course, popUpPage = false) {
             await wait(100);
             renameClass(e, true);
         }
-    })
+    });
 
-    if (asynchronous) clas.classList.add('notIncluded');
+
+    if (noMeetingInfo) clas.classList.add('notIncluded');
 
 
     // configure checkbox
     checkbox.type = "checkbox";
-    checkbox.checked = !asynchronous && course.getSetting("includecourse");
+
+    if (noMeetingInfo) {
+        console.log("AAAAAAAAAAAAAAAAAAAAAAAAA", excludeAsyncByDefault)
+        checkbox.checked = excludeAsyncByDefault ? false : course.getSetting("includecourse");
+    } else {
+        checkbox.checked = course.getSetting("includecourse");
+    }
     checkbox.setAttribute("data-setting", "includecourse");
-    checkbox.id = "includecourse" + index;
+    checkbox.id = "includecourse" + "_" + course.id;
     checkbox.classList.add("courseCheckbox");
 
     // add course code + name
     const courseStr = displayName;
+
+    const summaryContent = document.createElement("div");
+    summaryContent.classList.add("summaryContent");
 
     displayNameSpan.classList.add("displayName");
     courseCodeSpan.classList.add("courseCode");
     displayNameSpan.textContent = courseStr;
     courseCodeSpan.textContent = `${courseCode}: `
 
-    courseCodeSpan.append(displayNameSpan);
-    summary.append(courseCodeSpan, checkbox);
+    summaryContent.append(courseCodeSpan, displayNameSpan);
+
+    summary.append(summaryContent, checkbox);
 
     course.setSetting("includecourse", checkbox.checked);
 
     clas.classList.add("class");
-    options.classList.add("options");
+    options.classList.add("courseOptions");
     courseDetails.classList.add("classDetails");
 
 
@@ -165,7 +196,7 @@ export function renderCourse(schedule, course, popUpPage = false) {
 
 
     const infoObj = {
-        asynchronous,
+        noMeetingInfo,
         waitlisted,
         "Course Code": courseCode,
         "Section": section.toUpperCase(),
@@ -190,8 +221,27 @@ export function renderCourse(schedule, course, popUpPage = false) {
             div.append("This class is WAITLISTED. If included, this will be indicated by the prefix: [WL].");
             courseDetails.append(div);
             continue;
-        } else if (key === "asynchronous") {
-            div.append(`This class is likely asynchronous as the extension could not find a time/day. If you include this course in your .ics file, it will create only ONE (1) all-day event on ${startDate}.`);
+        } else if (key === "noMeetingInfo") {
+
+            const list = document.createElement('ul');
+
+            const li = document.createElement('li');
+            const li2 = document.createElement('li');
+            const li3 = document.createElement('li');
+            const li4 = document.createElement('li');
+
+            li.textContent = "Asynchronous";
+            li2.textContent = "Unfinalized (aka TBA)";
+            li3.textContent = "Research-based";
+            li4.textContent = "Or something else."
+
+            list.append(li, li2, li3, li4);
+            div.append(
+                `The meeting information for this class could not be found. This course is likely:`,
+                list,
+                `If you include this course in your .ics file, the extension will create only ONE (1) all-day event on ${startDate}.`,
+
+            );
             courseDetails.append(div);
             continue;
         } else if (key === "Course Code") {
@@ -208,15 +258,15 @@ export function renderCourse(schedule, course, popUpPage = false) {
 
         div.append(keySpan, " ", valueSpan);
         courseDetails.append(div);
-        if (key === "Class Active" && asynchronous) break;
+        if (key === "Class Active" && noMeetingInfo) break;
     }
 
     // load in per-class options
-    for (const option of Course.CourseSettings.slice(1)) {
-        const id = option.trim().replaceAll(" ", "").toLowerCase();
+    for (const option of Settings.CourseSettings.slice(1)) {
+        const id = Settings.convertSettingToId(option);
 
         const optionElement = document.createElement("div");
-        optionElement.classList.add("option");
+        optionElement.classList.add("courseOption");
 
         const label = document.createElement("label");
         const checkbox = document.createElement("input");
@@ -224,8 +274,8 @@ export function renderCourse(schedule, course, popUpPage = false) {
         checkbox.type = "checkbox";
         checkbox.checked = course.getSetting(id);
         if (
-            ((option.includes("location") && (!hasLocation || asynchronous))) ||
-            ((option.includes("professor") && prof[0] === "No professor")) ||
+            ((option.includes("location") && (!hasLocation || noMeetingInfo))) ||
+            ((option.includes("professor") && prof[0] === "No professor found")) ||
             (option.includes('code') && !courseCode)
         ) {
             checkbox.checked = false;
@@ -233,10 +283,10 @@ export function renderCourse(schedule, course, popUpPage = false) {
             checkbox.classList.add("disabled");
             course.setSetting(id, checkbox.checked);
         }
-        checkbox.name = id + index;
-        checkbox.id = id + index;
+        checkbox.name = id + "_" + course.id;
+        checkbox.id = id + "_" + course.id;
         checkbox.setAttribute("data-setting", id);
-        label.setAttribute("for", id + index);
+        label.setAttribute("for", checkbox.id);
         label.textContent = option;
 
         optionElement.append(checkbox, label);
@@ -247,9 +297,9 @@ export function renderCourse(schedule, course, popUpPage = false) {
 
 
     clas.append(summary, br, courseDetails, options);
-    if (asynchronous) {
-        course.setSetting("includecourse", false);
-    }
+    // if (noMeetingInfo) {
+    //     course.setSetting("includecourse", false);
+    // }
 
     return clas;
 }

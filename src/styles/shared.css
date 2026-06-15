@@ -54,7 +54,7 @@ h2 {
     font-weight: bold;
 }
 
-.export {
+.exportScheduleButton {
     margin-top: 15px;
 }
 
@@ -111,6 +111,15 @@ input[type="text"] {
 
 }
 
+
+
+.message.flashing {
+    animation-name: flashing;
+    animation-duration: 0.3s;
+    animation-iteration-count: infinite;
+    animation-timing-function: step-end;
+}
+
 .message.show {
     display: block;
 
@@ -126,6 +135,20 @@ input[type="text"] {
     color: rgb(78, 0, 14);
     border-left: solid rgb(255, 0, 0) 4px;
     background-color: rgb(255, 133, 133);
+}
+
+@keyframes flashing {
+    0% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
 }
 
 .message.alert {
@@ -165,12 +188,16 @@ img {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .buttonContainer * {
     margin: 4px;
-    margin-bottom: 20px;
     margin-top: 10px;
+}
+
+.buttonContainer .message {
+    margin: 0;
 }
 
 #popupbuttoncontainer {
@@ -213,19 +240,7 @@ img {
     text-decoration: underline #f49c9c;
 }
 
-.footer *,
-.footer *:visited,
-a {
-    color: #FFC759;
-    text-decoration: underline #FFC759;
-}
 
-.footer *:hover,
-a:hover {
-    cursor: pointer;
-    color: rgb(255, 95, 170);
-    text-decoration: underline rgb(255, 95, 170);
-}
 
 .message.error a {
     color: #000000;
@@ -276,7 +291,6 @@ input[type="file"]::file-selector-button {
 }
 
 .footer {
-    position: sticky;
     margin-top: 40px;
     display: flex;
     gap: 20px;
@@ -284,6 +298,20 @@ input[type="file"]::file-selector-button {
     width: 100%;
     font-size: 15px;
     text-decoration: underline blue;
+}
+
+.footer *,
+.footer *:visited,
+a {
+    color: #FFC759;
+    text-decoration: underline #FFC759;
+}
+
+.footer *:hover,
+a:hover {
+    cursor: pointer;
+    color: rgb(255, 95, 170);
+    text-decoration: underline rgb(255, 95, 170);
 }
 
 .classes {
@@ -296,33 +324,36 @@ input[type="file"]::file-selector-button {
 
 summary,
 label,
-.options,
+.courseOptions,
 .classDetailKey {
     user-select: none;
 }
 
 details {
     border: 1px solid black;
-    background-color: #ffffff;
+    background-color: #e4e4e4;
     border-radius: 4px;
     padding: 10px;
-    width: 338px;
+    width: 100%;
     color: black;
 }
 
-details:not(.notIncluded):has(summary:hover) {
-    background-color: #dedcdc;
+details:has(summary:hover) {
     cursor: pointer;
+}
+
+details:not(.notIncluded):has(summary:hover) {
+    background-color: #cacaca;
 }
 
 details:not(.notIncluded):has(.courseCheckbox:not(:checked)),
 details:not(.notIncluded):has(.courseCheckbox:disabled) {
-    background-color: rgb(189, 189, 189);
+    background-color: rgb(139, 139, 139);
     color: rgba(0, 0, 0, 0.411);
 }
 
 details:not(.notIncluded):has(.courseCheckbox:not(:checked)):has(summary:hover) {
-    background-color: rgb(167, 167, 167);
+    background-color: rgb(123, 123, 123);
     color: rgba(0, 0, 0, 0.411);
 }
 
@@ -332,11 +363,9 @@ details.notIncluded {
 
 details.notIncluded:has(summary:hover) {
     background-color: rgb(231, 180, 180);
+
 }
 
-details.notIncluded summary input[type="text"]:focus {
-    background-color: rgb(253, 209, 209);
-}
 
 details.notIncluded:has(.courseCheckbox:not(:checked)) {
     background-color: rgb(160, 125, 125);
@@ -383,29 +412,61 @@ summary input[type="text"] {
 }
 
 summary span.courseCode {
+    display: inline-block;
     margin-right: auto;
-    width: 89%;
+    width: auto;
+    margin-right: 4.5px;
 }
 
-summary.nameEdit span.courseCode {
+span.displayName {
+    display: inline-block;
     width: 100%;
 }
 
 
-summary input[type="text"] {}
+summary input[type="text"] {
+    width: 90%;
+    border: solid black 2px;
+    background-color: transparent;
+}
 
-summary span {
+
+summary .summaryContent {
+
+    white-space: nowrap;
+    overflow: hidden;
+
+}
+
+span.displayName {
+
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+
+}
+
+
+
+.summaryContent {
+    width: 89%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 summary input[type="text"]:focus {
-    background-color: rgb(236, 236, 236)
+    outline: none;
+    background-color: transparent;
 }
 
-.options {
+.courseOptions {
     margin-top: 15px;
+}
+
+.courseOption input[type=checkbox] {
+    height: 14px;
+    width: 14px;
 }
 
 .courseDetails {
@@ -458,6 +519,11 @@ summary input[type="text"]:focus {
 
 .scheduleSettings .scheduleSetting>label {
     margin-left: 4px;
+}
+
+.scheduleSettings input[type=checkbox] {
+    width: 17px;
+    height: 17px;
 }
 
 .selectionContainer {
@@ -521,4 +587,22 @@ input[type="file"] {
     font-size: 14.5px;
     font-weight: 200;
     margin-bottom: 3px;
+}
+
+.classes h2 {
+    margin: 0;
+    margin-bottom: 1em;
+}
+
+.classes hr {
+    border: white solid 1px;
+    margin: 2em 0;
+    width: 19em;
+}
+
+.classGroup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 92%;
 }

@@ -1,0 +1,28 @@
+h1 {
+    font-size: 4em;
+    margin-top: 0.1em;
+}
+
+.subheader {
+    display: block;
+    text-align: center;
+    font-size: 1.7em;
+}
+
+body {
+    padding-bottom: 10px !important;
+}
+
+.classGroup {
+    width: 100%;
+}
+
+details.class {
+    width: 30%;
+}
+
+/* .schedules {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+} */

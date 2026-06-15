@@ -1,15 +1,18 @@
 import { Schedule, Course } from "../../classes/index.js";
 import { updateUI, updateCourseSetting } from "../../scripts/shared/index.js";
 import { updateSessionStorage } from "../tools/storage.js";
+import { Settings } from "../tools/setting.js";
 
 /**
  * Creates the bulk settings for a schedule
  * @param {Schedule} schedule The schedule to apply the bulk settings to
  * @param {HTMLDivElement} scheduleContainer The schedule's HTML div container
- * @param {boolean} [popUpPage=false] Whether or not the bulk settings are being attached to the extension popup. Defaults to **`false`**
  * @returns {HTMLDivElement} A container which has the bulk settings (the buttons and select menu)
  */
-export function createBulkSettings(schedule, scheduleContainer, popUpPage = false) {
+export function createBulkSettings(schedule, scheduleContainer) {
+
+    const popUpPage = window.location.pathname.includes("pages/popup");
+
     const selectionContainer = document.createElement("div");
     const selectAll = document.createElement("button");
     const deselectAll = document.createElement("button");
@@ -23,9 +26,9 @@ export function createBulkSettings(schedule, scheduleContainer, popUpPage = fals
     selectAll.textContent = "Select All";
     deselectAll.textContent = "Deselect All";
 
-    Course.CourseSettings.forEach(e => {
+    Settings.CourseSettings.forEach(e => {
         const optionElement = document.createElement('option');
-        optionElement.value = Course.convertSettingToId(e);
+        optionElement.value = Settings.convertSettingToId(e);
         optionElement.text = e;
         selectBox.options.add(optionElement);
     })
@@ -36,20 +39,28 @@ export function createBulkSettings(schedule, scheduleContainer, popUpPage = fals
      */
     const massChange = (booleanValue) => {
 
-        const optionsOverlap = Course.SettingOverwrites;
         const settingToChange = selectBox.value;
-        const index = optionsOverlap.indexOf(optionsOverlap.find(e => e[0] === settingToChange));
 
+        const bulkEvent = new CustomEvent("course-bulk-settings", {
+            bubbles: true,
+            cancelable: true,
+            detail: {
+                schedule,
+                setting: settingToChange,
+                newValue: booleanValue
+            }
+        })
+
+        document.dispatchEvent(bulkEvent);
 
         for (let i = 0; i < schedule.length; i++) {
-            const course = schedule.getAtIndex(i);
-            if (course.isAsync()) continue;
+            const course = schedule.at(i);
+            if (course.hasNoMeetingInfo()) continue;
 
-            const checkbox = document.querySelector(`#${schedule.id} #${settingToChange}${i}`);
-            console.log(`#${schedule.id} #${settingToChange}${i}`);
+            const checkbox = document.querySelector(`#${schedule.id} #${settingToChange}_${course.id}`);
             if (checkbox.disabled) continue;
 
-            updateCourseSetting(schedule, course.id, settingToChange, booleanValue);
+            updateCourseSetting(schedule, course.id, settingToChange, booleanValue, true);
 
             checkbox.checked = booleanValue;
 
@@ -60,12 +71,10 @@ export function createBulkSettings(schedule, scheduleContainer, popUpPage = fals
 
     selectAll.onclick = () => {
         massChange(true);
-        if (popUpPage) updateSessionStorage(schedule);
     };
 
     deselectAll.onclick = () => {
         massChange(false);
-        if (popUpPage) updateSessionStorage(schedule);
     };
 
     selectionContainer.append(selectAll, deselectAll, selectBox);

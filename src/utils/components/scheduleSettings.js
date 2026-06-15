@@ -1,4 +1,5 @@
 import { Schedule, Course } from "../../classes/index.js";
+import { Settings } from "../tools/setting.js";
 
 /**
  * Creates an export button
@@ -10,16 +11,19 @@ export function createScheduleSettings(schedule) {
 
     settingsContainer.classList.add("scheduleSettings");
 
-    for (const setting of Schedule.Settings) {
+    for (const setting of Settings.ScheduleSettings) {
         const container = document.createElement('div');
         const checkbox = document.createElement('input');
         const label = document.createElement('label');
 
+        const id = Settings.convertSettingToId(setting);
+
         container.classList.add("scheduleSetting");
 
         checkbox.type = "checkbox";
-        checkbox.checked = schedule.getSetting(Course.convertSettingToId(setting))
-        checkbox.id = Course.convertSettingToId(setting);
+        checkbox.checked = schedule.getSetting(id);
+        checkbox.id = id + "_" + schedule.id;
+        checkbox.setAttribute("data-setting", id);
 
         label.htmlFor = checkbox.id;
         label.textContent = setting;

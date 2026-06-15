@@ -1,5 +1,6 @@
 import { Course } from "./course.js";
 import { getJSON } from "../utils/tools/getJSON.js";
+import { Settings } from "../utils/tools/setting.js";
 
 /**
  * A class representing a schedule, a list of courses. Contains methods that manages, filters, and indexes courses
@@ -17,19 +18,15 @@ export class Schedule {
     constructor(...courses) {
         this.#courses = courses;
 
-        getJSON("../../../manifest.json").then(e => {
+        getJSON(chrome.runtime.getURL("manifest.json")).then(e => {
             this.#version = e.version;
         })
 
-        for (const setting of Schedule.Settings) {
-            this.#settings[Course.convertSettingToId(setting)] = true;
+        for (const setting of Settings.ScheduleSettings) {
+            this.#settings[Settings.convertSettingToId(setting)] = true;
         }
 
-        this.#id = "S" + crypto.randomUUID(); // prevents .querySelector errors
-    }
-
-    static get Settings() {
-        return ["Include waitlisted courses"];
+        this.#id = "S" + crypto.randomUUID(); // the "S" prevents .querySelector errors in the case that the uuid starts with a number
     }
     /**
      * The version of the schedule. This corresponds with the version of the extension at the time this schedule was created
@@ -86,11 +83,11 @@ export class Schedule {
     }
 
     /**
-     * Returns only asynchronous courses. Does not affect the Schedule
-     * @returns {Course[]} all asynchronous courses in the Schedule
+     * Returns only courses with no meeting information. Does not affect the Schedule
+     * @returns {Course[]} all courses without meeting information
      */
-    getAsyncCourses() {
-        return this.#courses.filter(e => e.isAsync());
+    getNoMeetingCourses() {
+        return this.#courses.filter(e => e.hasNoMeetingInfo());
     }
 
     /**
@@ -107,7 +104,7 @@ export class Schedule {
      * @param {number} index The index to get
      * @returns {Course} the course at the provided index; could be null/undefined
      */
-    getAtIndex(index) {
+    at(index) {
         return this.#courses[index];
     }
 
@@ -173,22 +170,29 @@ export class Schedule {
         const included = this.getIncludedCourses();
         const filtered = this.#settings.includewaitlistedcourses ? included : included.filter(e => !e.isWaitlisted());
         const icsEvents = filtered.map(e => e.toICS());
-        return `BEGIN:VCALENDAR\nVERSION:2.0\nCALSCALE:GREGORIAN\nMETHOD:PUBLISH\nPRODID:-//Sir Jal//Calendar Extension importable//EN\n${icsEvents.join(
+
+        const scheduleData = this.toJSON();
+
+        return `BEGIN:VCALENDAR\nX-SCHEDULE-DATA:${JSON.stringify(scheduleData)}\nVERSION:2.0\nCALSCALE:GREGORIAN\nMETHOD:PUBLISH\nPRODID:-//Sir Jal//Calendar Extension importable//EN\n${icsEvents.join(
             "\n"
         )}\nEND:VCALENDAR`
             .split("\n")
             .join("\r\n");
+
+        JSON.parse()
     }
 
     /**
      * Converts the schedule to JSON (object)
-     * @returns {object} the json
+     * @returns the json
      */
     toJSON() {
         const json = {
             version: this.version,
-            courses: this.#courses.map(e => e.toJSON()),
-            settings: this.#settings
+            id: this.id,
+            settings: this.#settings,
+            dataVersion: 2,
+            courses: this.#courses.map(e => e.toJSON())
         };
 
         return json;
@@ -224,5 +228,32 @@ export class Schedule {
      */
     clear() {
         this.#courses = [];
+    }
+
+    /**
+     * Groups this schedule's courses by their course code
+     * 
+     * @param {boolean} [separateNoMeeting=false] Whether or not to also categorize courses with no meeting times. 
+     * Defaults to **`false`**
+     * @returns {{[courseCode: string]: Course[]}} The courses categorized by course code
+     */
+    groupCourses(separateNoMeeting = false) {
+        const obj = { "No Meeting Time": [] };
+        for (const course of this.getCourses()) {
+            const useNoMeetingArray = course.hasNoMeetingInfo() && separateNoMeeting;
+            const arrayToUse = useNoMeetingArray ? "No Meeting Time" : course.getCourseCode();
+
+            const arr = obj[arrayToUse];
+
+
+            if (arr) {
+                arr.push(course);
+            } else {
+                obj[arrayToUse] = [course];
+            }
+
+        }
+
+        return obj;
     }
 }

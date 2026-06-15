@@ -1,5 +1,6 @@
 import { Schedule, Course } from "../../../classes/index.js";
 import { updateCourseSetting } from "../settings/updateCourseSetting.js";
+import { Settings } from "../../../utils/tools/setting.js";
 
 
 /**
@@ -9,6 +10,7 @@ import { updateCourseSetting } from "../settings/updateCourseSetting.js";
  * @param {{waitlisted: boolean, courseOverwrites: boolean}} ignore
  */
 export function updateUI(schedule, classContainer, ignore = {}) {
+    // debugger;
     const allCourses = schedule.getCourses();
     const waitlistedCourses = schedule.getWaitlistedCourses();
     const coursesDOM = Array.from(classContainer.querySelectorAll(".class"));
@@ -17,14 +19,13 @@ export function updateUI(schedule, classContainer, ignore = {}) {
 
     const includeWaitlisted = schedule.getSetting("includewaitlistedcourses");
 
-    console.log(schedule);
 
     // update waitlisted courses
     if (!ignore.waitlisted) {
         for (const course of waitlistedCourses) {
 
 
-            const courseDiv = coursesDOM[schedule.findCourseIndex(course.id)];
+            const courseDiv = coursesDOM.find(e => e.id == course.id);
             const courseCheckbox = courseDiv.querySelector('.courseCheckbox');
             courseCheckbox.disabled = !includeWaitlisted;
 
@@ -40,10 +41,13 @@ export function updateUI(schedule, classContainer, ignore = {}) {
     }
 
     for (const course of allCourses) {
-        const courseDiv = coursesDOM[schedule.findCourseIndex(course.id)];
-        const optionCheckboxes = Array.from(courseDiv.querySelectorAll('.option input[type="checkbox"]'));
+        const courseDiv = coursesDOM.find(e => e.id === course.id);
+
+
+
+        const optionCheckboxes = Array.from(courseDiv.querySelectorAll('.courseOption input[type="checkbox"]'));
         const courseIncluded = course.getSetting("includecourse");
-        const courseOverwrites = Course.SettingOverwrites;
+        const courseOverwrites = Settings.CourseSettingOverwrites;
 
         if (!ignore.courseOverwrites) {
             for (const overwrite of courseOverwrites) {
@@ -63,7 +67,6 @@ export function updateUI(schedule, classContainer, ignore = {}) {
 
 
         for (const checkbox of optionCheckboxes) {
-
             if (!checkbox.classList.contains('disabled')) {
                 checkbox.disabled = !courseIncluded;
             }

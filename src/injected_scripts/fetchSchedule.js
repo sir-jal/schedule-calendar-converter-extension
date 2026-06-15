@@ -82,6 +82,12 @@
     const endDate = classEnd.substring(endColonIndex + 1).trim();
 
 
+    // example: ['Message: **Web Registered**', 'Hours: 3', 'Degree: Undergraduate Semester', 
+    // 'Campus: Online - Atl US (Mand. Fees)', 'Schedule Type: Lecture', 'Instructional Method: Fully Distance 95% tech', 
+    // 'Grade Mode: Letters I, A-F, W, WF']
+    const crnInfo = document.querySelectorAll(".list-view-crn-info-div")[index].textContent.split(" | ");
+
+
     // in meetingInformation, a new row is indicated by the start date; this will therefore the indices at which the start date appears
     const rowEndPoints = findAllIndices(meetingInformation, startDate);
 
@@ -106,7 +112,7 @@
 
     const prof = [];
     if (parsableProfessors.length === 0) {
-      prof.push("No professor");
+      prof.push("No professor found");
     } else {
       for (const elProf of parsableProfessors) {
         const [first, last] = elProf.textContent

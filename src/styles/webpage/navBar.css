@@ -1,0 +1,56 @@
+:root {
+    --nav-height: 85px;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    padding-top: calc(var(--nav-height) + 15px)
+}
+
+.navigation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    background-color: #25282df4;
+    margin-bottom: 2em;
+    position: fixed;
+    width: 100%;
+    top: 0;
+}
+
+nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4em;
+
+}
+
+nav a {
+    display: block;
+    height: var(--nav-height);
+    width: auto;
+    align-content: center;
+    padding: 0px 15px;
+    text-decoration: none;
+    padding-top: 4px;
+    border-bottom: solid 4px #25282df4;
+}
+
+nav a:hover {
+    background-color: #363b42f4;
+    text-decoration: none;
+    border-bottom: solid 4px #363b42f4;
+}
+
+nav a.currentPage {
+    border-bottom: white solid 4px;
+    text-decoration: none;
+}
+
+#pageLogo {
+    width: var(--nav-height);
+    height: var(--nav-height);
+}

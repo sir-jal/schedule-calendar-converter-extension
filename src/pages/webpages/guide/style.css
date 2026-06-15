@@ -13,6 +13,13 @@ h1 {
     align-items: center;
 }
 
+#guideContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
 .introToGuide p {
     width: 40em;
 }
@@ -83,12 +90,13 @@ h2.underline {
     padding: 0.4em;
     border: rgb(94, 94, 94) solid 2px;
     border-radius: 2%;
-    width: 10%;
-    font-size: 100%;
+    width: 9em;
+    font-size: 1.4em;
     text-decoration: none;
 }
 
-.guideOption:hover {
+.guideOption:hover,
+.guideOption:focus {
     background-color: rgba(189, 214, 230, 0.39);
     border-color: white;
     cursor: pointer;
@@ -111,15 +119,43 @@ h2.underline {
 }
 
 details {
-    width: 70%;
+    width: 50%;
+}
+
+details>.body {
+    margin-top: 0.5em;
+    text-align: left;
+    font-size: 0.85em;
+}
+
+details>.body img {
+    display: inline-block;
+    width: auto;
+    max-width: 100%;
+}
+
+details>.body a {
+    color: blue;
+    text-decoration: underline blue solid;
+}
+
+details>.body a:hover {
+    color: rgb(255, 0, 76);
+    text-decoration: underline rgb(141, 5, 102) solid;
 }
 
 details>summary {
-    font-size: 1.8em;
+    font-size: 0.9em;
 }
 
-details>summary {}
+details>summary {
+    padding: 0.2em
+}
 
-details div:first-child {
-    margin-top: 5em;
+#settingsOverlapGuide h3 {
+    text-align: left;
+}
+
+body {
+    padding-bottom: 10px !important;
 }
