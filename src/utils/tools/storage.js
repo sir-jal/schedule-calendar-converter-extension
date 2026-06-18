@@ -13,15 +13,15 @@ export async function getStorage(key) {
  * Updates the session storage
  * @param {Schedule} schedule The schedule to update the storage with
  */
-export function updateSessionStorage(schedule) {
+export async function updateSessionStorage(schedule) {
 
     console.log('storage updated');
-    chrome.storage.session.set({ loadedSchedule: schedule.toJSON() });
+    await chrome.storage.session.set({ loadedSchedule: schedule.toJSON() });
 }
 
 /**
  * Clears the session storage
  */
-export function clearSessionStorage() {
-    chrome.storage.session.remove("loadedSchedule");
+export async function clearSessionStorage() {
+    await chrome.storage.session.remove("loadedSchedule");
 }

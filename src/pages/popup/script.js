@@ -8,7 +8,7 @@ import { createDownload } from "../../utils/tools/download.js";
 import { createExportButton } from "../../utils/components/exportButton.js";
 import { createBulkSettings } from "../../utils/components/bulkSettings.js";
 import { createScheduleSettings } from "../../utils/components/scheduleSettings.js";
-import { updateSessionStorage } from "../../utils/tools/storage.js";
+import { clearSessionStorage, updateSessionStorage } from "../../utils/tools/storage.js";
 
 
 
@@ -20,14 +20,14 @@ const version = document.querySelector("#versionNumber");
 
 const inputFileContainer = document.querySelector(".fileInputContainer");
 
-const resetPopUpButton = document.querySelector("#refreshPopup");
-const popUpButtonIcon = document.querySelector("#refreshPopup i");
 
-resetPopUpButton.addEventListener('click', resetPopup);
+const webpageButton = document.querySelector("#webpageButton");
+
+
 document.addEventListener('keypress', e => {
   if (e.key.toLowerCase() === " " || e.key.toLowerCase() === "enter") {
-    if (document.activeElement.id === "refreshPopup") {
-      resetPopUpButton.click()
+    if (document.activeElement.id === webpageButton.id) {
+      webpageButton.click();
     }
   }
 })
@@ -53,6 +53,7 @@ const waitlistedCourses = [];
 
 const correctSitePageContainer = document.querySelector("#onWebsitePage");
 const wrongSitePageContainer = document.querySelector("#notOnWebsitePage")
+
 
 const message = document.querySelector(".message");
 
@@ -224,7 +225,6 @@ async function loadClasses(fromCache = false) {
   message.classList.toggle('error', false);
   message.classList.toggle("alert", false);
 
-  resetPopUpButton.style.display = "";
 
   wrongSitePageContainer.style.display = "none";
   correctSitePageContainer.style.display = "";
@@ -253,32 +253,46 @@ async function loadClasses(fromCache = false) {
 
   correctSitePageContainer.append(scheduleElement);
 
-  document.querySelector(".buttonContainer").append(resetPopUpButton);
+  document.querySelector(".buttonContainer").append(webpageButton);
+  webpageButton.style.display = "";
 
   classesLoaded = true;
 
   document.addEventListener("course-change", async e => {
-    console.log(e.detail.isBulk);
     if (e.detail.isBulk) return;
+
     changingLocal = true;
+
     await wait(400);
-    updateSessionStorage(schedule);
+    await updateSessionStorage(schedule);
     await wait(400);
+
     changingLocal = false;
   })
   document.addEventListener("course-bulk-settings", async e => {
     changingLocal = true;
+
     await wait(400);
-    updateSessionStorage(schedule);
+    await updateSessionStorage(schedule);
     await wait(400);
+
     changingLocal = false;
+  })
+
+  webpageButton.addEventListener('click', async () => {
+    await chrome.storage.session.set({ scheduleToImport: schedule.toJSON() });
+    await clearSessionStorage();
+    window.open(chrome.runtime.getURL("src/pages/webpages/import/index.html?extensionDirect=true"), "_blank");
   })
 
 }
 
 async function detectSchedule() {
   const loadedSchedule = await chrome.storage.session.get(["loadedSchedule"]);
-  if (Object.keys(loadedSchedule).length === 0) return;
+  if (Object.keys(loadedSchedule).length === 0) {
+    await clearSessionStorage();
+    return;
+  }
 
   const theSchedule = loadedSchedule.loadedSchedule;
 

@@ -87,22 +87,25 @@ export function renderCourse(schedule, course, excludeAsyncByDefault = true) {
 
         const finalizeText = async (reset = false) => {
             const oldName = displayNameSpan.textContent.slice();
-
-            const trimmed = textInput.value.trim()
-            if (!reset && !/^\s*$/.test(textInput.value) && trimmed.toLowerCase() !== courseTitle.toLowerCase()) {
+            let trimmed = textInput.value.trim().replace(/[\\,;\r\n\x00-\x1F]/g, "").split(" ").filter(e => e !== "").join(" ");
+            if (
+                reset ||
+                /^\s*$/.test(textInput.value) ||
+                trimmed.toLowerCase() === courseTitle.toLowerCase() ||
+                !trimmed
+            ) {
                 // actionHistory.push(`User renames Class #${index + 1} from ${displayNameSpan.textContent} to \`${trimmed}\``);
-                displayNameSpan.textContent = trimmed;
-            } else {
-                // actionHistory.push(`User resets Class #${index + 1}'s name from ${displayNameSpan.textContent} to \`${courseTitle}\``);
-                displayNameSpan.textContent = courseTitle;
+                trimmed = courseTitle;
             }
+
+            displayNameSpan.textContent = trimmed;
 
             const event = new CustomEvent("course-change", {
                 detail: {
                     course,
                     changedProperty: "displayName",
                     oldValue: oldName,
-                    newValue: displayNameSpan.textContent
+                    newValue: trimmed
 
                 },
                 bubbles: true,
@@ -110,7 +113,7 @@ export function renderCourse(schedule, course, excludeAsyncByDefault = true) {
             });
             document.dispatchEvent(event);
 
-            course.setDisplayName(displayNameSpan.textContent);
+            course.setDisplayName(trimmed);
 
             summaryContentContainer.replaceChildren(courseCodeSpan, displayNameSpan);
             summary.classList.toggle("nameEdit", false);

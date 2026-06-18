@@ -119,7 +119,7 @@
                     <p>
                         You may rename a class. This is especially helpful if you have multiple classes with the same
                         name. For example, at Georgia Tech, a math course typically has a <b>lecture</b>,
-                        <b>studio</b>, and <b>exam</b> block; all of which can have the same name.
+                        <b>studio</b>, and <b>exam</b> block. Each block can have the same name.
                         Renaming these courses can help you differentiate them.
 
                     </p>
@@ -138,7 +138,30 @@
                         A textbox will appear. Use that to rename the course.
                         Once you rename it, either click enter or click out of the textbox to save the name.
                         <br><br>
-                        If you leave the textbox blank, the name will return to the orignial course name.
+                        If you leave the textbox blank, or if the name is blank after omitting forbidden characters (see
+                        below), the name will return to the orignial course name.
+                    </p>
+
+                    <h2>Forbidden Characters</h2>
+                    <p>
+                        The following characters are not allowed in course names and will be omitted if they are
+                        detected:
+                    </p>
+                    <ul>
+                        <li>\ (backslash)</li>
+                        <li>, (comma)</li>
+                        <li>; (semicolon)</li>
+                        <li>Extra spaces, including those that are</li>
+                        <ul>
+                            <li>at the beginning of the name</li>
+                            <li>at the end of the name</li>
+                            <li>between words</li>
+                        </ul>
+                        <li>New line characters</li>
+                    </ul>
+                    <p>
+                        These characters could cause issues when importing your file(s) into calendars such as Google
+                        Calendar and Outlook.
                     </p>
                 </div>
             </details>

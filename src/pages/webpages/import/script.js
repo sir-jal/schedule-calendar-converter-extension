@@ -8,8 +8,12 @@ import { createExportButton } from "../../../utils/components/exportButton.js";
 import { createBulkSettings } from "../../../utils/components/bulkSettings.js";
 import { createScheduleSettings } from "../../../utils/components/scheduleSettings.js";
 
-(() => {
+(async () => {
+
     let preventDefault = false;
+
+    const link = window.location.href;
+    const extensionDirect = link.includes("extensionDirect=true");
 
     let schedule = new Schedule();
 
@@ -17,6 +21,21 @@ import { createScheduleSettings } from "../../../utils/components/scheduleSettin
     schedulesContainer.classList.add("schedules");
 
     const inputFileButton = document.querySelector("#importFile");
+
+    if (extensionDirect) {
+        const leSchedule = (await chrome.storage.session.get(["scheduleToImport"]));
+
+        if (leSchedule && leSchedule.scheduleToImport) {
+
+            schedule = Schedule.fromJSON(leSchedule.scheduleToImport);
+
+            loadClasses();
+
+            await chrome.storage.session.remove("scheduleToImport");
+        }
+
+
+    }
 
     inputFileButton.addEventListener("click", async () => {
         const fileInput = document.querySelector("#icsfileinput");
@@ -60,41 +79,8 @@ import { createScheduleSettings } from "../../../utils/components/scheduleSettin
             }
             inputFileButton.disabled = true;
 
-            schedule = readIcs(content);
-
-            // let course1 = Course.fromJSON(schedule.at(0).toJSON());
-            // let course2 = Course.fromJSON(schedule.at(1).toJSON());
-            // let course3 = Course.fromJSON(schedule.at(2).toJSON());
-            // course1.id = "CTEST1"
-            // course2.id = "CTEST2";
-            // course3.id = "CTEST3";
-
-            // let schedule2 = new Schedule(course1, course2, course3);
-
-
-            const scheduleElement = renderSchedule(schedule, false);
-            // const scheduleElement2 = renderSchedule(schedule2);
-
             await wait(1000);
-
-            scheduleElement.append(
-                createScheduleSettings(schedule),
-                createBulkSettings(schedule, scheduleElement),
-                createExportButton(schedule)
-            )
-            // scheduleElement2.append(
-            //     createScheduleSettings(schedule2),
-            //     createBulkSettings(schedule2, scheduleElement2),
-            //     createExportButton(schedule2)
-            // )
-            schedulesContainer.append(scheduleElement) //, scheduleElement2);
-            document.querySelector(".main").append(
-                schedulesContainer
-            );
-
-            document.querySelector(".fileInputContainer").style.display = "none";
-            addSettingListener(schedule);
-            // addSettingListener(schedule2);
+            loadClasses(content);
 
 
 
@@ -120,4 +106,42 @@ import { createScheduleSettings } from "../../../utils/components/scheduleSettin
     window.addEventListener('beforeunload', e => {
         if (preventDefault) e.preventDefault();
     })
+
+    async function loadClasses(content = "") {
+
+        if (schedule.length === 0) schedule = readIcs(content);
+
+        // let course1 = Course.fromJSON(schedule.at(0).toJSON());
+        // let course2 = Course.fromJSON(schedule.at(1).toJSON());
+        // let course3 = Course.fromJSON(schedule.at(2).toJSON());
+        // course1.id = "CTEST1"
+        // course2.id = "CTEST2";
+        // course3.id = "CTEST3";
+
+        // let schedule2 = new Schedule(course1, course2, course3);
+
+
+        const scheduleElement = renderSchedule(schedule, false);
+        // const scheduleElement2 = renderSchedule(schedule2);
+
+        if (schedule.length !== 0)
+
+            scheduleElement.append(
+                createScheduleSettings(schedule),
+                createBulkSettings(schedule, scheduleElement),
+                createExportButton(schedule)
+            )
+        // scheduleElement2.append(
+        //     createScheduleSettings(schedule2),
+        //     createBulkSettings(schedule2, scheduleElement2),
+        //     createExportButton(schedule2)
+        // )
+        schedulesContainer.append(scheduleElement) //, scheduleElement2);
+        document.querySelector(".main").append(
+            schedulesContainer
+        );
+
+        document.querySelector(".fileInputContainer").style.display = "none";
+        addSettingListener(schedule);
+    }
 })()

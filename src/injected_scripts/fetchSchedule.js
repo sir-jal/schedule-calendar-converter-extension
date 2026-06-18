@@ -48,7 +48,7 @@
   // regular expressions to match the start and end times and the start and end dates.
   const timeRegex12 = /\d{2}:\d{2}\s{2}(?:AM|PM)\s*-\s*\d{2}:\d{2}\s{2}(?:AM|PM)/;
   const timeRegex24 = /\d{2}:\d{2}\s*-\s*\d{2}:\d{2}/;
-  const classes = Array.from(document.querySelectorAll(".listViewWrapper")); // i despise the ElementList type, so im converting it to Array
+  const classes = Array.from(document.querySelectorAll(".listViewWrapper"));
   const Schedule = [];
 
 
@@ -88,7 +88,8 @@
     const crnInfo = document.querySelectorAll(".list-view-crn-info-div")[index].textContent.split(" | ");
 
 
-    // in meetingInformation, a new row is indicated by the start date; this will therefore the indices at which the start date appears
+    // in meetingInformation, a new row is indicated by the start date; 
+    // this will therefore the indices at which the start date appears
     const rowEndPoints = findAllIndices(meetingInformation, startDate);
 
     for (let i = 0; i < rowEndPoints.length; i++) {
@@ -153,7 +154,6 @@
       const [startTime, endTime] = [timeSplit?.[0]?.trim(), timeSplit?.[1]?.trim()];
 
       // location
-      // building name
       const buildingStringIndex = row.indexOf("Building");
       const toBuildingStr = row.substring(buildingStringIndex);
       const buildingName = toBuildingStr
