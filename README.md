@@ -1,6 +1,6 @@
 # Schedule-Calendar Converter Chrome Extension
 
-![picture of the extension's import schedule screen](src/images/extension%20popup.png)
+![picture of the extension's import schedule screen](src/images/extension%20popup%202.0.1.png)
 
 Convert your schedule to an iCalendar (.ics) file!
 Click [here](https://chromewebstore.google.com/detail/dfieaopofcnikkcaegpdijmggefjiofb?utm_source=item-share-cb) to download the chrome extension.
