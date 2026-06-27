@@ -161,7 +161,6 @@ export function renderCourse(schedule, course, excludeAsyncByDefault = true) {
     checkbox.type = "checkbox";
 
     if (noMeetingInfo) {
-        console.log("AAAAAAAAAAAAAAAAAAAAAAAAA", excludeAsyncByDefault)
         checkbox.checked = excludeAsyncByDefault ? false : course.getSetting("includecourse");
     } else {
         checkbox.checked = course.getSetting("includecourse");

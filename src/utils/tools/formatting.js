@@ -20,7 +20,11 @@ export function formatDate(dateStr, timeStr, justDate) {
             hour = "00";
         }
     }
-    return justDate ? `${year}${month}${day}` : `${year}${month}${day}T${hour.toString().padStart(2, "0")}${minute.toString().padStart(2, "0")}00`;
+
+    hour = hour.toString().padStart(2, "0");
+    minute = minute.toString().padStart(2, "0");
+
+    return justDate ? `${year}${month}${day}` : `${year}${month}${day}T${hour}${minute}00`;
 }
 
 /**

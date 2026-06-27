@@ -28,6 +28,10 @@ export function createScheduleSettings(schedule) {
         label.htmlFor = checkbox.id;
         label.textContent = setting;
 
+        if (id.includes("waitlisted")) {
+            checkbox.disabled = schedule.getWaitlistedCourses().length === 0;
+        }
+
         container.append(checkbox, label);
         settingsContainer.append(container);
 

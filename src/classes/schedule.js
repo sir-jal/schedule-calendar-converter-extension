@@ -1,6 +1,7 @@
 import { Course } from "./course.js";
 import { getJSON } from "../utils/tools/getJSON.js";
 import { Settings } from "../utils/tools/setting.js";
+import { InvalidSettingError } from "./Errors/InvalidSettingError.js";
 
 /**
  * A class representing a schedule, a list of courses. Contains methods that manages, filters, and indexes courses
@@ -51,8 +52,8 @@ export class Schedule {
      * @throws If the key is invalid, meaning the key is not a setting, an error is thrown
     */
     setSetting(key, value) {
-        const keys = Object.keys(this.#settings);
-        if (!keys.includes(key)) throw new Error(`Invalid key: ${key} is not a valid key for class settings`);
+        const keys = Settings.ScheduleSettings.map(e => Settings.convertSettingToId(e));
+        if (!keys.includes(key)) throw new InvalidSettingError(`Invalid key: ${key} is not a valid key for class settings`);
         this.#settings[key] = value;
     }
 

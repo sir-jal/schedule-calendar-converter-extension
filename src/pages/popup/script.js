@@ -148,6 +148,7 @@ function handleError(e, type, extensionError = true) {
   importScheduleButton.textContent = "Error";
 
   message.classList.add("error", "show");
+  message.classList.toggle("success", false);
   message.innerHTML = `Uh oh! I ran into ${errorLog.length} error(s)!<br><br>Below is a log file that has been generated for you to download. If you would like to report this error (highly recommended), please do so in the Help & Feedback Hub (Click 'Help & Feedback' at the bottom to access). This will help the developer debug the problem.<br><br><a href=${url} download="errorlog.txt">Download Error Log</a`;
 }
 
@@ -257,6 +258,8 @@ async function loadClasses(fromCache = false) {
   webpageButton.style.display = "";
 
   classesLoaded = true;
+
+  await wait(750);
 
   document.addEventListener("course-change", async e => {
     if (e.detail.isBulk) return;

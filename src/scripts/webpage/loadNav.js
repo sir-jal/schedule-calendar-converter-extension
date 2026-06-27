@@ -3,6 +3,7 @@ const logos = {
         chrome.runtime.getURL("src/images/extension logo.png"),
     "webpages/import": chrome.runtime.getURL("src/images/import page logo.png"),
     "webpages/guide/customization.html": chrome.runtime.getURL("src/images/settings customization logo.png"),
+    "webpages/guide/troubleshooting.html": chrome.runtime.getURL("src/images/troubleshooting logo transparent.png")
 
 }
 

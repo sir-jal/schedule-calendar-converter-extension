@@ -53,6 +53,10 @@ h2 {
     text-decoration: underline;
 }
 
+details .body h2 {
+    margin: 0.7em 0;
+}
+
 h2.underline {
     text-decoration: underline solid white 2px;
 }
@@ -132,6 +136,10 @@ details>.body img {
     display: inline-block;
     width: auto;
     max-width: 100%;
+}
+
+details>.body p {
+    margin: 0;
 }
 
 details>.body a {

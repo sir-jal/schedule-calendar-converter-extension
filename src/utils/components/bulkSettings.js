@@ -26,6 +26,8 @@ export function createBulkSettings(schedule, scheduleContainer) {
     selectAll.textContent = "Select All";
     deselectAll.textContent = "Deselect All";
 
+    selectBox.title = "select a setting to bulk change"
+
     Settings.CourseSettings.forEach(e => {
         const optionElement = document.createElement('option');
         optionElement.value = Settings.convertSettingToId(e);

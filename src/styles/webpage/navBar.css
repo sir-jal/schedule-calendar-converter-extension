@@ -5,7 +5,7 @@
 body {
     margin: 0;
     padding: 0;
-    padding-top: calc(var(--nav-height) + 15px)
+    padding-top: calc(var(--nav-height) + 20px)
 }
 
 .navigation {

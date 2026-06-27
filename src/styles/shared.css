@@ -1,5 +1,5 @@
 * {
-    font-family: "PT Serif", serif;
+    font-family: "Rubik", sans-serif;
     font-style: normal;
 }
 
@@ -352,7 +352,8 @@ details:not(.notIncluded):has(.courseCheckbox:disabled) {
     color: rgba(0, 0, 0, 0.411);
 }
 
-details:not(.notIncluded):has(.courseCheckbox:not(:checked)):has(summary:hover) {
+details:not(.notIncluded):has(.courseCheckbox:not(:checked)):has(summary:hover),
+details:not(.notIncluded):has(.courseCheckbox:disabled):has(summary:hover) {
     background-color: rgb(123, 123, 123);
     color: rgba(0, 0, 0, 0.411);
 }
@@ -388,7 +389,6 @@ div::after {
 
 summary {
     display: flex;
-    font-size: 15px;
     flex-direction: row;
     align-items: center;
     gap: 10px;
@@ -407,7 +407,6 @@ summary input[type="checkbox"] {
 
 summary span,
 summary input[type="text"] {
-    font-size: 16px;
     text-align: left;
 }
 
@@ -432,9 +431,13 @@ summary input[type="text"] {
 
 
 summary .summaryContent {
-
     white-space: nowrap;
     overflow: hidden;
+
+}
+
+summary .summaryContent * {
+    font-size: 97%;
 
 }
 
@@ -449,7 +452,7 @@ span.displayName {
 
 
 .summaryContent {
-    width: 89%;
+    width: 92%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -514,7 +517,7 @@ summary input[type="text"]:focus {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 30px;
 }
 
 .scheduleSettings .scheduleSetting>label {
@@ -610,4 +613,8 @@ input[type="file"] {
     flex-direction: column;
     align-items: center;
     width: 92%;
+}
+
+.classGroup h2 {
+    font-size: 19px;
 }

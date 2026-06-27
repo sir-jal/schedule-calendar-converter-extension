@@ -23,14 +23,7 @@ export class Course {
     #waitlisted;
     #id;
 
-    #settings = {
-        includecoursecode: true,
-        includeclasslocation: true,
-        includesection: true,
-        onlyincludeprimaryprofessor: true,
-        includeprofessornames: true,
-        includecourse: true
-    }
+    #settings = {};
 
 
     /**
@@ -50,8 +43,9 @@ export class Course {
     /**
      * Creates a course object
      * @param {object} data The class object
+     * @param {boolean} fromJson Whether or not the class is being instantiated by the Course.fromJSON() method
      */
-    constructor(data) {
+    constructor(data, fromJson = false) {
         this.#courseTitle = data.courseTitle;
         this.#displayName = data.displayName ?? data.courseTitle;
         this.#courseCode = data.courseCode;
@@ -67,6 +61,10 @@ export class Course {
         this.#prof = data.prof;
         this.#waitlisted = data.waitlisted;
         this.#id = data.id ?? "C" + crypto.randomUUID(); // the "C" prevents .querySelector errors in the case that the uuid starts with a number
+        if (!fromJson)
+            for (const setting of Settings.CourseSettings) {
+                this.#settings[Settings.convertSettingToId(setting)] = true;
+            }
     }
 
     /**
@@ -251,7 +249,7 @@ export class Course {
      * @returns {Course} the course
      */
     static fromJSON(obj) {
-        const course = new Course(obj);
+        const course = new Course(obj, true);
 
         for (const [key, value] of Object.entries(obj.settings)) {
             course.setSetting(key, value);
@@ -268,7 +266,7 @@ export class Course {
      * @throws If the key is invalid, meaning the key is not a setting, an error is thrown
      */
     setSetting(key, value) {
-        const keys = Object.keys(this.#settings);
+        const keys = Settings.CourseSettings.map(e => Settings.convertSettingToId(e));
         if (!keys.includes(key)) throw new InvalidSettingError(`\nInvalid key: ${key} is not a valid key for class settings`);
         this.#settings[key] = value;
     }

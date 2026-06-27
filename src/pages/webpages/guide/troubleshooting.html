@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Extension Guide</title>
+    <link rel="stylesheet" href="../../../styles/shared.css" />
+    <link rel="stylesheet" href="./style.css">
+    <link rel="icon" type="image/png" href="../../../images/troubleshooting logo transparent.png">
+
+
+    <!--nav bar-->
+    <link rel="stylesheet" href="../../../styles/webpage/navBar.css">
+    <script src="../../../scripts/webpage/loadNav.js" defer></script>
+
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.1/css/all.css" crossorigin="anonymous">
+
+    <!-- <script src="../../scripts/shared.js" defer></script> -->
+
+</head>
+
+<body>
+    <div id="yoo">
+        <div class="navigation">
+        </div>
+        <div class="header">
+            <h1>Troubleshooting</h1>
+
+        </div>
+        <hr>
+        <div class="introToGuide">
+            <h2>Intro</h2>
+            <p>
+                This page serves as a guide for troubleshooting issues. Consult this page before creating a ticket.
+            </p>
+        </div>
+
+        <div class="guide">
+            <h2>Guide</h2>
+
+            <details>
+                <summary>Make sure your schedule is fully loaded</summary>
+                <div class="body">
+                    <p>
+                        Before loading the schedule into the extension, ensure you click on "Schedule Details". Whatever
+                        is not displayed on the page will not be detected by the extension.
+                    </p>
+                </div>
+            </details>
+
+            <details>
+                <summary>Courses with no meeting are excluded by default</summary>
+                <div class="body">
+                    <p>
+                        They will not be included unless the user manually checks it. These courses will
+                        also not be affected by bulk settings.
+                    </p>
+
+                </div>
+            </details>
+
+            <details>
+                <summary>The classes that are loaded may not match the selected term</summary>
+                <div class="body">
+                    <p>
+                        This especially occurs when you select a different term. If this occurs, usually clicking in and
+                        out of "Schedule Details" will resolve the issue. Remember, the extension grabs course
+                        information from there.
+                    </p>
+                </div>
+            </details>
+
+            <details>
+                <summary>Refresh the page and try again</summary>
+                <div class="body">
+                    <p>Refreshing the page usually clears out issues.</p>
+                </div>
+            </details>
+
+            <details>
+                <summary>Disable other extensions that affect the webpage</summary>
+                <div class="body">
+                    <p>
+                        This can include other Banner-related extensions, ad blockers, etc. These could affect the page
+                        and therefore interfere with how the extension fetches your course information. Temporarily
+                        disable them if applicable.
+                    </p>
+                </div>
+            </details>
+
+            <details>
+                <summary>Use a supported browser</summary>
+                <div class="body">
+                    <p>
+                        Use a browser that supports chrome extensions,
+                        such as <b>Google Chrome</b> and <b>Microsoft Edge</b>.</p>
+                </div>
+            </details>
+
+            <details>
+                <summary>Ensure the extension has the permission to download files</summary>
+                <div class="body">
+                    <p>Without this permission, the extension will not be able to export .ics files.</p>
+                </div>
+            </details>
+
+            <details>
+                <summary>Clear extension cache</summary>
+                <div class="body">
+                    <p>
+                        If you are speficially having issues with the school search, try clearing the cache. After
+                        clearing it, reopen the extension and try again.
+                    </p>
+                </div>
+            </details>
+            <p>If issues persist, proceed to the feedback hub linked on the home page and submit a ticket.</p>
+        </div>
+    </div>
+</body>
+
+</html>
