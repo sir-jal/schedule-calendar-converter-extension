@@ -2,6 +2,7 @@ import { Schedule, Course } from "../../../classes/index.js";
 import { updateSessionStorage } from "../../../utils/tools/storage.js";
 import { wait } from "../../../utils/tools/timeRelatedUtils.js";
 import { Settings } from "../../../utils/tools/setting.js";
+import { ExtensionSettingsManager } from "../../../utils/tools/config.js";
 
 /**
  * Renders a course
@@ -10,6 +11,12 @@ import { Settings } from "../../../utils/tools/setting.js";
  * @returns {Element} the rendered html "details" element
  */
 export function renderCourse(schedule, course, excludeAsyncByDefault = true) {
+
+    let defaultPerCourseSettings;
+
+    ExtensionSettingsManager.getAll().then(e => {
+        defaultPerCourseSettings = e.perCourseSettings;
+    })
     const popUpPage = window.location.pathname.includes("pages/popup");
     const keysToEditName = ["e", "f2"];
     let editingName = false;
@@ -59,7 +66,7 @@ export function renderCourse(schedule, course, excludeAsyncByDefault = true) {
         const summaryContentContainer = summary.querySelector(".summaryContent");
 
         const textInput = document.createElement('input');
-        if (!checkbox.checked) return;
+        if (!checkbox.checked || checkbox.disabled) return;
 
         summary.classList.toggle("nameEdit", true);
 
@@ -274,6 +281,9 @@ export function renderCourse(schedule, course, excludeAsyncByDefault = true) {
         const checkbox = document.createElement("input");
 
         checkbox.type = "checkbox";
+        checkbox.name = id + "_" + course.id;
+        checkbox.id = id + "_" + course.id;
+        checkbox.setAttribute("data-setting", id);
         checkbox.checked = course.getSetting(id);
         if (
             ((option.includes("location") && (!hasLocation || noMeetingInfo))) ||
@@ -285,9 +295,6 @@ export function renderCourse(schedule, course, excludeAsyncByDefault = true) {
             checkbox.classList.add("disabled");
             course.setSetting(id, checkbox.checked);
         }
-        checkbox.name = id + "_" + course.id;
-        checkbox.id = id + "_" + course.id;
-        checkbox.setAttribute("data-setting", id);
         label.setAttribute("for", checkbox.id);
         label.textContent = option;
 

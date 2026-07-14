@@ -1,11 +1,14 @@
-import { formatDays, formatDate } from "../utils/tools/formatting.js";
+import { formatDays, formatDate, dateWithFormat } from "../utils/tools/formatting.js";
 import { Schedule } from "./schedule.js";
 import { Settings } from "../utils/tools/setting.js";
 import { InvalidSettingError } from "./Errors/InvalidSettingError.js";
+import { ExtensionSettingsManager } from "../utils/tools/config.js";
 
 /**
  * A class representing a course. Contains methods and constants useful for managing a course
  */
+
+
 export class Course {
     #courseTitle;
     #displayName;
@@ -45,7 +48,7 @@ export class Course {
      * @param {object} data The class object
      * @param {boolean} fromJson Whether or not the class is being instantiated by the Course.fromJSON() method
      */
-    constructor(data, fromJson = false) {
+    constructor(data, fromJson = false, forcePreserve = false) {
         this.#courseTitle = data.courseTitle;
         this.#displayName = data.displayName ?? data.courseTitle;
         this.#courseCode = data.courseCode;
@@ -61,10 +64,24 @@ export class Course {
         this.#prof = data.prof;
         this.#waitlisted = data.waitlisted;
         this.#id = data.id ?? "C" + crypto.randomUUID(); // the "C" prevents .querySelector errors in the case that the uuid starts with a number
-        if (!fromJson)
-            for (const setting of Settings.CourseSettings) {
-                this.#settings[Settings.convertSettingToId(setting)] = true;
+
+        let perCourseSettings;
+        let preserveSettings;
+
+        ExtensionSettingsManager.getAll().then(e => {
+            preserveSettings = e.importBehavior.importSettingBehavior === "PRESERVE";
+            perCourseSettings = e.perCourseSettings;
+        }).then(async e => {
+
+            this.#settings = { "includecourse": true, ...perCourseSettings };
+
+
+            if (fromJson) {
+                if (preserveSettings || forcePreserve) {
+                    this.#settings = Object.fromEntries(Object.entries(data.settings));
+                }
             }
+        })
     }
 
     /**
@@ -248,12 +265,8 @@ export class Course {
      * @param {object} obj the object to convert
      * @returns {Course} the course
      */
-    static fromJSON(obj) {
-        const course = new Course(obj, true);
-
-        for (const [key, value] of Object.entries(obj.settings)) {
-            course.setSetting(key, value);
-        }
+    static fromJSON(obj, forcePreserve = false) {
+        const course = new Course(obj, true, forcePreserve);
 
         return course;
     }
@@ -267,7 +280,7 @@ export class Course {
      */
     setSetting(key, value) {
         const keys = Settings.CourseSettings.map(e => Settings.convertSettingToId(e));
-        if (!keys.includes(key)) throw new InvalidSettingError(`\nInvalid key: ${key} is not a valid key for class settings`);
+        if (!keys.includes(key)) throw new InvalidSettingError(`Invalid key: ${key} is not a valid key for class settings`);
         this.#settings[key] = value;
     }
 
@@ -309,7 +322,7 @@ export class Course {
      * the course is being included. Defaults to **`false`** 
      * @returns {string} The course as an .ics event
      */
-    toICS(force = false) {
+    async toICS(force = false) {
         if (!this.getSetting("includecourse") && !force) return "";
 
         const includeCourseCode = this.getSetting("includecoursecode");
@@ -323,9 +336,11 @@ export class Course {
         const dayFormat = formatDays(this.getDays());
         const location = !this.isOnline() ? `${this.#buildingName}\\, Room ${this.#roomNumber}` : "No location found";
 
+        const [endDateObj, startDateObj] = [await dateWithFormat(this.#endDate), await dateWithFormat(this.#startDate)];
 
-        const [endDateObj, startDateObj] = [new Date(this.#endDate), new Date(this.#startDate)];
-
+        if (startDateObj.toString().includes("Invalid") || endDateObj.toString().includes("Invalid")) {
+            return "PARSING ERROR";
+        }
         // this is used to offset the days from the start date of the class. 
         // otherwise, every class will appear on the start date in iCloud calendar.
         const indices = {
@@ -371,8 +386,17 @@ export class Course {
                     "12:00  AM", true)}`,
             )
         } else {
-            const difference = indices[dayFormat.split(",")[0]] - startDateObj.getDay();
-            startDateObj.setDate(startDateObj.getDate() + difference);
+            const days = dayFormat.split(",");
+
+            const daysOnOrAfterStart = days.filter(e => indices[e] >= startDateObj.getDay());
+
+            if (daysOnOrAfterStart.length === 0) {
+                const difference = indices[days[0]] - startDateObj.getDay();
+                startDateObj.setDate(startDateObj.getDate() + difference + 7);
+            } else {
+                const difference = indices[daysOnOrAfterStart[0]] - startDateObj.getDay();
+                startDateObj.setDate(startDateObj.getDate() + difference);
+            }
             lines.push(
                 `DTSTART:${formatDate(
                     `${(startDateObj.getMonth() + 1).toString().padStart(2, "0")}/${startDateObj.getDate().toString().padStart(2, "0")}/${startDateObj.getFullYear()}`,

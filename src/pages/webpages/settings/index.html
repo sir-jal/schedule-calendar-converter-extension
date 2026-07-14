@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Extension Settings</title>
+
+    <link rel="stylesheet" href="../../../styles/shared.css" />
+    <link rel="stylesheet" href="../guide/style.css">
+    <link rel="stylesheet" href="./style.css">
+
+    <!--nav bar-->
+    <link rel="stylesheet" href="../../../styles/webpage/navBar.css">
+    <script src="../../../scripts/webpage/loadNav.js" defer></script>
+
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.1/css/all.css" crossorigin="anonymous">
+
+    <script type="module" src="./script.js" defer></script>
+    <!-- <script src="../../scripts/shared.js" defer></script> -->
+
+</head>
+
+<body>
+    <div id="yoo">
+        <div class="navigation">
+        </div>
+
+
+
+        <div class="header">
+            <h1>Extension Settings</h1>
+        </div>
+        <hr>
+
+        <div class="subheader">
+            <p>
+                Modify extension settings using this page. Click the save button on the bottom to save. Cooldowns will
+                apply to prevent spam.
+            </p>
+        </div>
+
+        <div class="settingsDropdowns">
+            <details>
+                <summary>
+                    Per-course default settings
+                </summary>
+                <div class="body">
+                    Change the settings that the extension defaults to when loading up your classes. Assume the
+                    extension is able to find all related information.
+                    <br><br>
+                    <div class="settingsArea per-course" id="leCourseSettings">
+
+                    </div>
+                </div>
+
+            </details>
+
+            <details>
+                <summary>Course Categorization</summary>
+                <div class="body">
+                    The extension will categorize courses based on the checkboxes below. A course with multiple
+                    categories will be placed in the one with the highest priority.
+                    <br><br>
+                    <div class="settingsArea">
+                        <div class="settingContainer">
+                            <input type="checkbox" name="categorize_nomeetingtime" id="categorize_nomeetingtime"
+                                settingKey="groupNoMeetingTime">
+                            <label for="categorize_nomeetingtime">Group courses with no meeting times</label>
+                            <div class="settingExplain">
+                                Places courses with no meeting time in their own category. Min: 1, Priority: 1
+                            </div>
+                        </div>
+
+                        <div class="settingContainer">
+                            <input type="checkbox" name="categorize_waitlisted" id="categorize_waitlisted"
+                                settingKey="groupWaitlistedCourses">
+                            <label for="categorize_waitlisted">Group waitlisted courses</label>
+                            <div class="settingExplain">
+                                Places waitlisted courses in their own category. Min: 1, Priority: 2
+                            </div>
+                        </div>
+
+                        <div class="settingContainer">
+                            <input type="checkbox" id="categorize_coursecode" settingKey="groupCourseCode">
+                            <label for="categorize_coursecode">Group courses with the same course code</label>
+                            <div class="settingExplain">
+                                Places courses with the same course code in their own category. Min: 2, Priority: 3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            <details>
+                <summary>Schedule Behavior</summary>
+                <div class="body">
+                    Control how the schedule behaves.
+                    <br><br>
+                    <div class="settingsArea">
+                        <div class="settingContainer select">
+                            <label for="restorationSelection">Restore progress on startup (popup)</label>
+                            <select id="restorationSelection" settingKey="restorePopupProgress">
+                                <option value="ALWAYS">Always</option>
+                                <option value="ASK">Ask me</option>
+                                <option value="NEVER">Never</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            <details>
+                <summary>Import Behavior</summary>
+                <div class="body">
+                    <div class="settingsArea">
+                        <div class="settingContainer select">
+                            <label for="importSettingSelection">When importing schedules, the extension should:</label>
+                            <select id="importSettingSelection" settingKey="importSettingBehavior">
+                                <option value="PRESERVE">Preserve course settings</option>
+                                <option value="REVERT">Revert to default settings</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            <details>
+                <summary>Time & Date Formatting</summary>
+                <div class="body">
+                    What formats should the extension use to parse your schedule? This needs to match the formats of
+                    your Banner page.
+                    <br><br>
+                    <div class="settingsArea">
+                        <div class="settingContainer select">
+                            <label for="dateFormatSelection">Date format:</label>
+                            <select id="dateFormatSelection" settingKey="dateFormat">
+                                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                                <option value="YYYY/MM/DD">YYYY/MM/DD</option>
+                                <option value="MONTH_NAME">My dates includes the month's name</option>
+                            </select>
+                        </div>
+
+                        <div class="settingContainer select">
+                            <label for="dateFormatSplitter">Date format splitter:</label>
+                            <select id="dateFormatSplitter" settingKey="dateSplitter" parentSetting="dateFormat"
+                                disableOnValue="MONTH_NAME">
+                                <option value="/">/</option>
+                                <option value="-">-</option>
+                                <option value=".">.</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </div>
+        <div id="buttonContainer">
+            <button id="saveButton">Save</button>
+            <button id="reset">Reset to default</button>
+        </div>
+    </div>
+</body>
+
+</html>

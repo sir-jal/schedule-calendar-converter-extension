@@ -2,6 +2,7 @@ import { Course } from "./course.js";
 import { getJSON } from "../utils/tools/getJSON.js";
 import { Settings } from "../utils/tools/setting.js";
 import { InvalidSettingError } from "./Errors/InvalidSettingError.js";
+import { DEFAULT_SETTINGS } from "../utils/tools/config.js";
 
 /**
  * A class representing a schedule, a list of courses. Contains methods that manages, filters, and indexes courses
@@ -167,20 +168,32 @@ export class Schedule {
      * 
      * @returns {string} The .ics file content
      */
-    toICS() {
+    async toICS() {
         const included = this.getIncludedCourses();
         const filtered = this.#settings.includewaitlistedcourses ? included : included.filter(e => !e.isWaitlisted());
-        const icsEvents = filtered.map(e => e.toICS());
+        const icsEvents = [];
+
+        if (filtered.length === 0) return "ONE_CLASS_ERROR";
+        for (const course of filtered) {
+            const ics = await course.toICS();
+            if (ics === "PARSING ERROR") {
+                return ics;
+            }
+
+            icsEvents.push(ics);
+        }
 
         const scheduleData = this.toJSON();
 
-        return `BEGIN:VCALENDAR\nX-SCHEDULE-DATA:${JSON.stringify(scheduleData)}\nVERSION:2.0\nCALSCALE:GREGORIAN\nMETHOD:PUBLISH\nPRODID:-//Sir Jal//Calendar Extension importable//EN\n${icsEvents.join(
-            "\n"
-        )}\nEND:VCALENDAR`
-            .split("\n")
-            .join("\r\n");
+        return `BEGIN:VCALENDAR
+X-SCHEDULE-DATA:${JSON.stringify(scheduleData)}
+VERSION:2.0
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+PRODID:-//Sir Jal//Calendar Extension importable//EN
+${icsEvents.join("\n")}\nEND:VCALENDAR`.split("\n").join("\r\n");
 
-        JSON.parse()
+
     }
 
     /**
@@ -205,13 +218,21 @@ export class Schedule {
      * @param {object} obj the object to convert
      * @returns {Schedule} the schedule
      */
-    static fromJSON(obj) {
+    static fromJSON(json) {
         const schedule = new Schedule();
+
+        try {
+            var obj = typeof json === "string" ? JSON.parse(json) : json;
+        } catch (e) {
+            return schedule;
+        }
+        if (Object.keys(obj).length === 0) return schedule;
+
         const courses = [];
 
 
         for (const course of obj.courses) {
-            const c = Course.fromJSON(course);
+            const c = Course.fromJSON(course, obj.FORCE_PRESERVE);
 
             courses.push(c);
         }
@@ -228,33 +249,83 @@ export class Schedule {
      * Clears the schedule
      */
     clear() {
+        const event = new CustomEvent("schedule-clear", {
+            detail: {
+                scheduleId: this.id,
+            },
+            bubbles: true,
+            cancelable: false
+        });
+
+        document.dispatchEvent(event);
         this.#courses = [];
     }
 
     /**
-     * Groups this schedule's courses by their course code
+     * Groups this schedule's courses.
      * 
-     * @param {boolean} [separateNoMeeting=false] Whether or not to also categorize courses with no meeting times. 
-     * Defaults to **`false`**
-     * @returns {{[courseCode: string]: Course[]}} The courses categorized by course code
+     * @param {typeof DEFAULT_SETTINGS.courseCategorization} groupCritiera The criteria to group by. This is an object
+     * that tells this function what to group
+     * @returns {{[category: string]: Course[]}} The courses categorized by course code
      */
-    groupCourses(separateNoMeeting = false) {
-        const obj = { "No Meeting Time": [] };
-        for (const course of this.getCourses()) {
-            const useNoMeetingArray = course.hasNoMeetingInfo() && separateNoMeeting;
-            const arrayToUse = useNoMeetingArray ? "No Meeting Time" : course.getCourseCode();
+    groupCourses(groupCritiera) {
 
-            const arr = obj[arrayToUse];
+        const obj = { "No Meeting Time": [], "Waitlisted": [] };
+
+        const courseMinimums = {
+            "No Meeting Time": 1,
+            "Waitlisted": 1,
+            "Course Code": 2,
+            "Uncategorized": -1
+        };
+
+        const {
+            groupNoMeetingTime,
+            groupWaitlistedCourses,
+            groupCourseCode,
+        } = groupCritiera;
 
 
-            if (arr) {
-                arr.push(course);
+        const lesCourses = this.#courses.slice();
+
+        const uncategorized = [];
+        for (const course of lesCourses) {
+            const isNoMeeting = course.hasNoMeetingInfo();
+            const isWaitlisted = course.isWaitlisted();
+
+            if (isNoMeeting && groupNoMeetingTime) {
+                obj["No Meeting Time"].push(course);
+            } else if (isWaitlisted && groupWaitlistedCourses) {
+                obj["Waitlisted"].push(course);
+
+            } else if (groupCourseCode) {
+                const courseCode = course.getCourseCode();
+                const arr = obj[courseCode];
+                if (arr) arr.push(course);
+                else obj[courseCode] = [course];
+
             } else {
-                obj[arrayToUse] = [course];
+                uncategorized.push(course);
             }
+
+
 
         }
 
-        return obj;
+        const entries = Object.entries(obj);
+        const mininumNonCompliant = entries.filter(e => {
+            const category = e[0];
+            const arr = e[1];
+            const minimum = courseMinimums[category] ?? courseMinimums["Course Code"];
+            if (minimum === -1) return false;
+
+            return arr.length < minimum;
+        });
+
+        for (const [category, courses] of mininumNonCompliant) {
+            uncategorized.push(...courses);
+            delete obj[category];
+        }
+        return { ...obj, "Uncategorized": uncategorized };
     }
 }

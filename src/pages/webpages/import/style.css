@@ -1,6 +1,6 @@
 h1 {
     font-size: 4em;
-    margin-top: 0.1em;
+    margin: 0.1em 0;
 }
 
 .subheader {
@@ -17,12 +17,17 @@ body {
     width: 100%;
 }
 
-details.class {
-    width: 30%;
+
+
+.header {
+    margin: 3px !important;
 }
 
-/* .schedules {
+.schedules {
     display: flex;
     justify-content: center;
-    gap: 10px;
-} */
+}
+
+.schedule {
+    width: 30%;
+}

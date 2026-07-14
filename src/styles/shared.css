@@ -356,6 +356,7 @@ details:not(.notIncluded):has(.courseCheckbox:not(:checked)):has(summary:hover),
 details:not(.notIncluded):has(.courseCheckbox:disabled):has(summary:hover) {
     background-color: rgb(123, 123, 123);
     color: rgba(0, 0, 0, 0.411);
+    cursor: default;
 }
 
 details.notIncluded {
@@ -368,14 +369,17 @@ details.notIncluded:has(summary:hover) {
 }
 
 
-details.notIncluded:has(.courseCheckbox:not(:checked)) {
+details.notIncluded:has(.courseCheckbox:not(:checked)),
+details.notIncluded:has(.courseCheckbox:disabled) {
     background-color: rgb(160, 125, 125);
     color: rgba(0, 0, 0, 0.411);
 }
 
-details.notIncluded:has(.courseCheckbox:not(:checked)):has(summary:hover) {
+details.notIncluded:has(.courseCheckbox:not(:checked)):has(summary:hover),
+details.notIncluded:has(.courseCheckbox:disabled):has(summary:hover) {
     background-color: rgb(114, 90, 90);
     color: rgba(0, 0, 0, 0.411);
+    cursor: default;
 }
 
 details div {
@@ -399,7 +403,8 @@ details[open] summary {
     padding-bottom: 10px;
 }
 
-summary input[type="checkbox"] {
+summary input[type="checkbox"],
+.groupNameContainer input {
     width: 25px;
     height: 25px;
     margin-left: auto;
@@ -517,7 +522,7 @@ summary input[type="text"]:focus {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 30px;
+    margin-bottom: 19px;
 }
 
 .scheduleSettings .scheduleSetting>label {
@@ -597,9 +602,9 @@ input[type="file"] {
     margin-bottom: 3px;
 }
 
-.classes h2 {
+.classes .groupNameContainer {
     margin: 0;
-    margin-bottom: 1em;
+    margin-bottom: 5px;
 }
 
 .classes hr {
@@ -617,4 +622,15 @@ input[type="file"] {
 
 .classGroup h2 {
     font-size: 19px;
+}
+
+.schedule .classGroup:not(:first-of-type) .groupNameContainer {
+    margin-top: 4px;
+}
+
+.groupNameContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
 }

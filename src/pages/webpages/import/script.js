@@ -55,18 +55,18 @@ import { createScheduleSettings } from "../../../utils/components/scheduleSettin
             msg.textContent = "You have not provided a file.";
             return;
         }
-        if (fileType !== "text/calendar") {
-            msg.classList.toggle('show', true);
-            msg.textContent = "The file you provided is not an .ics file.";
-            clearFileInput();
-            return;
-        }
+
         const reader = new FileReader();
 
         reader.onload = async (event) => {
             msg.classList.toggle("show", false);
             const content = event.target.result;
             const lowercase = content.toLowerCase();
+
+            if (fileType === "application/json") {
+                loadClasses(content);
+                return;
+            }
 
 
             if (lowercase.includes("sir jal//calendar extension")) {
@@ -97,6 +97,17 @@ import { createScheduleSettings } from "../../../utils/components/scheduleSettin
         reader.readAsText(file);
     });
 
+    const validateFileInput = () => {
+        const leFiles = fileInput.files;
+
+        if (leFiles.length > 0) {
+            const item = leFiles.item(0);
+            if (item.type !== "text/calendar" && item.type !== "application/json") {
+                clearFileInput();
+            }
+        }
+    }
+
     window.addEventListener('beforeunload', async e => {
         if (preventDefault) e.preventDefault();
     })
@@ -111,22 +122,16 @@ import { createScheduleSettings } from "../../../utils/components/scheduleSettin
 
         const dt = new DataTransfer();
         const item = e.dataTransfer.files.item(0);
-        if (item.type !== "text/calendar") return;
 
         dt.items.add(item);
 
         fileInput.files = dt.files;
+
+        validateFileInput();
     })
 
     fileInput.addEventListener('change', e => {
-        const leFiles = fileInput.files;
-
-        if (leFiles.length > 0) {
-            const item = leFiles.item(0);
-            if (item.type !== "text/calendar") {
-                clearFileInput();
-            }
-        }
+        validateFileInput();
     })
 
 
@@ -139,7 +144,11 @@ import { createScheduleSettings } from "../../../utils/components/scheduleSettin
     async function loadClasses(content = "") {
         inputFileButton.disabled = true;
 
-        if (schedule.length === 0) schedule = readIcs(content);
+        if (schedule.length === 0) {
+            if (content.startsWith("{") && content.endsWith("}")) {
+                schedule = Schedule.fromJSON(content);
+            } else schedule = readIcs(content);
+        };
 
 
         if (!extensionDirect) await wait(1000);
@@ -166,7 +175,7 @@ import { createScheduleSettings } from "../../../utils/components/scheduleSettin
 
 
 
-        const scheduleElement = renderSchedule(schedule, false);
+        const scheduleElement = await renderSchedule(schedule, false);
         // const scheduleElement2 = renderSchedule(schedule2);
 
 
@@ -197,8 +206,14 @@ import { createScheduleSettings } from "../../../utils/components/scheduleSettin
             }
         });
 
-        document.addEventListener("click", (e) => {
-            if (e.target.classList.contains("exportScheduleButton") && preventDefault) {
+        // document.addEventListener("click", (e) => {
+        //     if (e.target.classList.contains("exportScheduleButton") && preventDefault) {
+        //         preventDefault = false;
+        //     }
+        // })
+
+        chrome.downloads.onChanged.addListener(d => {
+            if (d.state?.current === "complete") {
                 preventDefault = false;
             }
         })

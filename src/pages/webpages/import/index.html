@@ -32,8 +32,8 @@
         <div class="header" style="display: flex; flex-direction: column; align-items: center;">
             <h1>Schedule Importer</h1>
             <p class="subheader" style="width: 90%;">
-                Import a valid .ICS file. You may also drag a file. If you drag multiple files, only the first one will
-                be read. A file created using an extension version older than 2.0.0 will not be accepted.
+                Import a valid .ICS or .JSON file. You may also drag a file. If you drag multiple files, only the first
+                one will be read. A file created using an extension version older than 2.0.0 will not be accepted.
             </p>
         </div>
 
@@ -45,7 +45,7 @@
             <div class="fileInputContainer">
 
                 <div class="fileInputElementContainer">
-                    <input type="file" name="icsfileinput" id="icsfileinput" accept=".ics">
+                    <input type="file" name="icsfileinput" id="icsfileinput" accept=".ics,.json">
                 </div>
 
                 <button id="importFile">Import File</button>

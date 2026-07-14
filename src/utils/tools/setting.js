@@ -8,10 +8,6 @@ export const Settings = {
         return setting.trim().replaceAll(" ", "").toLowerCase();
     },
 
-    defaultCourseSettings() {
-
-    },
-
     /**
      * Course settings that apply to every course
      */
@@ -32,8 +28,10 @@ export const Settings = {
     /**
      * 
      */
-    CourseSettingOverwrites: [
-        ["includeprofessornames", "onlyincludeprimaryprofessor"]
-    ]
+    CourseSettingOverwrites() {
+        return [
+            [this.convertSettingToId(this.CourseSettings[2]), this.convertSettingToId(this.CourseSettings[3])]
+        ]
+    }
 
 }

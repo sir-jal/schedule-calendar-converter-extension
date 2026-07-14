@@ -1,5 +1,5 @@
 const logos = {
-    "webpages/home webpages/guide/index.html webpages/guide/extension.html":
+    "webpages/home webpages/guide/index.html webpages/guide/extension.html webpages/settings/index.html":
         chrome.runtime.getURL("src/images/extension logo.png"),
     "webpages/import": chrome.runtime.getURL("src/images/import page logo.png"),
     "webpages/guide/customization.html": chrome.runtime.getURL("src/images/settings customization logo.png"),
@@ -19,7 +19,7 @@ fetch(chrome.runtime.getURL("src/pages/webpages/components/nav.html")).then(e =>
         return split.some(p => path.includes(p));
     })
 
-    const curPage = ["guide", "import"].find(e => path.includes(e));
+    const curPage = ["guide", "import", "settings"].find(e => path.includes(e));
 
     document.querySelector("nav img#pageLogo").setAttribute("src", logos[matchKey]);
     if (curPage) document.querySelector(`nav #${curPage}Page`).classList.toggle("currentPage", true);

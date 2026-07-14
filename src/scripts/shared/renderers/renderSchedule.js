@@ -1,5 +1,6 @@
 import { Schedule, Course } from "../../../classes/index.js";
 import { renderCourse, updateUI } from "../index.js";
+import { ExtensionSettingsManager } from "../../../utils/tools/config.js";
 
 
 /**
@@ -7,8 +8,8 @@ import { renderCourse, updateUI } from "../index.js";
  * @param {Schedule} schedule The schedule to render
  * @returns {HTMLDivElement} the container element
  */
-export function renderSchedule(schedule, excludeAsyncByDefault = true) {
-
+export async function renderSchedule(schedule, excludeAsyncByDefault = true) {
+    const extSettings = await ExtensionSettingsManager.getAll();
     const scheduleContainer = document.createElement("div");
     const classesContainer = document.createElement("div");
 
@@ -18,34 +19,40 @@ export function renderSchedule(schedule, excludeAsyncByDefault = true) {
     scheduleContainer.id = schedule.id;
 
 
-    const grouped = schedule.groupCourses(true);
-    const entries = Object.entries(grouped);
-
-    const uncategorizedGroup = document.createElement('div');
-    const h2 = document.createElement('h2');
+    const grouped = schedule.groupCourses(extSettings.courseCategorization);
+    const entries = Object.entries(grouped).filter(e => e[1].length > 0);
 
 
-
-    h2.textContent = "Uncategorized";
-    uncategorizedGroup.classList.add("classGroup");
-    if (!entries.every(e => e[1].length <= 1)) uncategorizedGroup.append(h2);
+    // const uncategorizedGroup = document.createElement('div');
+    // const h2 = document.createElement('h2');
 
 
 
+    // h2.textContent = "Uncategorized";
+    // uncategorizedGroup.classList.add("classGroup");
+    // if (!entries.every(e => e[1].length <= 1)) uncategorizedGroup.append(h2);
 
-    for (const [courseCode, courses] of entries) {
+
+    for (const [category, courses] of entries) {
         if (courses.length === 0) continue;
-        if (courses.length === 1 && !courses[0].hasNoMeetingInfo()) {
-            uncategorizedGroup.append(renderCourse(schedule, courses[0], excludeAsyncByDefault));
-            continue;
-        }
+        // if (courses.length === 1) {
+        //     uncategorizedGroup.append(renderCourse(schedule, courses[0], excludeAsyncByDefault));
+        //     continue;
+        // }
         const classGroup = document.createElement('div');
         const h2 = document.createElement('h2');
+        const categoryCheckbox = document.createElement("input");
+        const groupNameContainer = document.createElement("div");
         const hr = document.createElement('hr');
 
-        h2.textContent = courseCode;
+        categoryCheckbox.type = "checkbox";
+        categoryCheckbox.checked = !courses.every(e => !e.getSetting("includecourse"));
+        h2.textContent = category;
 
-        classGroup.append(h2);
+        groupNameContainer.classList.add("groupNameContainer");
+        groupNameContainer.append(h2, categoryCheckbox);
+
+        if (entries.length !== 1) classGroup.append(groupNameContainer);
         classGroup.classList.add("classGroup");
 
         for (const course of courses) {
@@ -54,10 +61,23 @@ export function renderSchedule(schedule, excludeAsyncByDefault = true) {
 
         }
 
-        classesContainer.append(classGroup, hr);
+        classesContainer.append(classGroup);
+        // if (category !== entries[entries.length - 1][0]) classesContainer.append(hr);
     }
 
-    classesContainer.append(uncategorizedGroup);
+    // if (Object.keys(grouped).length < 2) {
+    //     h2.remove();
+    // }
+    // const hasUncategorized = uncategorizedGroup.querySelector("details.class");
+    // if (hasUncategorized) {
+    //     classesContainer.append(uncategorizedGroup);
+    // } else {
+    //     const hrs = Array.from(classesContainer.querySelectorAll("hr"));
+    //     console.log(hrs);
+    //     hrs[hrs.length - 1].remove();
+    // }
+
+
     // for (const course of schedule.getCourses()) {
 
     //     const classGroups = Array.from(classesContainer.querySelectorAll(".classGroup"));

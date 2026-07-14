@@ -241,6 +241,20 @@
       "aliases": [
         "EWU"
       ]
+    },
+    "Oakton College": {
+      "link": "https://banner.oakton.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": []
+    },
+    "Old Dominion University": {
+      "link": "https://reg-prod.ec.odu.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": [
+        "ODU"
+      ]
+    },
+    "SUNY Oneonta": {
+      "link": "https://webservices.oneonta.edu/StudentRegistrationSsb/ssb/registration",
+      "aliases": []
     }
   }
 }

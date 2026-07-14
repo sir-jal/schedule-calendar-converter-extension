@@ -12,7 +12,7 @@ export function getParents(element) {
 
     let curElement = element;
 
-    while (curElement.tagName !== "HTML") {
+    while (curElement.tagName.toLowerCase() !== "html") {
         const parent = curElement.parentElement;
         parents.push(parent);
 

@@ -30,13 +30,19 @@ export function updateUI(schedule, classContainer, ignore = {}) {
             courseCheckbox.disabled = !includeWaitlisted;
 
 
-            if (includeWaitlisted) {
-                updateCourseSetting(schedule, course.id, "includecourse", courseCheckbox.checked);
-            } else {
-                updateCourseSetting(schedule, course.id, "includecourse", false);
-            }
+        }
+    }
 
+    const classGroupContainer = Array.from(classContainer.querySelectorAll(".classGroup"));
 
+    for (const group of classGroupContainer) {
+        const checkbox = group.querySelector(".groupNameContainer > input[type=\"checkbox\"]");
+        if (!checkbox) break;
+        const classes = Array.from(group.querySelectorAll(".class"));
+
+        for (const clas of classes) {
+            const courseCheckbox = clas.querySelector("summary > input");
+            courseCheckbox.disabled = !checkbox.checked;
         }
     }
 
@@ -47,7 +53,7 @@ export function updateUI(schedule, classContainer, ignore = {}) {
 
         const optionCheckboxes = Array.from(courseDiv.querySelectorAll('.courseOption input[type="checkbox"]'));
         const courseIncluded = course.getSetting("includecourse");
-        const courseOverwrites = Settings.CourseSettingOverwrites;
+        const courseOverwrites = Settings.CourseSettingOverwrites();
 
         if (!ignore.courseOverwrites) {
             for (const overwrite of courseOverwrites) {
