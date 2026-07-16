@@ -178,12 +178,6 @@ import { createScheduleSettings } from "../../../utils/components/scheduleSettin
         const scheduleElement = await renderSchedule(schedule, false);
         // const scheduleElement2 = renderSchedule(schedule2);
 
-
-        scheduleElement.append(
-            createScheduleSettings(schedule),
-            createBulkSettings(schedule, scheduleElement),
-            createExportButton(schedule)
-        )
         // scheduleElement2.append(
         //     createScheduleSettings(schedule2),
         //     createBulkSettings(schedule2, scheduleElement2),

@@ -277,11 +277,6 @@ import { ExtensionSettingsManager } from "../../utils/tools/config.js";
 
     addSettingListener(schedule);
     const scheduleElement = await renderSchedule(schedule, !fromCache);
-    scheduleElement.append(
-      createScheduleSettings(schedule),
-      createBulkSettings(schedule, scheduleElement),
-      createExportButton(schedule)
-    )
 
     correctSitePageContainer.append(scheduleElement);
 

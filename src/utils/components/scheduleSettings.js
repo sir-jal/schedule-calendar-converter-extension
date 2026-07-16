@@ -1,4 +1,5 @@
 import { Schedule, Course } from "../../classes/index.js";
+import { ExtensionSettingsManager } from "../tools/config.js";
 import { Settings } from "../tools/setting.js";
 
 /**
@@ -10,7 +11,7 @@ export function createScheduleSettings(schedule) {
     const settingsContainer = document.createElement('div');
 
     settingsContainer.classList.add("scheduleSettings");
-
+    ExtensionSettingsManager.getAll()
     for (const setting of Settings.ScheduleSettings) {
         const container = document.createElement('div');
         const checkbox = document.createElement('input');

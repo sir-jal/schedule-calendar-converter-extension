@@ -1,6 +1,9 @@
 import { Schedule, Course } from "../../../classes/index.js";
 import { renderCourse, updateUI } from "../index.js";
 import { ExtensionSettingsManager } from "../../../utils/tools/config.js";
+import { createExportButton } from "../../../utils/components/exportButton.js";
+import { createBulkSettings } from "../../../utils/components/bulkSettings.js";
+import { createScheduleSettings } from "../../../utils/components/scheduleSettings.js";
 
 
 /**
@@ -111,7 +114,12 @@ export async function renderSchedule(schedule, excludeAsyncByDefault = true) {
     // }
 
 
-    scheduleContainer.append(classesContainer);
+    scheduleContainer.append(
+        classesContainer,
+        await createScheduleSettings(schedule),
+        createBulkSettings(schedule, scheduleContainer),
+        createExportButton(schedule)
+    );
     updateUI(schedule, classesContainer);
     return scheduleContainer;
 }
