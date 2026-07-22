@@ -1,6 +1,7 @@
 import { Settings } from "../../../utils/tools/setting.js"
 import { ExtensionSettingsManager } from "../../../utils/tools/config.js";
 import { wait, delay } from "../../../utils/tools/timeRelatedUtils.js"
+import { pluralize } from "../../../utils/tools/string.js";
 
 (async () => {
     const perCourseSettingsContainer = document.querySelector("#leCourseSettings");
@@ -113,17 +114,19 @@ import { wait, delay } from "../../../utils/tools/timeRelatedUtils.js"
         let cooldownRemaining = cooldownLeft - (cooldownLeft % 1000);
 
         saveButton.disabled = true;
-        saveButton.textContent = `Saved. Wait ${cooldownRemaining / 1000} second(s) to click again.`;
+        resetButton.disabled = true;
+        saveButton.textContent = `Saved. Wait ${cooldownRemaining / 1000} ${pluralize("second", "seconds", cooldownRemaining / 1000)} to click again.`;
 
         const interval = setInterval(() => {
             if (cooldownRemaining === 0) {
                 clearInterval(interval);
                 saveButton.disabled = false;
+                resetButton.disabled = false;
                 saveButton.textContent = "Save";
                 return;
             }
             cooldownRemaining -= 1000;
-            saveButton.textContent = `Saved. Wait ${cooldownRemaining / 1000} second(s) to click again.`;
+            saveButton.textContent = `Saved. Wait ${cooldownRemaining / 1000} ${pluralize("second", "seconds", cooldownRemaining / 1000)} to click again.`;
         }, 1000);
     }
 
@@ -137,19 +140,18 @@ import { wait, delay } from "../../../utils/tools/timeRelatedUtils.js"
 
     })
 
+    let warned = false;
     resetButton.addEventListener("click", async e => {
-        console.log(ExtensionSettingsManager.settingsAreDefault(curSettings));
-        const warned = resetButton.classList.contains("warned");
         const prevText = resetButton.textContent;
         if (!warned) {
+            warned = true;
             resetButton.textContent = "Are you sure? Press again to reset.";
-            await wait(700);
-            resetButton.classList.add("warned");
             await delay(2000, () => {
                 resetButton.textContent = prevText;
-                resetButton.classList.remove("warned");
+                warned = false;
             })
         } else {
+            console.log("resetting");
             preventDefault = false;
             await ExtensionSettingsManager.resetToDefault();
             window.location.reload();

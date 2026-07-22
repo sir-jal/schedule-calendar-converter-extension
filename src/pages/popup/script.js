@@ -10,6 +10,7 @@ import { createBulkSettings } from "../../utils/components/bulkSettings.js";
 import { createScheduleSettings } from "../../utils/components/scheduleSettings.js";
 import { clearSessionStorage, updateSessionStorage, updateInfoCache } from "../../utils/tools/storage.js";
 import { ExtensionSettingsManager } from "../../utils/tools/config.js";
+import { pluralize } from "../../utils/tools/string.js";
 
 (async () => {
 
@@ -203,7 +204,7 @@ import { ExtensionSettingsManager } from "../../utils/tools/config.js";
 
     message.classList.add("error", "show");
     message.classList.toggle("success", false);
-    contentContainer.innerHTML = `Uh oh! I ran into ${errorLog.length} error(s)! 
+    contentContainer.innerHTML = `Uh oh! I ran into ${pluralize("an", errorLog.length.toString(), errorLog.length)} ${pluralize("error", "errors", errorLog.length)}! 
     You may download the log file to send to the developer when you submit a ticket via the Help & Feedback hub 
     (see webpage).<br><br>
     If an error happened during injection, you may copy the schedule html content to send to the developer to help debug your

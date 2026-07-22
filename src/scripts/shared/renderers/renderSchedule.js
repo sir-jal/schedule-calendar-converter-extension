@@ -4,6 +4,7 @@ import { ExtensionSettingsManager } from "../../../utils/tools/config.js";
 import { createExportButton } from "../../../utils/components/exportButton.js";
 import { createBulkSettings } from "../../../utils/components/bulkSettings.js";
 import { createScheduleSettings } from "../../../utils/components/scheduleSettings.js";
+import { Settings } from "../../../utils/tools/setting.js";
 
 
 /**
@@ -35,7 +36,7 @@ export async function renderSchedule(schedule, excludeAsyncByDefault = true) {
     // uncategorizedGroup.classList.add("classGroup");
     // if (!entries.every(e => e[1].length <= 1)) uncategorizedGroup.append(h2);
 
-
+    const specialCategories = ["waitlisted", "no meeting time", "uncategorized"];
     for (const [category, courses] of entries) {
         if (courses.length === 0) continue;
         // if (courses.length === 1) {
@@ -64,6 +65,7 @@ export async function renderSchedule(schedule, excludeAsyncByDefault = true) {
 
         }
 
+        if (specialCategories.includes(category.toLowerCase())) classGroup.classList.add(Settings.convertSettingToId(category));
         classesContainer.append(classGroup);
         // if (category !== entries[entries.length - 1][0]) classesContainer.append(hr);
     }

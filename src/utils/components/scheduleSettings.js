@@ -7,17 +7,22 @@ import { Settings } from "../tools/setting.js";
  * @param {Schedule} schedule A schedule is required for the event listeners, specifically when it's time to actually export the .ics file
  * @returns {HTMLDivElement} The container which has all schedule settings as checkmarks
  */
-export function createScheduleSettings(schedule) {
+export async function createScheduleSettings(schedule) {
+    const categorySettings = (await ExtensionSettingsManager.getAll())["courseCategorization"];
     const settingsContainer = document.createElement('div');
 
     settingsContainer.classList.add("scheduleSettings");
-    ExtensionSettingsManager.getAll()
     for (const setting of Settings.ScheduleSettings) {
+        const id = Settings.convertSettingToId(setting);
+
+        if (id.includes("waitlisted")) {
+            if (categorySettings.groupWaitlistedCourses || schedule.getWaitlistedCourses().length === 0) continue;
+        }
+
         const container = document.createElement('div');
         const checkbox = document.createElement('input');
         const label = document.createElement('label');
 
-        const id = Settings.convertSettingToId(setting);
 
         container.classList.add("scheduleSetting");
 
@@ -29,15 +34,14 @@ export function createScheduleSettings(schedule) {
         label.htmlFor = checkbox.id;
         label.textContent = setting;
 
-        if (id.includes("waitlisted")) {
-            checkbox.disabled = schedule.getWaitlistedCourses().length === 0;
-        }
-
         container.append(checkbox, label);
         settingsContainer.append(container);
 
     }
 
+    if (settingsContainer.children.length === 0) {
+        settingsContainer.style.display = "none";
+    }
     return settingsContainer;
 
 

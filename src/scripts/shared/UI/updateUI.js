@@ -14,24 +14,15 @@ export function updateUI(schedule, classContainer, ignore = {}) {
     const allCourses = schedule.getCourses();
     const waitlistedCourses = schedule.getWaitlistedCourses();
     const coursesDOM = Array.from(classContainer.querySelectorAll(".class"));
+    const waitlistedCheckbox = classContainer.querySelector(".classGroup.waitlisted > .groupNameContainer > input");
+
+    console.log(waitlistedCheckbox);
+
+    // test || test2
+
+    const includeWaitlisted = waitlistedCheckbox?.checked ?? schedule.getSetting("includewaitlistedcourses");
 
 
-
-    const includeWaitlisted = schedule.getSetting("includewaitlistedcourses");
-
-
-    // update waitlisted courses
-    if (!ignore.waitlisted) {
-        for (const course of waitlistedCourses) {
-
-
-            const courseDiv = coursesDOM.find(e => e.id == course.id);
-            const courseCheckbox = courseDiv.querySelector('.courseCheckbox');
-            courseCheckbox.disabled = !includeWaitlisted;
-
-
-        }
-    }
 
     const classGroupContainer = Array.from(classContainer.querySelectorAll(".classGroup"));
 
@@ -43,6 +34,33 @@ export function updateUI(schedule, classContainer, ignore = {}) {
         for (const clas of classes) {
             const courseCheckbox = clas.querySelector("summary > input");
             courseCheckbox.disabled = !checkbox.checked;
+
+            const course = schedule.findCourseById(clas.id);
+            if (!checkbox.checked) {
+                updateCourseSetting(schedule, course.id, "includecourse", false);
+            } else {
+                updateCourseSetting(schedule, course.id, "includecourse", courseCheckbox.checked);
+            }
+        }
+    }
+
+    // update waitlisted courses
+    if (!ignore.waitlisted) {
+        for (const course of waitlistedCourses) {
+
+            const courseDiv = coursesDOM.find(e => e.id == course.id);
+            const courseCheckbox = courseDiv.querySelector('.courseCheckbox');
+            console.log(includeWaitlisted);
+            courseCheckbox.disabled = !includeWaitlisted;
+
+            if (!includeWaitlisted) {
+                updateCourseSetting(schedule, course.id, "includecourse", false);
+            } else {
+                updateCourseSetting(schedule, course.id, "includecourse", courseCheckbox.checked);
+
+            }
+
+
         }
     }
 

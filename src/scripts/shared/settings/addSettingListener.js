@@ -54,19 +54,6 @@ export function addSettingListener(schedule) {
             schedule.setSetting(setting, element.checked);
 
             ignore.courseOverwrites = true;
-        } else if (isGroupToggle) {
-            const classes = Array.from(isGroupToggle.querySelectorAll(".class"));
-            for (const clas of classes) {
-                const courseCheckbox = clas.querySelector("summary > input");
-                courseCheckbox.disabled = !element.checked;
-                const course = schedule.findCourseById(clas.id);
-                if (!element.checked) {
-                    updateCourseSetting(schedule, course.id, "includecourse", false);
-                } else {
-                    updateCourseSetting(schedule, course.id, "includecourse", courseCheckbox.checked);
-                    course.setSetting("includecourse", courseCheckbox.checked);
-                }
-            }
         }
 
         updateUI(schedule, document.querySelector(`.schedule#${schedule.id}`), ignore);

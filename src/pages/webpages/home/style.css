@@ -28,17 +28,53 @@ h2.underline {
     text-decoration: underline solid white 2px;
 }
 
-.links {
+.list {
     display: flex;
     gap: 10px;
     font-size: 1.9em;
     flex-direction: column;
     align-items: center;
+    margin: 0;
 }
+
+.list li {
+    margin-right: auto;
+}
+
+.actualList {
+    margin: 0;
+    margin-bottom: 10px;
+    font-size: 20px;
+}
+
+.actualList>li:not(:first-child),
+.sublist {
+    margin-top: 12px;
+}
+
+.sublist>li:not(:first-child) {
+    margin-top: 5px;
+}
+
+.sublist {
+    margin-left: 30px;
+}
+
+#listContainer {
+    width: 40%;
+}
+
+
+
+
 
 .main {
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
+}
+
+#changelog {
+    margin-top: 60px;
 }

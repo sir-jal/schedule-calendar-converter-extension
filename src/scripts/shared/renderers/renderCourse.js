@@ -94,7 +94,7 @@ export function renderCourse(schedule, course, excludeAsyncByDefault = true) {
 
         const finalizeText = async (reset = false) => {
             const oldName = displayNameSpan.textContent.slice();
-            let trimmed = textInput.value.trim().replace(/[\\,;\r\n\x00-\x1F]/g, "").split(" ").filter(e => e !== "").join(" ");
+            let trimmed = textInput.value.trim().replace(/[\\,;`\r\n\x00-\x1F]/g, "").split(" ").filter(e => e !== "").join(" ");
             if (
                 reset ||
                 /^\s*$/.test(textInput.value) ||

@@ -168,3 +168,7 @@ details>summary {
 body {
     padding-bottom: 10px !important;
 }
+
+#forbiddenCharList>li:not(:first-child) {
+    margin-top: 10px;
+}
